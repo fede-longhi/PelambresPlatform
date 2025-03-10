@@ -35,9 +35,6 @@ export const {
             access_type: "offline",
             response_type: "code", 
         },
-        profile(profile) {
-          return { role: profile.role ?? "user", ... }
-        },
     })
   ],
 });

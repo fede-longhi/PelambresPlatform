@@ -37,16 +37,6 @@ export const authConfig = {
             // }
             return true
         },
-        async session({session, user}) {
-            console.log(session)
-            console.log(user)
-            session.user.role = token.role
-            return session
-        },
-        jwt({ token, user }) {
-            if(user) token.role = user.role
-            return token
-        },
     },
   
     providers: [],
