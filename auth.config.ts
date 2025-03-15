@@ -8,33 +8,21 @@ export const authConfig = {
     secret: process.env.SECRET,
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
-            console.log('authorized');
             const isLoggedIn = !!auth?.user;
-            const isOnDashboard = nextUrl.pathname.startsWith('/home');
-            if (isOnDashboard) {
+            const isOnPrivateApp = nextUrl.pathname.startsWith('/admin') || nextUrl.pathname.startsWith('/customer');
+            if (isOnPrivateApp) {
                 if (isLoggedIn) return true;
                 return false; // Redirect unauthenticated users to login page
-            } else if (isLoggedIn) {
-                return Response.redirect(new URL('/home', nextUrl));
-            }
+            } 
+            // TODO: commented the following line beacuse it was redirecting the public images urls
+            // else if (isLoggedIn) {
+            //     return Response.redirect(new URL('/admin', nextUrl));
+            // }
+
             return true;
         },
         async signIn({ account, profile }) {
             console.log('sign in');
-            // if (account?.provider === "google") {
-            //     if (profile == null) {
-            //         return false
-            //     }
-            //     if (profile?.email && profile?.name) {
-            //         console.log(profile)
-            //         const user = await getUser(profile.email)
-            //         if (!user) {
-            //             await createUser({id: "", name: profile.name, email: profile.email, password: "", image_url: profile.picture})
-            //         }
-            //     }
-            //     return true
-            //     // return profile?.email_verified && profile?.email?.endsWith("@example.com")
-            // }
             return true
         },
     },

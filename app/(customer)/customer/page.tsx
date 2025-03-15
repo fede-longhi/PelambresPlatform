@@ -1,7 +1,9 @@
 export default function Page() {
     return (
         <div>
-            <h1>Pelambres</h1>
+            <h1>
+                Customer Home
+            </h1>
         </div>
     )
 }

@@ -2,13 +2,21 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   experimental: {
-    ppr: 'incremental'
+    ppr: 'incremental',
+    serverActions: {
+      bodySizeLimit: '200mb',
+    },
   },
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'my-blob-store.public.blob.vercel-storage.com',
+        port: '',
       },
     ],
   },

@@ -6,7 +6,7 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: ["selector"],
+  darkMode: ["selector", 'class'],
   prefix: "",
   theme: {
   	container: {
@@ -67,11 +67,18 @@ const config: Config = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-			header: {
-				DEFAULT: 'hsl(var(--header-background))',
-				background: 'hsl(var(--header-background))',
-				dark: 'hsl(var(--header-background-dark))',
-			}
+  			header: {
+  				DEFAULT: 'hsl(var(--header-background))',
+  				background: 'hsl(var(--header-background))',
+  				dark: 'hsl(var(--header-background-dark))'
+  			},
+  			chart: {
+  				'1': 'hsl(var(--chart-1))',
+  				'2': 'hsl(var(--chart-2))',
+  				'3': 'hsl(var(--chart-3))',
+  				'4': 'hsl(var(--chart-4))',
+  				'5': 'hsl(var(--chart-5))'
+  			}
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -102,27 +109,6 @@ const config: Config = {
   		}
   	}
   },
-  // theme: {
-  //   extend: {
-  //     gridTemplateColumns: {
-  //       '13': 'repeat(13, minmax(0, 1fr))',
-  //     },
-  //     colors: {
-  //       blue: {
-  //         400: '#2589FE',
-  //         500: '#0070F3',
-  //         600: '#2F6FEB',
-  //       },
-  //     },
-  //   },
-  //   keyframes: {
-  //     shimmer: {
-  //       '100%': {
-  //         transform: 'translateX(100%)',
-  //       },
-  //     },
-  //   },
-  // },
   plugins: [require('@tailwindcss/forms'), require("tailwindcss-animate")],
 };
 export default config;

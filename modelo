@@ -1,0 +1,30 @@
+Usuario
+    - id
+    - name
+    - mail
+    - password
+
+Perfil
+    - first_name
+    - last_name
+    - address
+    - image_url
+    - user (FK)
+
+Rol
+    - role
+    - user (FK)
+
+Impresion
+    - print_status
+    - time_left
+    - customer (FK)
+
+Invoice
+    - customer (FK)
+    - amount
+    - amount_payed
+    - amount_left
+
+Customer
+    - perfil (FK)

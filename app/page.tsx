@@ -1,51 +1,63 @@
-import PelambresLogo from '@/app/ui/home-logo';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import styles from '@/app/ui/home.module.css';
 import { lusitana } from '@/app/ui/fonts';
 import Image from 'next/image';
-
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 
 export default function Page() {
   return (
-    <main className="flex min-h-screen flex-col p-6">
-      <div className="flex h-20 shrink-0 items-end rounded-lg bg-primary p-4 md:h-52">
-        <PelambresLogo />
-      </div>
-      <div className="mt-4 flex grow flex-col gap-4 md:flex-row">
-        <div className="flex flex-col justify-center gap-6 rounded-lg bg-gray-50 px-6 py-10 md:w-2/5 md:px-20">
-        <div className={styles.shape}/>
-          <p className={` ${lusitana.className} text-xl text-gray-800 md:text-3xl md:leading-normal`}>
-            <strong>Welcome to Acme.</strong> This is the example for the{' '}
-            <a href="https://nextjs.org/learn/" className="text-blue-500">
-              Next.js Learn Course
-            </a>
-            , brought to you by Vercel.
-          </p>
-          <Link
-            href="/login"
-            className="flex items-center gap-5 self-start rounded-lg bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-400 md:text-base"
-          >
-            <span>Log in</span> <ArrowRightIcon className="w-5 md:w-6" />
-          </Link>
+    <main className="flex min-h-screen flex-col">
+        <div className="flex flex-col bg-primary">
+            <div className="flex flex-row-reverse">
+                <Link
+                href="/login"
+                className="flex flex-row text-white mx-8 mt-4" 
+                >
+                    <span>Login</span>
+                    <ArrowRightIcon className="w-5 md:w-6 ml-2" />
+                </Link>
+            </div>
+
+            <div className="flex justify-center pt-20 pb-8 bg-primary">    
+                <div
+                    className={`${lusitana.className} flex flex-col items-center leading-none text-white`}
+                >
+                    <Image
+                        src="/pelambres_logo.svg"
+                        width={128}
+                        height={128}
+                        className="hidden md:block mb-8"
+                        alt="Logo of Pelambres"
+                    />
+                    <p className="text-[64px] mb-2">Pelambres</p>
+                    <p className="text-[18px]">Haciendo realidad tus proyectos</p>
+                </div>
+            </div>
+            <div className="flex justify-center p-8 bg-primary">
+                <div className="flex flex-row space-x-2 font-medium">
+                    <Link
+                        href="/public/quote"
+                        className="flex items-center gap-5 self-start rounded-lg bg-secondary px-6 py-3
+                        text-sm font-medium text-slate-800 transition-colors
+                        hover:shadow-xl
+                        hover:text-primary-foreground
+                        md:text-base"
+                        >
+                        <span>Cotiza tu proyecto</span>
+                    </Link>
+                    <Link
+                        href="/public/print-status"
+                        className="flex items-center gap-5 self-start rounded-lg bg-secondary px-6 py-3
+                        text-sm font-medium text-slate-800 transition-colors
+                        hover:bg-purple-800
+                        hover:text-primary-foreground
+                        md:text-base"
+                        >
+                        <span>Ver mi impresión</span>
+                    </Link>
+
+                </div>
+            </div>
         </div>
-        <div className="flex items-center justify-center p-6 md:w-3/5 md:px-28 md:py-12">
-          <Image
-            src="/hero-desktop.png"
-            width={1000}
-            height={760}
-            className="hidden md:block"
-            alt="Screenshots of the dashboard project showing desktop version"
-          />
-          <Image
-            src="/hero-mobile.png"
-            width={560}
-            height={620}
-            className="block md:hidden"
-            alt="Screenshots of the dashboard project showing mobile version"
-          />
-        </div>
-      </div>
     </main>
   );
 }

@@ -25,11 +25,11 @@ input[type='number']::-webkit-outer-spin-button {
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 	281 40% 50%;
+    --primary: 286.9 49.8% 41.4%;
     --primary-dark: 140.7 40.8% 13.9%;
-    --primary-focus: 153.5 45.9% 43.5%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --primary-focus: 256.6 49.8% 41.4;
+    --primary-foreground: 360 100% 100%;
+    --secondary: 56 92% 71%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --success: 	114.2 54.2% 37.6%;
     --success-foreground: 210 40% 98%;
