@@ -2,7 +2,6 @@
 
 import { createQuote, QuoteFormState } from '@/app/lib/quote-actions';
 import { useRef, useActionState, useState } from 'react';
-import { put } from '@vercel/blob';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,10 +15,10 @@ export default function Form() {
     const [attachments, setAttachments] = useState<Array<File>>([]);
     const initialState: QuoteFormState = { message: null, errors: {}};
     const [state, formAction, isPending] = useActionState(createQuote, initialState);
-    let fileInputRef = useRef<any>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const addFile = async (event: any) => {
-        if (event.target.files[0] != null) {
+    const addFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files != null && event.target.files[0] != null) {
             setAttachments([...attachments, event.target.files[0]]);
         }
     }
@@ -35,7 +34,6 @@ export default function Form() {
     }
 
     const handleSubmit = async (formData: FormData) => {
-        let filesUrl:Array<string> = [];
         attachments.forEach((file, i) => {
             formData.append(`file-${i}`, file);
         });
