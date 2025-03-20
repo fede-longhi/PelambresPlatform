@@ -4,19 +4,10 @@ import { lusitana } from '@/app/ui/fonts';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 export const metadata: Metadata = {
-    title: 'Quotes',
+    title: 'Prints',
 };
 
-export default async function Page(props: {
-    searchParams?: Promise<{
-        query?:string;
-        page?:string;
-    }>;
-}) {
-    const searchParams = await props.searchParams;
-    const query = searchParams?.query || '';
-    const currentPage = Number(searchParams?.page) || 1;
-
+export default async function Page() {
     return (
         <div className="w-full">
             <div className="flex w-full items-center justify-between">

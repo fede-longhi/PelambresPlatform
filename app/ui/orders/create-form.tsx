@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { cn, generateCode } from "@/lib/utils";
+import { generateCode } from "@/lib/utils";
 import {AutoAwesome, Business, CheckCircleOutline, Handshake, Loop, Person, Search, Schedule, UnfoldMore } from '@mui/icons-material';
 import { Customer } from "@/app/lib/definitions";
 import {
@@ -15,7 +15,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { DatePicker } from "@/components/ui/date-picker";
 import { useDebouncedCallback } from 'use-debounce';
 import { fetchFilteredCustomers } from "@/app/lib/customer-data";
 import Spinner from "@/components/ui/spinner";
@@ -37,8 +36,7 @@ export default function CreateForm() {
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<{value:string, label:string}>({value:"", label:""});
     const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
-    const [date, setDate] = useState<Date>();
-    const [orderStatus, setOrderStatus] = useState<String>("pending");
+    const [orderStatus, setOrderStatus] = useState<string>("pending");
      
 
     useEffect(() => {
@@ -46,7 +44,6 @@ export default function CreateForm() {
             setIsSearchingCustomers(true);
             const customers = await fetchFilteredCustomers("");
             setFilteredCustomers(customers);
-            console.log("customersLoaded");
             setIsSearchingCustomers(false);
         };
     
@@ -54,10 +51,8 @@ export default function CreateForm() {
     }, []);
 
     const handleCustomerSearch = useDebouncedCallback(async (term) => {
-        console.log(term);
         setIsSearchingCustomers(true);
         const customers = await fetchFilteredCustomers(term);
-        console.log(customers);
         setFilteredCustomers(customers);
         setIsSearchingCustomers(false);
     }, 300);

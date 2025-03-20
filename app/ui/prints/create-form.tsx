@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { cn, generateCode } from "@/lib/utils";
-import {AutoAwesome, Business, Check, CheckCircleOutline, Handshake, Loop, Person, Search, Schedule, UnfoldMore } from '@mui/icons-material';
+import { generateCode } from "@/lib/utils";
+import {AutoAwesome, Business, CheckCircleOutline, Handshake, Loop, Person, Search, Schedule, UnfoldMore } from '@mui/icons-material';
 import { Customer } from "@/app/lib/definitions";
 import {
     Popover,

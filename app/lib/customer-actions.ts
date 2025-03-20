@@ -45,8 +45,6 @@ export async function createCustomer(
         type: formData.get("type"),
     });
 
-    console.log(validatedFields.data);
-
     if (!validatedFields.success) {
         return {
             errors: validatedFields.error.flatten().fieldErrors,
@@ -55,15 +53,12 @@ export async function createCustomer(
         };
     }
 
-    let { name, firstName, lastName, email, phone, type } = validatedFields.data;
-    if (firstName === undefined) firstName = '';
-    if (name === undefined) name = '';
-    if (lastName === undefined) lastName = '';
+    const { name, firstName, lastName, email, phone, type } = validatedFields.data;
 
     try {
         await sql`
         INSERT INTO customers (name, first_name, last_name, email, phone, type)
-        VALUES (${name}, ${firstName}, ${lastName}, ${email}, ${phone}, ${type})
+        VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone}, ${type})
         `;
     } catch (error) {
         console.error(error);

@@ -1,7 +1,6 @@
 'use client';
 import {
     HomeIcon,
-    DocumentDuplicateIcon,
     CubeIcon,
 } from '@heroicons/react/24/outline';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
