@@ -1,108 +1,128 @@
 // This file contains type definitions for your data.
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
+
+import { OrderStatus } from "./order-definitions";
+
 // However, these types are generated automatically if you're using an ORM such as Prisma.
 export type User = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  image_url: string;
-  role: string;
-};
-
-export type Customer = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
+    id: string;
+    name: string;
+    email: string;
+    password: string;
+    image_url: string;
+    role: string;
 };
 
 export type Invoice = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  date: string;
-  // In TypeScript, this is called a string union type.
-  // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
-  status: 'pending' | 'paid';
+    id: string;
+    customer_id: string;
+    amount: number;
+    date: string;
+    // In TypeScript, this is called a string union type.
+    // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
+    status: 'pending' | 'paid';
 };
 
 export type Revenue = {
-  month: string;
-  revenue: number;
+    month: string;
+    revenue: number;
 };
 
 export type LatestInvoice = {
-  id: string;
-  name: string;
-  image_url: string;
-  email: string;
-  amount: string;
+    id: string;
+    name: string;
+    image_url: string;
+    email: string;
+    amount: string;
 };
 
 // The database returns a number for amount, but we later format it to a string with the formatCurrency function
 export type LatestInvoiceRaw = Omit<LatestInvoice, 'amount'> & {
-  amount: number;
+    amount: number;
 };
 
 export type InvoicesTable = {
-  id: string;
-  customer_id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  date: string;
-  amount: number;
-  status: 'pending' | 'paid';
+    id: string;
+    customer_id: string;
+    name: string;
+    email: string;
+    image_url: string;
+    date: string;
+    amount: number;
+    status: 'pending' | 'paid';
 };
 
 export type CustomersTableType = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  total_invoices: number;
-  total_pending: number;
-  total_paid: number;
+    id: string;
+    name: string;
+    email: string;
+    image_url: string;
+    total_invoices: number;
+    total_pending: number;
+    total_paid: number;
 };
 
 export type FormattedCustomersTable = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-  total_invoices: number;
-  total_pending: string;
-  total_paid: string;
+    id: string;
+    name: string;
+    email: string;
+    image_url: string;
+    total_invoices: number;
+    total_pending: string;
+    total_paid: string;
 };
 
 export type CustomerField = {
-  id: string;
-  name: string;
+    id: string;
+    name: string;
 };
 
 export type InvoiceForm = {
-  id: string;
-  customer_id: string;
-  amount: number;
-  status: 'pending' | 'paid';
+    id: string;
+    customer_id: string;
+    amount: number;
+    status: 'pending' | 'paid';
 };
 
 export type Quote = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  detail: string;
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    detail: string;
 }
 
 export type QuoteTable = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  detail: string;
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    detail: string;
+    date: string;
+}
+
+export type Customer = {
+    id: string;
+    first_name: string;
+    last_name: string;
+    name: string;
+    type: string;
+    email: string;
+    phone: string;
+}
+
+export type OrderTable = {
+    id: string;
+    created_date: string,
+    estimated_date: string,
+    status: OrderStatus,
+    tracking_code: string,
+    amount: number,
+    first_name: string,
+    last_name: string,
+    name: string,
+    type: 'business' | 'person' 
 }

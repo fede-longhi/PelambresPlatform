@@ -61,7 +61,7 @@ export async function createQuote(
     const date = new Date().toISOString().split('T')[0];
     try {
         const result = await sql`
-        INSERT INTO quotes (first_name, last_name, email, phone, detail, date)
+        INSERT INTO quote_requests (first_name, last_name, email, phone, detail, date)
         VALUES (${firstName}, ${lastName}, ${email}, ${phone}, ${detail}, ${date})
         RETURNING id
         `;
@@ -74,7 +74,7 @@ export async function createQuote(
             });
 
             await sql`
-            INSERT INTO quote_attachments(quote_id, file_url)
+            INSERT INTO quote_request_attachments(quote_id, file_url)
             VALUES (${result[0].id}, ${blob.downloadUrl})
             `;
         }

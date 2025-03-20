@@ -129,7 +129,7 @@ export async function doSocialLogin(
 ) {
     try {
         const action = formData.get('action') as string;
-        await signIn(action, {redirectTo: "/dashboard"})
+        await signIn(action, {redirectTo: "/admin"})
         console.log(action);
     } catch (error) {
         console.error(error);

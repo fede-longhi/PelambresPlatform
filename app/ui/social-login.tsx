@@ -2,15 +2,12 @@
 
 import { useActionState } from 'react';
 import { doSocialLogin } from '@/app/lib/actions';
-// import { useSearchParams } from 'next/navigation';
 import {
     ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import GoogleIcon from '@mui/icons-material/Google';
 
 export default function SocialLogin() {
-  // const searchParams = useSearchParams();
-  // const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
   const [errorMessage, formAction, isPending] = useActionState(
     doSocialLogin,
     undefined,

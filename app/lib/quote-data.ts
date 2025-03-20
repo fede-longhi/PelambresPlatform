@@ -31,6 +31,24 @@ export async function fetchFilteredQuotes(
     return quotes;
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch invoices.');
+    throw new Error('Failed to fetch quotes.');
+  }
+}
+
+export async function fetchQuotesPages(query: string) {
+  try {
+    const data = await sql`SELECT COUNT(*)
+    FROM quotes
+    WHERE
+        first_name ILIKE ${`%${query}%`} OR
+        last_name ILIKE ${`%${query}%`} OR
+        email ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of quotes.');
   }
 }
