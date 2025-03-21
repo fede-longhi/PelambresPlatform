@@ -149,7 +149,7 @@ export default function CreateForm() {
                         <Label htmlFor="status" className="mb-2">Estado de la orden</Label>
                         <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
                             <div className="flex gap-4 flex-col md:flex-row">
-                                {Object.entries(statuses).map(([_, status]) => {
+                                {Object.entries(statuses).map(([__, status]) => {
                                     const Icon = status.icon
                                     return (
                                         <div key={status.value} className="flex items-center">
