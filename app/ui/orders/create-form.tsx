@@ -18,15 +18,8 @@ import {
 import { useDebouncedCallback } from 'use-debounce';
 import { fetchFilteredCustomers } from "@/app/lib/customer-data";
 import Spinner from "@/components/ui/spinner";
-
-const statuses = [
-    { value: 'pending', label: 'Pending', icon: Schedule, class: "bg-gray-500 text-primary-foreground" },
-    { value: 'in progress', label: 'In Progress', icon: Loop, class: "bg-yellow-500 text-primary-foreground" },
-    { value: 'finished', label: 'Finished', icon: CheckCircleOutline, class: "bg-green-500 text-primary-foreground" },
-    { value: 'delivered', label: 'Delivered', icon: Handshake, class: "bg-primary text-primary-foreground" }
-];
-
-const trackingCodeLength = 6;
+import { TRACKING_CODE_LENGTH } from "@/config/consts";
+import { OrderStatuses } from "@/app/lib/order-definitions";
 
 export default function CreateForm() {
     const initialState: OrderFormState = { message: null, errors: {} };
@@ -37,7 +30,8 @@ export default function CreateForm() {
     const [selectedCustomer, setSelectedCustomer] = useState<{value:string, label:string}>({value:"", label:""});
     const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
     const [orderStatus, setOrderStatus] = useState<string>("pending");
-     
+    const trackingCodeLength = TRACKING_CODE_LENGTH;
+    const statuses = OrderStatuses;
 
     useEffect(() => {
         const loadCustomers = async () => {
@@ -155,7 +149,7 @@ export default function CreateForm() {
                         <Label htmlFor="status" className="mb-2">Estado de la orden</Label>
                         <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
                             <div className="flex gap-4 flex-col md:flex-row">
-                                {statuses.map((status) => {
+                                {Object.entries(statuses).map(([_key, status]) => {
                                     const Icon = status.icon
                                     return (
                                         <div key={status.value} className="flex items-center">

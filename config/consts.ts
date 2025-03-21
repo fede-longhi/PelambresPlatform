@@ -1,0 +1,1 @@
+export const TRACKING_CODE_LENGTH = 6;

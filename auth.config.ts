@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import { AUTHORIZED_USERS } from './app/lib/user-definitions';
 // import { getUser, createUser } from '@/app/lib/user-actions';
  
 export const authConfig = {
@@ -9,15 +10,23 @@ export const authConfig = {
     callbacks: {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user;
-            const isOnPrivateApp = nextUrl.pathname.startsWith('/admin') || nextUrl.pathname.startsWith('/customer');
+            const isOnPrivateApp = 
+                nextUrl.pathname.startsWith('/admin') ||
+                nextUrl.pathname.startsWith('/customer');
+            
+            
+            
             if (isOnPrivateApp) {
-                if (isLoggedIn) return true;
+                if (!AUTHORIZED_USERS.includes(auth?.user?.email??"")){
+                    return false;
+                } else if (isLoggedIn) {
+                    return true;
+                }
                 return false; // Redirect unauthenticated users to login page
-            } 
-            // TODO: commented the following line beacuse it was redirecting the public images urls
-            // else if (isLoggedIn) {
-            //     return Response.redirect(new URL('/admin', nextUrl));
-            // }
+            }
+            else if (isLoggedIn) {
+                return Response.redirect(new URL('/admin', nextUrl));
+            }
 
             return true;
         },

@@ -216,3 +216,9 @@ export function InvoicesTableSkeleton() {
     </div>
   );
 }
+
+export function StatusDetailSkeleton () {
+  return(
+    <CardSkeleton />
+  )
+}

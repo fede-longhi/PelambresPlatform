@@ -64,3 +64,28 @@ export async function fetchOrdersPages(query: string) {
     throw new Error('Failed to fetch total number of quotes.');
   }
 }
+
+export async function fetchOrderDetailByTrackingCode(code: string) {
+    try {
+        const order = await sql`SELECT
+            orders.id,
+            orders.created_date,
+            orders.estimated_date,
+            orders.status,
+            orders.tracking_code,
+            orders.amount,
+            customers.first_name,
+            customers.last_name,
+            customers.name,
+            customers.type
+        FROM orders
+        JOIN customers ON orders.customer_id = customers.id
+        WHERE
+            orders.tracking_code = ${code}
+        `;
+        return order;
+    } catch (error) {
+        console.error('Database Error: ', error);
+        throw new Error('Failed to fetch order.');
+    }
+}

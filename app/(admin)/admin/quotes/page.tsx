@@ -30,7 +30,7 @@ export default async function Page(props: {
         <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
             <Search placeholder="Search quotes..." />
         </div>
-         <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+        <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
             <QuotesTable query={query} currentPage={currentPage} />
         </Suspense>
         <div className="mt-5 flex w-full justify-center">
