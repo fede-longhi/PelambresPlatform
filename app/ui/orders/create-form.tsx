@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { generateCode } from "@/lib/utils";
-import {AutoAwesome, Business, CheckCircleOutline, Handshake, Loop, Person, Search, Schedule, UnfoldMore } from '@mui/icons-material';
+import {AutoAwesome, Business, Person, Search, UnfoldMore } from '@mui/icons-material';
 import { Customer } from "@/app/lib/definitions";
 import {
     Popover,
@@ -149,7 +149,7 @@ export default function CreateForm() {
                         <Label htmlFor="status" className="mb-2">Estado de la orden</Label>
                         <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
                             <div className="flex gap-4 flex-col md:flex-row">
-                                {Object.entries(statuses).map(([_key, status]) => {
+                                {Object.entries(statuses).map(([_, status]) => {
                                     const Icon = status.icon
                                     return (
                                         <div key={status.value} className="flex items-center">
