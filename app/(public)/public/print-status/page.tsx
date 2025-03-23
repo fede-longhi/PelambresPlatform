@@ -20,11 +20,11 @@ export default async function Page(props: {
 
     return (
         <div className="flex flex-col justify-center items-center">
-            <div className="flex flex-col w-[600px] shadow-md bg-slate-200">
+            <div className="flex flex-col w-full md:w-auto mt-6 shadow-md bg-slate-200">
                 <h1 className="text-center bg-primary text-primary-foreground rounded-t-md p-4 text-[32px] font-medium">
                     Estado de impresión
                 </h1>
-                <div className="flex flex-col justify-center p-4">
+                <div className="flex flex-col justify-center p-6 md:p-12">
                     <TrackingCodeSearch />
 
                     <div className="mt-8 mx-4">

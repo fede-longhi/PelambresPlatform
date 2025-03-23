@@ -5,7 +5,7 @@ import Image from 'next/image';
 export default function HomeBanner() {
     return (
         <>
-        <div className="flex justify-center pt-20 pb-8 bg-primary">
+        <div className="flex justify-center md:pt-20 pb-8 bg-primary">
                 <div
                     className={`flex flex-col items-center leading-none text-slate-100`}
                 >
@@ -13,7 +13,7 @@ export default function HomeBanner() {
                         src="/pelambres_logo.svg"
                         width={128}
                         height={128}
-                        className="hidden md:block mb-8"
+                        className="block mb-8"
                         alt="Logo of Pelambres"
                     />
                     <p className={`${lusitana.className} text-[64px] mb-2`}>Pelambres</p>
@@ -21,7 +21,31 @@ export default function HomeBanner() {
                 </div>
             </div>
 
-            <div className="flex justify-center p-8 bg-primary">
+            <div className="flex flex-col p-4 space-y-4 font-medium justify-center items-center mb-4 md:hidden">
+                <Link
+                    href="/public/quote"
+                    className="rounded-lg bg-secondary px-6 py-3
+                    text-md font-medium text-slate-800 transition-colors
+                    shadow-md
+                    hover:bg-purple-800
+                    hover:text-primary-foreground"
+                    >
+                    <span>Cotiza tu proyecto</span>
+                </Link>
+                <Link
+                    href="/public/print-status"
+                    className="rounded-lg bg-secondary px-6 py-3
+                    text-md font-medium text-slate-800 transition-colors
+                    shadow-md
+                    hover:bg-purple-800
+                    hover:text-primary-foreground
+                    md:text-base"
+                    >
+                    <span>Ver estado de mi pedido</span>
+                </Link>
+            </div>
+
+            <div className="justify-center p-8 bg-primary hidden md:flex">
                 <div className="flex flex-row space-x-2 font-medium">
                     <Link
                         href="/public/quote"
