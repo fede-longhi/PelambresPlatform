@@ -27,7 +27,7 @@ export default function TrackingCodeSearch() {
     }
 
     return (
-        <div className="flex flex-row items-end justify-center">
+        <div className="flex flex-col md:flex-row md:items-end justify-center items-center">
             <div className="flex flex-col">
                 <Label htmlFor="code" className="mb-2">Código de trackeo</Label>
                 <InputOTP
@@ -46,7 +46,7 @@ export default function TrackingCodeSearch() {
                     </InputOTPGroup>
                 </InputOTP>
             </div>
-            <Button className="ml-4" type="button" onClick={() =>{searchOrder(trackingCode)}}>
+            <Button className="mt-4 md:ml-4 md:mt-0" type="button" onClick={() =>{searchOrder(trackingCode)}}>
                 Buscar <MagnifyingGlassIcon className='ml-4'/>
             </Button>
         </div>
