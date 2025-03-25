@@ -3,6 +3,7 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import HomeBanner from './ui/home/home-banner';
 import PrintGuideBanner from './ui/home/print-guide';
 import ContactBanner from './ui/home/contact-banner';
+import OurServicesBanner from './ui/home/our-services';
 
 export default function Page() {
   return (
@@ -20,8 +21,11 @@ export default function Page() {
 
             <HomeBanner />
         </div>
-        <PrintGuideBanner />
+
+        {/* <PrintGuideBanner /> */}
+        <OurServicesBanner />
         <ContactBanner />
+
     </main>
   );
 }
