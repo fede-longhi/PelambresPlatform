@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import HomeBanner from './ui/home/home-banner';
-import PrintGuideBanner from './ui/home/print-guide';
 import ContactBanner from './ui/home/contact-banner';
 import OurServicesBanner from './ui/home/our-services';
 
