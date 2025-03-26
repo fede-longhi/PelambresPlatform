@@ -7,8 +7,8 @@ export const metadata: Metadata = {
     template: '%s | Pelambres',
     default: 'Pelambres',
   },
-  description: 'The official Next.js Learn Dashboard built with App Router.',
-  metadataBase: new URL('https://next-learn-dashboard.vercel.sh'),
+  description: 'Pelambres - Servicio de Impresión 3d.',
+  metadataBase: new URL('https://www.pelambres.com.ar/images/pelambres_preview.png'),
 };
 export default function RootLayout({
   children,

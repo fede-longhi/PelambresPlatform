@@ -1,3 +1,5 @@
+import { Warning } from "@mui/icons-material";
+
 export default function Page() {
     return (
         <div>
@@ -6,6 +8,8 @@ export default function Page() {
             Bienvenido a nuestra guía de impresión 3D. Si es tu primera vez solicitando una impresión o quieres optimizar tus diseños, aquí encontrarás toda la información necesaria para obtener los mejores resultados.
             </p>
             <br />
+
+            <h2 className="text-[38px] text-center p-2 bg-secondary text-secondary-foreground m-12 rounded"> <Warning />- Esta guía aún esta en construcción - <Warning /></h2>
 
             <p className="font-medium">
             En esta guía aprenderás:
