@@ -149,7 +149,13 @@ export default function Form() {
                 <h1 className="text-sm font-medium mb-2">Adjuntar archivos</h1>
                 <div className="flex mb-2">
                     <Input type="file" name="file" className="hidden" ref={fileInputRef} onChange={addFile}/>  
-                    <Button className="bg-secondary text-secondary-foreground hover:text-primary-foreground" type="button" onClick={openFileExplorer}><AddIcon />Agregar archivo</Button>
+                    <Button
+                    className="bg-secondary text-secondary-foreground hover:text-primary-foreground"
+                    type="button"
+                    aria-label="Adjuntar archivo"
+                    onClick={openFileExplorer}>
+                        <AddIcon />Agregar archivo
+                    </Button>
                 </div>
                 <ul className="space-y-2 mb-2">
                     {

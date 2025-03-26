@@ -11,10 +11,11 @@ export function HomeCard (props : {
 }) {
     return (
         <div className={`${clsx(props.imagePosition == 'right' ? 'flex-row-reverse' : 'flex-row')} flex items-center md:mx-12 justify-start bg-slate-100 rounded-xl max-h-[256px]`}>
+            
             <Image
-                className={clsx(
+                className={`${clsx(
                     props.imagePosition == 'right' ? "rounded-r-xl" : "rounded-l-xl",
-                )}
+                )} bg-primary/40`}
                 width={256}
                 height={256}
                 src={props.imageName}

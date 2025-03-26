@@ -16,27 +16,30 @@ export default function OurServicesBanner() {
                     title="Modelado y desarrollo"
                     description="Te ayudamos a desarrollar tu propio proyecto para que puedas crear el producto que quieras!"
                     imagePosition="left"
-                    imageName="/images/render_3d.png"
+                    imageName="/images/imagen_1.png"
                     titleLink="/public/quote"
-                />
+                    />
                 <HomeCard
                     title="Impresión a demanda"
                     description="¿Ya tenés tu diseño listo? Envíanos tu archivo y te lo imprimimos en la mejor calidad y material según tus necesidades."
                     imagePosition="right"
-                    imageName="/images/pelambrito_printed.webp"
-                />
+                    imageName="/images/imagen_2.png"
+                    titleLink="/public/quote"
+                    />
                 <HomeCard
                     title="Prototipos"
                     description="Imprimimos prototipos para que puedas probar y perfeccionar tus diseños. Te asesoramos para encontrar la mejor forma de imprimirlos optimizando costos y materiales."
                     imagePosition="left"
-                    imageName="/images/pelambrito_printed.webp"
-                />
+                    imageName="/images/imagen_3.png"
+                    titleLink="/public/quote"
+                    />
 
                 <HomeCard
                     title="Soluciones a medida"
                     description="Realizamos todo el proceso desde el inicio hasta la entrega para poder brindarte una solución a tu problema de forma creativa eficiente y funcional. Con soluciones que van más allá de la impresión 3d."
                     imagePosition="right"
-                    imageName="/images/render_3d.png"
+                    imageName="/images/pelambrito_printed.webp"
+                    titleLink="/public/quote"
                 />
 
             </div>
