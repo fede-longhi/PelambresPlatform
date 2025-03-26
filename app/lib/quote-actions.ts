@@ -1,7 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { put } from '@vercel/blob';
 import postgres from 'postgres';
@@ -74,7 +73,7 @@ export async function createQuote(
         `;
         
         const filesCount = Number(formData.get("filesCount"))
-        var files: File[] = [];
+        let files: File[] = [];
         for (let i = 0; i < filesCount; i++) {
             const file = formData.get(`file-${i}`) as File;
             files.push(file);
