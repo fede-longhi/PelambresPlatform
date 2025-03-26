@@ -73,7 +73,7 @@ export async function createQuote(
         `;
         
         const filesCount = Number(formData.get("filesCount"))
-        let files: File[] = [];
+        const files: File[] = [];
         for (let i = 0; i < filesCount; i++) {
             const file = formData.get(`file-${i}`) as File;
             files.push(file);
