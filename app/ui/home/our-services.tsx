@@ -33,7 +33,6 @@ export default function OurServicesBanner() {
                     imageName="/images/imagen_3.png"
                     titleLink="/public/quote"
                     />
-
                 <HomeCard
                     title="Soluciones a medida"
                     description="Realizamos todo el proceso desde el inicio hasta la entrega para poder brindarte una solución a tu problema de forma creativa eficiente y funcional. Con soluciones que van más allá de la impresión 3d."
@@ -45,13 +44,13 @@ export default function OurServicesBanner() {
             </div>
 
 
-            <div className="flex flex-row m-12 text-[18px]">
+            <div className="flex flex-col md:flex-row m-12 text-[18px] text-center md:text-left">
                 <p>No olvides consultar nuestra </p>
                     <Link href="/public/print-guide"
                     target="_blank"
-                    className="flex items-center mx-1 rounded-md px-2">
+                    className="flex items-center justify-center md:justify-start mx-1 rounded-md px-2">
                         <School className="mr-2"/>
-                        <span>Guía</span>
+                        <span>Guía de impresión</span>
                         <OpenInNew className="ml-2"/>
                     </Link>
                 <p> para aprovechar al máximo nuestros servicios.</p>
