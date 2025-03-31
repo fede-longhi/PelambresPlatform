@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: 'Pelambres - Servicio de Impresión 3d.',
   metadataBase: new URL('https://www.pelambres.com.ar/images/pelambres_preview.png'),
 };
+
 export default function RootLayout({
   children,
 }: {

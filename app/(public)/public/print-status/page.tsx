@@ -1,5 +1,5 @@
 import TrackingCodeSearch from "@/app/ui/orders/code-search";
-import { OrderStatusDetail } from "@/app/ui/orders/status-detail";
+import { OrderStatusDetailByCode } from "@/app/ui/orders/status-detail";
 import { StatusDetailSkeleton } from "@/app/ui/skeletons";
 import { ArrowBack } from "@mui/icons-material";
 import { Metadata } from "next";
@@ -31,7 +31,7 @@ export default async function Page(props: {
                         {
                             query &&
                             <Suspense key={query} fallback={<StatusDetailSkeleton />}>
-                                <OrderStatusDetail code={query}/>
+                                <OrderStatusDetailByCode code={query}/>
                             </Suspense>
                         }
                     </div>

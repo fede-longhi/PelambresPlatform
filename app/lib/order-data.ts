@@ -89,3 +89,29 @@ export async function fetchOrderDetailByTrackingCode(code: string) {
         throw new Error('Failed to fetch order.');
     }
 }
+
+export async function fetchLastOrderDetail() {
+    try {
+        const order = await sql`SELECT
+            orders.id,
+            orders.created_date,
+            orders.estimated_date,
+            orders.status,
+            orders.tracking_code,
+            orders.amount,
+            customers.first_name,
+            customers.last_name,
+            customers.name,
+            customers.type
+        FROM orders
+        JOIN customers ON orders.customer_id = customers.id
+        WHERE orders.status != 'delivered'
+        ORDER BY orders.created_date DESC
+        LIMIT 1
+        `;
+        return order;
+    } catch (error) {
+        console.error('Database Error: ', error);
+        throw new Error('Failed to fetch order.');
+    }
+}

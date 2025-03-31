@@ -14,7 +14,7 @@ export default function Page() {
                 },
                 ]}
             />
-            <Form />
+            <Form redirect/>
         </main>
     )   
 }

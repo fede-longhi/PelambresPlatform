@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
+import { Customer } from './definitions';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -29,11 +30,14 @@ export type CustomerFormState = {
         type?: string[];
     };
     message?: string | null;
+    success?: boolean;
     payload?: FormData;
+    redirect?: boolean;
+    insertedCustomer?: Customer;
 };
 
 export async function createCustomer(
-    _prevState: CustomerFormState,
+    prevState: CustomerFormState,
     formData: FormData
 ) {
     const validatedFields = CreateCustomer.safeParse({
@@ -50,21 +54,36 @@ export async function createCustomer(
             errors: validatedFields.error.flatten().fieldErrors,
             message: "Faltan completar algunos campos.",
             payload: formData,
+            success: false
         };
     }
 
     const { name, firstName, lastName, email, phone, type } = validatedFields.data;
 
     try {
-        await sql`
+        const insertedCustomers = await sql<Customer[]>`
         INSERT INTO customers (name, first_name, last_name, email, phone, type)
         VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone}, ${type})
+        RETURNING id, name, first_name, last_name, type
         `;
+
+        if (prevState.redirect) {
+            revalidatePath('/admin/customers');
+            redirect('/admin/customers');
+        }
+
+        const newState: CustomerFormState = {
+            errors: {},
+            message: "success",
+            payload: formData,
+            redirect: prevState.redirect,
+            success: true,
+            insertedCustomer: insertedCustomers[0],
+        }
+        return newState;
     } catch (error) {
         console.error(error);
         return { message: "Hubo un error al guardar el cliente." };
     }
 
-    revalidatePath('/admin/customers');
-    redirect('/admin/customers');
 }

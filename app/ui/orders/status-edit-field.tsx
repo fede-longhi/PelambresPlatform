@@ -1,8 +1,10 @@
 import { OrderStatus } from "@/app/lib/order-definitions";
 import { AdvanceStep, GoBackStep } from "./buttons";
+import OrderStatusField from "./status-field";
 
-export function OrderStatusEditField({ id, status }: { id: string, status: OrderStatus }) {
-    
+export function OrderStatusEditField({ id, status }: { id?: string, status?: OrderStatus }) {
+    if (!id || !status) return null;
+
     return (
         <div className="flex flex-row items-center justify-stretch">
             {
@@ -11,7 +13,7 @@ export function OrderStatusEditField({ id, status }: { id: string, status: Order
                 :
                 <span className="w-6 h-6"></span>
             }
-            <p className="mx-2 grow text-center">{status}</p>
+            <OrderStatusField className="mx-4" statusName={status}/>
             {
                 status != 'delivered' ?
                 <AdvanceStep id={id} status={status}/>

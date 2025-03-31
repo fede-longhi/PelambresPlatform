@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { generateCode } from "@/lib/utils";
-import {AutoAwesome, Business, Person, Search, UnfoldMore } from '@mui/icons-material';
+import {Add, AutoAwesome, Business, Person, Search, UnfoldMore } from '@mui/icons-material';
 import { Customer } from "@/app/lib/definitions";
 import {
     Popover,
@@ -20,12 +20,14 @@ import { fetchFilteredCustomers } from "@/app/lib/customer-data";
 import Spinner from "@/components/ui/spinner";
 import { TRACKING_CODE_LENGTH } from "@/config/consts";
 import { OrderStatuses } from "@/app/lib/order-definitions";
+import CustomerForm from "../customers/create-form";
 
 export default function CreateForm() {
     const initialState: OrderFormState = { message: null, errors: {} };
     const [state, formAction] = useActionState(createOrder, initialState);
     const [code, setCode] = useState<string>("");
     const [open, setOpen] = useState(false);
+    const [customerFormOpen, setCustomerFormOpen] = useState(false);
     const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
     const [selectedCustomer, setSelectedCustomer] = useState<{value:string, label:string}>({value:"", label:""});
     const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
@@ -36,7 +38,7 @@ export default function CreateForm() {
     useEffect(() => {
         const loadCustomers = async () => {
             setIsSearchingCustomers(true);
-            const customers = await fetchFilteredCustomers("");
+            const customers = await fetchFilteredCustomers("", 1);
             setFilteredCustomers(customers);
             setIsSearchingCustomers(false);
         };
@@ -46,7 +48,7 @@ export default function CreateForm() {
 
     const handleCustomerSearch = useDebouncedCallback(async (term) => {
         setIsSearchingCustomers(true);
-        const customers = await fetchFilteredCustomers(term);
+        const customers = await fetchFilteredCustomers(term, 1);
         setFilteredCustomers(customers);
         setIsSearchingCustomers(false);
     }, 300);
@@ -64,7 +66,7 @@ export default function CreateForm() {
     return (
         <form action={formAction}>
             <div className="rounded-md bg-gray-50 p-4 md:p-6 md:space-y-4">
-                <div className="flex flex-row items-end">
+                <div className="flex flex-col md:flex-row items-end">
                     <div className="flex flex-col">
                         <Label htmlFor="code" className="mb-2">Código</Label>
                         <InputOTP
@@ -91,57 +93,71 @@ export default function CreateForm() {
                         Customer
                     </Label>
                     <input type="hidden" name="customerId" value={selectedCustomer.value} />
-                    <Popover open={open} onOpenChange={setOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            className="w-[200px] justify-between overflow-hidden"
-                            >
-                            <span className="truncate max-w-[160px] whitespace-nowrap">
-                                {selectedCustomer.value !== "" ? selectedCustomer.label : "Select customer..."}
-                            </span>
-                            <UnfoldMore className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0">
-                            <div className="flex items-center px-3 shadow-sm">
-                                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-primary" fontSize="small"/>
-                                <input
-                                    className="flex h-10 w-full rounded-md border-0 focus:shadow-none focus:outline-none focus:ring-0 bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Search customer..."
-                                    onChange={(e) => {
-                                        handleCustomerSearch(e.target.value);
-                                    }}
-                                />
-                            </div>
-                            {
-                                isSearchingCustomers ?
-                                <div className="flex justify-center p-6"> 
-                                    <Spinner />
+                    <div className="flex flex-col md:flex-row">
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                className="w-[200px] justify-between overflow-hidden"
+                                >
+                                <span className="truncate max-w-[160px] whitespace-nowrap">
+                                    {selectedCustomer.value !== "" ? selectedCustomer.label : "Select customer..."}
+                                </span>
+                                <UnfoldMore className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[200px] p-0">
+                                <div className="flex items-center px-3 shadow-sm">
+                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-primary" fontSize="small"/>
+                                    <input
+                                        className="flex h-10 w-full rounded-md border-0 focus:shadow-none focus:outline-none focus:ring-0 bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                        placeholder="Search customer..."
+                                        onChange={(e) => {
+                                            handleCustomerSearch(e.target.value);
+                                        }}
+                                    />
                                 </div>
-                                :
-                                <ul className="max-h-[200px] overflow-y-auto">
-                                    {
-                                        filteredCustomers.map((customer) => (
-                                            <li key={customer.id}
-                                            className="flex p-2 border-t cursor-pointer text-xs items-center"
-                                            onClick={() => {
-                                                setSelectedCustomer({value: customer.id, label: customer.type == 'person' ? customer.first_name + ', ' + customer.last_name : customer.name});
-                                                setOpen(false);
-                                            }}>
-                                                { customer.type == 'person' ? <Person className="mr-2" /> : <Business className="mr-2" /> }
-                                                { customer.type == 'person' ? customer.first_name + ', ' + customer.last_name : customer.name }
-                                            </li>
-                                        ))
-                                    }
-                                </ul>
+                                {
+                                    isSearchingCustomers ?
+                                    <div className="flex justify-center p-6"> 
+                                        <Spinner />
+                                    </div>
+                                    :
+                                    <ul className="max-h-[200px] overflow-y-auto">
+                                        {
+                                            filteredCustomers.map((customer) => (
+                                                <li key={customer.id}
+                                                className="flex p-2 border-t cursor-pointer text-xs items-center"
+                                                onClick={() => {
+                                                    setSelectedCustomer({value: customer.id, label: customer.type == 'person' ? customer.first_name + ', ' + customer.last_name : customer.name});
+                                                    setOpen(false);
+                                                }}>
+                                                    { customer.type == 'person' ? <Person className="mr-2" /> : <Business className="mr-2" /> }
+                                                    { customer.type == 'person' ? customer.first_name + ', ' + customer.last_name : customer.name }
+                                                </li>
+                                            ))
+                                        }
+                                    </ul>
+                                    
+                                }
                                 
-                            }
-                            
-                        </PopoverContent>
-                    </Popover>
+                            </PopoverContent>
+                        </Popover>
+                        <Popover open={customerFormOpen} onOpenChange={setCustomerFormOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="ml-4 bg-primary text-primary-foreground"><Add /> Create customer </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="flex w-auto">
+                                <CustomerForm onSuccess={(customer?: Customer) => {
+                                    setCustomerFormOpen(false);
+                                    if (customer)
+                                        setSelectedCustomer({value: customer?.id, label: customer.type == 'person' ? customer.first_name + ', ' + customer.last_name : customer.name});
+                                }} />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
 
                 <div>

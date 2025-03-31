@@ -54,29 +54,29 @@ export default async function OrdersTable({
             </div>
             <table className="hidden min-w-full text-gray-900 md:table">
                 <thead className="rounded-lg text-left text-sm font-normal">
-                <tr>
-                    <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                    Customer
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                    Code
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                    Amount
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                    Estimated Date
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium">
-                    Created Date
-                    </th>
-                    <th scope="col" className="px-3 py-5 font-medium text-center">
-                    Status
-                    </th>
-                    <th scope="col" className="relative py-3 pl-6 pr-3">
-                        <span className="sr-only">Edit</span>
-                    </th>
-                </tr>
+                    <tr>
+                        <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
+                        Customer
+                        </th>
+                        <th scope="col" className="px-3 py-5 font-medium">
+                        Code
+                        </th>
+                        <th scope="col" className="px-3 py-5 font-medium">
+                        Amount
+                        </th>
+                        <th scope="col" className="px-3 py-5 font-medium">
+                        Estimated Date
+                        </th>
+                        <th scope="col" className="px-3 py-5 font-medium">
+                        Created Date
+                        </th>
+                        <th scope="col" className="px-3 py-5 font-medium text-center">
+                        Status
+                        </th>
+                        <th scope="col" className="relative py-3 pl-6 pr-3">
+                            <span className="sr-only">Edit</span>
+                        </th>
+                    </tr>
                 </thead>
                 <tbody className="bg-white">
                 {orders?.map((order) => (
