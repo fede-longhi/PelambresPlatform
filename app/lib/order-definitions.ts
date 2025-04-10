@@ -1,6 +1,6 @@
-import { CheckCircleOutline, Handshake, Loop, Schedule } from "@mui/icons-material";
+import { CircleCheck, CircleX, Clock, Hammer, PackageCheck } from "lucide-react";
 
-export type OrderStatus = 'pending' | 'in progress' | 'finished' | 'delivered';
+export type OrderStatus = 'pending' | 'in progress' | 'finished' | 'delivered' | 'cancelled';
 
 export const OrderStatuses = {
     "pending": { 
@@ -9,7 +9,7 @@ export const OrderStatuses = {
         next: "in progress",
         value: 'pending',
         label: 'Pendiente',
-        icon: Schedule,
+        icon: Clock,
         class: "bg-gray-500 text-primary-foreground"
     },
     "in progress": {
@@ -18,7 +18,7 @@ export const OrderStatuses = {
         next: "finished",
         value: 'in progress',
         label: 'En curso',
-        icon: Loop,
+        icon: Hammer,
         class: "bg-yellow-500 text-primary-foreground"
     },
     "finished": {
@@ -27,7 +27,7 @@ export const OrderStatuses = {
         next: "delivered",
         value: 'finished',
         label: 'Terminada',
-        icon: CheckCircleOutline,
+        icon: CircleCheck,
         class: "bg-green-500 text-primary-foreground"
     },
     "delivered": {
@@ -36,7 +36,16 @@ export const OrderStatuses = {
         next: null,
         value: 'delivered',
         label: 'Entregada',
-        icon: Handshake,
+        icon: PackageCheck,
         class: "bg-primary text-primary-foreground"
+    },
+    "cancelled": {
+        name: "cancelled",
+        previous: null,
+        next: null,
+        value: 'cancelled',
+        label: 'Cancelada',
+        icon: CircleX,
+        class: "bg-red-500 text-primary-foreground"
     }
 }

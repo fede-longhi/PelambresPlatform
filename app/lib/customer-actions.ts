@@ -19,6 +19,7 @@ const FormSchema = z.object({
 });
 
 const CreateCustomer = FormSchema.omit({ id: true });
+const UpdateCustomer = FormSchema.omit({ id: true });
 
 export type CustomerFormState = {
     errors?: {
@@ -33,7 +34,7 @@ export type CustomerFormState = {
     success?: boolean;
     payload?: FormData;
     redirect?: boolean;
-    insertedCustomer?: Customer;
+    customer?: Customer;
 };
 
 export async function createCustomer(
@@ -78,12 +79,71 @@ export async function createCustomer(
             payload: formData,
             redirect: prevState.redirect,
             success: true,
-            insertedCustomer: insertedCustomers[0],
+            customer: insertedCustomers[0],
         }
         return newState;
     } catch (error) {
         console.error(error);
         return { message: "Hubo un error al guardar el cliente." };
     }
+}
 
+export async function deleteCustomer(id: string, path: string) {
+    await sql`DELETE FROM customers WHERE id = ${id}`;
+    
+    revalidatePath(path);
+    redirect(path);
+}
+
+export async function updateCustomer(
+    id: string,
+    prevState: CustomerFormState,
+    formData: FormData
+) {
+    const validatedFields = UpdateCustomer.safeParse({
+        name: formData.get("name"),
+        firstName: formData.get("first-name"),
+        lastName: formData.get("last-name"),
+        email: formData.get("email"),
+        phone: formData.get("phone"),
+        type: formData.get("type"),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: "Faltan completar algunos campos.",
+            payload: formData,
+            success: false
+        };
+    }
+
+    const { name, firstName, lastName, email, phone, type } = validatedFields.data;
+    
+    try {
+        await sql`
+            UPDATE customers
+            SET name = ${name ?? null}, first_name = ${firstName ?? null}, last_name = ${lastName ?? null},
+                email = ${email}, phone = ${phone}, type = ${type}
+            WHERE id = ${id}
+        `;
+    } catch (error) {
+        console.log(error)
+        return { message: 'Database Error: Failed to Update Customer.' };
+    }
+
+    if (prevState.redirect) {
+        revalidatePath('/admin/customers');
+        redirect('/admin/customers');
+    }
+
+    const newState: CustomerFormState = {
+        errors: {},
+        message: "success",
+        payload: formData,
+        redirect: prevState.redirect,
+        success: true,
+    }
+    return newState;
+    
 }

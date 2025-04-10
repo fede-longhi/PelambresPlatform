@@ -1,13 +1,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { lusitana } from '@/app/ui/fonts';
-import { PlusIcon } from '@heroicons/react/24/outline';
 import { Suspense } from 'react';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
 import Search from '@/app/ui/search';
 import OrdersTable from '@/app/ui/orders/table';
 import Pagination from '@/app/ui/invoices/pagination';
 import { fetchOrdersPages } from '@/app/lib/order-data';
+import { PlusIcon } from 'lucide-react';
 
 export const metadata: Metadata = {
     title: 'Orders',

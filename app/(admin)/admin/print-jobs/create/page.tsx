@@ -1,6 +1,8 @@
 import Breadcrumbs from "@/app/ui/breadcrumbs";
+import CreateForm from "@/app/ui/print-jobs/create-form";
 
 export default function Page() {
+    
     return (
         <main>
             <Breadcrumbs
@@ -15,6 +17,7 @@ export default function Page() {
             />
             <div className="flex w-full">
                 <div className="flex justify-center">
+                    <CreateForm />
                 </div>
             </div>
         </main>

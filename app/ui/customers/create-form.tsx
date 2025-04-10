@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ErrorIcon from '@mui/icons-material/Error';
-import { BuildingOfficeIcon, UserIcon } from '@heroicons/react/24/outline';
 import { Customer } from '@/app/lib/definitions';
+import { Business, Person } from '@mui/icons-material';
 
 export default function CustomerForm({redirect, onSuccess} : {redirect? : boolean, onSuccess?: (customer?: Customer)=>void}) {
     const initialState: CustomerFormState = { message: null, errors: {}, redirect: redirect };
@@ -16,7 +16,7 @@ export default function CustomerForm({redirect, onSuccess} : {redirect? : boolea
     useEffect(() => {
         console.log("Effect");
         if (state.message == 'success') {
-            onSuccess?.(state.insertedCustomer);
+            onSuccess?.(state.customer);
         }
     },[state?.message])
 
@@ -51,7 +51,7 @@ export default function CustomerForm({redirect, onSuccess} : {redirect? : boolea
                                 htmlFor="person"
                                 className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground"
                             >
-                                Person <UserIcon className="h-4 w-4" />
+                                Person <Person className="h-4 w-4" />
                             </label>
                         </div>
                         <div className="flex items-center">
@@ -69,7 +69,7 @@ export default function CustomerForm({redirect, onSuccess} : {redirect? : boolea
                                 htmlFor="business"
                                 className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground"
                             >
-                                Business <BuildingOfficeIcon className="h-4 w-4" />
+                                Business <Business className="h-4 w-4" />
                             </label>
                         </div>
                     </div>

@@ -50,8 +50,7 @@ export async function LastOrderStatusDetail(
     {canEdit, title, titleClassName} :
     {canEdit: boolean, title: string, titleClassName?: string}
 ){
-    const orders = await fetchLastOrderDetail();
-    const order = orders[0];
+    const order = await fetchLastOrderDetail();
     
     return (
         <div>

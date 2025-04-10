@@ -3,7 +3,7 @@ import CustomersTable from "@/app/ui/customers/table";
 import { lusitana } from "@/app/ui/fonts";
 import Pagination from "@/app/ui/invoices/pagination";
 import Search from "@/app/ui/search";
-import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
+import { CustomersTableSkeleton } from "@/app/ui/skeletons";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -41,7 +41,7 @@ export default async function Page(props: {
                     <Search placeholder="Search customers..." />
                 </div>
                 <div className="mt-4">
-                    <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+                    <Suspense key={query + currentPage} fallback={<CustomersTableSkeleton />}>
                         <CustomersTable query={query} currentPage={currentPage}  />
                     </Suspense>
                 </div>

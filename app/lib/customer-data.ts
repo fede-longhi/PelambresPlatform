@@ -62,3 +62,26 @@ export async function fetchCustomersPages(query: string) {
         throw new Error('Failed to fetch customer pages.');
     }  
 } 
+
+export async function fetchCustomerById(id: string) {
+    try {
+        const data = await sql<Customer[]>`
+            SELECT
+                id,
+                name,
+                first_name,
+                last_name,
+                email,
+                phone,
+                type
+            FROM customers
+            WHERE
+                id = ${id}
+            LIMIT 1;
+        `;
+        return data[0];
+    } catch (error) {
+        console.error(error);
+        throw new Error('Failed to fetch customer.');
+    }
+}

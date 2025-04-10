@@ -23,8 +23,8 @@ const links = [
         icon: ConstructionIcon,
     },
     {
-        name: 'Prints',
-        href: '/admin/prints',
+        name: 'Print Jobs',
+        href: '/admin/print-jobs',
         icon: CubeIcon,
     },
     {

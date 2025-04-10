@@ -20,9 +20,7 @@ export default function Page() {
                             <ArrowRightIcon className="w-5 md:w-6 ml-2" />
                         </Link>
                     </div>
-
                 }
-
                 <HomeBanner />
             </div>
 

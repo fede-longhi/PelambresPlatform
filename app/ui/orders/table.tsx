@@ -2,7 +2,8 @@ import { fetchFilteredOrders } from "@/app/lib/order-data";
 import { formatCurrency, formatDateToLocal } from "@/app/lib/utils";
 import { UpdateInvoice, DeleteInvoice } from "../invoices/buttons";
 import { OrderStatusEditField } from "./status-edit-field";
-import { DeleteOrder } from "./buttons";
+import { DeleteOrder, EditOrder } from "./buttons";
+import Link from "next/link";
 
 export default async function OrdersTable({
     query,
@@ -28,7 +29,7 @@ export default async function OrdersTable({
                         <div>
                             <div className="mb-2 flex items-center">
                             {
-                                order.type == 'person' ?
+                                order.customer_type == 'person' ?
                                 <p>{order.first_name}, {order.last_name}</p>
                                 :
                                 <p>{order.name}</p>
@@ -52,26 +53,27 @@ export default async function OrdersTable({
                     </div>
                 ))}
             </div>
+
             <table className="hidden min-w-full text-gray-900 md:table">
                 <thead className="rounded-lg text-left text-sm font-normal">
                     <tr>
+                        <th scope="col" className="px-3 py-5 font-medium">
+                            Code
+                        </th>
                         <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                        Customer
+                            Customer
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                        Code
+                            Amount
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                        Amount
+                            Estimated Date
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                        Estimated Date
-                        </th>
-                        <th scope="col" className="px-3 py-5 font-medium">
-                        Created Date
+                            Created Date
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium text-center">
-                        Status
+                            Status
                         </th>
                         <th scope="col" className="relative py-3 pl-6 pr-3">
                             <span className="sr-only">Edit</span>
@@ -84,18 +86,20 @@ export default async function OrdersTable({
                     key={order.id}
                     className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                     >
+                        <td className="whitespace-nowrap px-3 py-3">
+                            <Link href={`/admin/orders/${order.id}`}>
+                                {order.tracking_code}
+                            </Link>
+                        </td>
                         <td className="whitespace-nowrap py-3 pl-6 pr-3">
                             <div className="flex items-center gap-3">
                             {
-                                order.type == 'person' ?
+                                order.customer_type == 'person' ?
                                 <p>{order.first_name}, {order.last_name}</p>
                                 :
                                 <p>{order.name}</p>
                             }
                             </div>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-3">
-                            {order.tracking_code}
                         </td>
                         <td className="whitespace-nowrap px-3 py-3">
                             {formatCurrency(order.amount)}
@@ -106,14 +110,13 @@ export default async function OrdersTable({
                         <td className="whitespace-nowrap px-3 py-3">
                             {formatDateToLocal(order.created_date)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-3">
+                        <td className="whitespace-nowrap px-3 py-3 items-center">
                             <OrderStatusEditField id={order.id} status={order.status}/>
                         </td>
                         <td className="whitespace-nowrap py-3 pl-6 pr-3">
                             <div className="flex justify-end gap-3">
-                                <DeleteOrder id={order.id}/> 
-                            {/* <UpdateInvoice id={invoice.id} />
-                            <DeleteInvoice id={invoice.id} /> */}
+                                <EditOrder id={order.id}/>
+                                <DeleteOrder id={order.id}/>
                             </div>
                         </td>
                     </tr>

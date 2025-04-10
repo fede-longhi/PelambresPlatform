@@ -4,7 +4,6 @@
 
 import { OrderStatus } from "./order-definitions";
 
-// However, these types are generated automatically if you're using an ORM such as Prisma.
 export type User = {
     id: string;
     name: string;
@@ -19,8 +18,6 @@ export type Invoice = {
     customer_id: string;
     amount: number;
     date: string;
-    // In TypeScript, this is called a string union type.
-    // It means that the "status" property can only be one of the two strings: 'pending' or 'paid'.
     status: 'pending' | 'paid';
 };
 
@@ -104,12 +101,14 @@ export type QuoteTable = {
     date: string;
 }
 
+export type CustomerType = 'business' | 'person';
+
 export type Customer = {
     id: string;
     first_name: string;
     last_name: string;
     name: string;
-    type: string;
+    type: CustomerType;
     email: string;
     phone: string;
 }
@@ -121,8 +120,55 @@ export type OrderTable = {
     status: OrderStatus,
     tracking_code: string,
     amount: number,
+    customer_id: string,
     first_name: string,
     last_name: string,
+    email: string,
+    phone: string,
     name: string,
-    type: 'business' | 'person' 
+    customer_type: CustomerType 
 }
+
+export type Order = {
+    id: string,
+    created_date: string,
+    estimated_date: string,
+    status: OrderStatus,
+    tracking_code: string,
+    amount: number,
+    customer_id: string,
+    first_name: string,
+    last_name: string,
+    email: string,
+    phone: string,
+    name: string,
+    customer_type: CustomerType
+}
+
+export type PrintJobStatus = 'pending' | 'printing' | 'postprocess' | 'finished' | 'failed';
+
+export type PrintJob = {
+    id: string,
+    name: string,
+    gcode_url: string,
+    model_file_url: string,
+    status: PrintJobStatus,
+    estimated_printing_time: number,
+    order_id: string,
+    started_at: string,
+    finished_at: string,
+}
+
+export type GCodeInfo = {
+    hotendTemps?: number[],
+    bedTemps?: number[],
+    estimatedTimeSec?: number,
+};
+
+export type FileData = {
+    filename: string;
+    path: string;
+    mime_type: string;
+    size: number;
+    metadata?: any;
+};
