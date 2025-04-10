@@ -35,7 +35,7 @@ export function dateLongStringToString(dateLongString: string) {
 export async function getGcodeInfo(gcode : File) {
     const fileContent = await gcode.text();
     const lines = fileContent.split('\n');
-    let info: GCodeInfo = {
+    const info: GCodeInfo = {
         hotendTemps: [],
         bedTemps: [],
     };
