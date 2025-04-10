@@ -170,5 +170,5 @@ export type FileData = {
     path: string;
     mime_type: string;
     size: number;
-    metadata?: any;
+    metadata?: object;
 };

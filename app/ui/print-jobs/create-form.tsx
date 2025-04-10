@@ -7,14 +7,19 @@ import FileDropZone from "@/components/ui/drop-files";
 import FieldErrorDisplay from "@/components/ui/field-error-display";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { formatTime, getGcodeInfo } from "@/lib/utils";
 import { CircleX, File, Plus, Trash } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { filamentTypes } from "@/config/config";
 
-export default function PrintJobCreateForm({ orderId, showOrderInput, handleCancel } : { orderId?:string, showOrderInput?:boolean, handleCancel?: ()=>void  }) {
+interface PrintJobCreateForm {
+    orderId?:string,
+    handleCancel?: ()=>void
+}
+
+export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobCreateForm) {
     const initialState: PrintJobFormState = { message: null, errors: {}, success: false };
     const [state, formAction, isPending] = useActionState(createPrintJob, initialState);
     const [models, setModels] = useState<Array<File>>([]);
@@ -23,6 +28,16 @@ export default function PrintJobCreateForm({ orderId, showOrderInput, handleCanc
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     
+    useEffect(() => {
+        if (state.success) {
+        toast({
+            title: 'Éxito',
+            description: 'Print job creado correctamente.',
+            variant: 'success'
+        });
+        }
+    }, [state.success]);
+
     const addFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files != null && event.target.files[0] != null) {
             setModels([...models, event.target.files[0]]);
@@ -38,17 +53,6 @@ export default function PrintJobCreateForm({ orderId, showOrderInput, handleCanc
     const removeFile = (index: number) => {
         setModels(models.filter((_, i) => (i!=index)));
     }
-
-
-    useEffect(() => {
-        if (state.success) {
-        toast({
-            title: 'Éxito',
-            description: 'Print job creado correctamente.',
-            variant: 'success'
-        });
-        }
-    }, [state.success]);
 
     const handleSubmit = async (formData: FormData) => {
         models.forEach((file, i) => {

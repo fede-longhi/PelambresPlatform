@@ -68,8 +68,6 @@ export async function createPrintJob(
         name,
         order_id,
         estimated_printing_time,
-        started_at,
-        finished_at,
         status,
         value,
         filament_type
@@ -129,7 +127,7 @@ export async function createPrintJob(
 
     const gcodeInsertedRow = insertedFiles.filter((row) => (row.filename == gcodeFile.name))[0];
 
-    const insertedPrintJob = await sql`INSERT INTO print_jobs (
+    await sql`INSERT INTO print_jobs (
         name, gcode_id, status, estimated_printing_time, order_id, value, filament_type
     ) VALUES (
         ${name}, ${gcodeInsertedRow.id}, ${status}, ${estimated_printing_time}, ${order_id}, ${value ? value*100 : null},
@@ -138,7 +136,6 @@ export async function createPrintJob(
 
     revalidatePath(`/admin/orders/${order_id}`);
     redirect(`/admin/orders/${order_id}`);
-    // return {success: true, printJob: insertedPrintJob[0] as PrintJob}
 }
 
 export async function startPrintJob(id: string, pathToRevalidate?: string) {

@@ -114,7 +114,7 @@ export function CustomerSelectField({ defaultValue } : { defaultValue? : Custome
         };
     
         loadCustomers();      
-    }, []);
+    }, [defaultValue]);
 
     const handleCustomerSearch = useDebouncedCallback(async (term) => {
         setIsSearchingCustomers(true);

@@ -9,16 +9,27 @@ import ErrorIcon from '@mui/icons-material/Error';
 import { Customer } from '@/app/lib/definitions';
 import { Business, Person } from '@mui/icons-material';
 
-export default function CustomerForm({redirect, onSuccess} : {redirect? : boolean, onSuccess?: (customer?: Customer)=>void}) {
+interface CustomerFormProps {
+    redirect? : boolean,
+    onSuccess?: (customer?: Customer) => void,
+    onCancel?: () => void
+}
+
+
+export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerFormProps) {
     const initialState: CustomerFormState = { message: null, errors: {}, redirect: redirect };
     const [state, formAction, isPending] = useActionState(createCustomer, initialState);
     const [customerType, setCustomerType] = useState<"person" | "business">("person");
+    
     useEffect(() => {
-        console.log("Effect");
         if (state.message == 'success') {
             onSuccess?.(state.customer);
         }
     },[state?.message])
+
+    const handleCancel = () => {
+        onCancel?.();
+    }
 
     return (
         <form action={formAction} className="space-y-2s" aria-busy={isPending}>
@@ -168,7 +179,10 @@ export default function CustomerForm({redirect, onSuccess} : {redirect? : boolea
                 </div>
             </div>
 
-            <div className="flex justify-center pt-8">
+            <div className="flex justify-center pt-8 space-x-2">
+                <Button type="button" disabled={isPending} variant="outline" onClick={handleCancel}>
+                    Cancel
+                </Button>
                 <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground">
                     {isPending ? 'Guardando...' : 'Crear Cliente'}
                 </Button>

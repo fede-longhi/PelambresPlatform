@@ -1,4 +1,4 @@
-import { Customer, FileData, GCodeInfo, OrderTable } from "@/app/lib/definitions";
+import { Customer, GCodeInfo, OrderTable } from "@/app/lib/definitions";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -69,5 +69,3 @@ export function formatTime(seconds: number): string {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
 }
-
-export function insertFiles(files : FileData[]) {} 

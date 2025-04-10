@@ -39,7 +39,7 @@ export default async function Page(props: {
                 </Link>
             </div>
             <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-                <Search placeholder="Search quotes..." />
+                <Search placeholder="Search orders..." />
             </div>
                 <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
                     <OrdersTable query={query} currentPage={currentPage} />
