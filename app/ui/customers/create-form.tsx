@@ -25,7 +25,7 @@ export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerF
         if (state.message == 'success') {
             onSuccess?.(state.customer);
         }
-    },[state?.message])
+    },[state?.message, onSuccess])
 
     const handleCancel = () => {
         onCancel?.();

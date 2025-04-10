@@ -34,7 +34,7 @@ export default function EditCustomerForm({
                 variant: "success"
             });
         }
-    },[state?.message])
+    },[state?.message, onSuccess, state.customer, toast])
         
     return (
         <form action={formAction}>

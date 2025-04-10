@@ -36,7 +36,7 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
             variant: 'success'
         });
         }
-    }, [state.success]);
+    }, [state.success, toast]);
 
     const addFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files != null && event.target.files[0] != null) {
