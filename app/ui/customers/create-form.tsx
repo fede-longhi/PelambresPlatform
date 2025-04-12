@@ -1,24 +1,40 @@
 'use client';
 
 import { createCustomer, CustomerFormState } from '@/app/lib/customer-actions';
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ErrorIcon from '@mui/icons-material/Error';
-import { BuildingOfficeIcon, UserIcon } from '@heroicons/react/24/outline';
+import { Customer } from '@/app/lib/definitions';
+import { Business, Person } from '@mui/icons-material';
 
-export default function CustomerForm() {
-    const initialState: CustomerFormState = { message: null, errors: {} };
+interface CustomerFormProps {
+    redirect? : boolean,
+    onSuccess?: (customer?: Customer) => void,
+    onCancel?: () => void
+}
+
+
+export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerFormProps) {
+    const initialState: CustomerFormState = { message: null, errors: {}, redirect: redirect };
     const [state, formAction, isPending] = useActionState(createCustomer, initialState);
     const [customerType, setCustomerType] = useState<"person" | "business">("person");
+    
+    useEffect(() => {
+        if (state.message == 'success') {
+            onSuccess?.(state.customer);
+        }
+    },[state?.message, onSuccess])
 
-
+    const handleCancel = () => {
+        onCancel?.();
+    }
 
     return (
-        <form action={formAction} className="space-y-2" aria-busy={isPending}>
+        <form action={formAction} className="space-y-2s" aria-busy={isPending}>
             <div aria-live="polite" aria-atomic="true">
-                {state.message && (
+                {!state.success && state.message && (
                     <div className="flex flex-row items-center mt-2 text-sm text-red-500 border bg-slate-100 rounded-md p-2">
                         <ErrorIcon className="mr-2"/>
                         <p>{state.message}</p>
@@ -31,7 +47,7 @@ export default function CustomerForm() {
                     Type of Customer
                 </legend>
                 <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
-                    <div className="flex gap-4">
+                    <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex items-center">
                             <input
                                 id="person"
@@ -46,7 +62,7 @@ export default function CustomerForm() {
                                 htmlFor="person"
                                 className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground"
                             >
-                                Person <UserIcon className="h-4 w-4" />
+                                Person <Person className="h-4 w-4" />
                             </label>
                         </div>
                         <div className="flex items-center">
@@ -55,7 +71,7 @@ export default function CustomerForm() {
                                 name="type"
                                 type="radio"
                                 value="business"
-                                checked={customerType === "business"}
+                                checked={customerType === "business" || state.payload?.get("type") === "business"}
                                 onChange={() => setCustomerType("business")}
                                 className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-primary focus:ring-2"
                                 aria-describedby='status-error'
@@ -64,7 +80,7 @@ export default function CustomerForm() {
                                 htmlFor="business"
                                 className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground"
                             >
-                                Business <BuildingOfficeIcon className="h-4 w-4" />
+                                Business <Business className="h-4 w-4" />
                             </label>
                         </div>
                     </div>
@@ -163,7 +179,10 @@ export default function CustomerForm() {
                 </div>
             </div>
 
-            <div className="flex justify-center pt-8">
+            <div className="flex justify-center pt-8 space-x-2">
+                <Button type="button" disabled={isPending} variant="outline" onClick={handleCancel}>
+                    Cancel
+                </Button>
                 <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground">
                     {isPending ? 'Guardando...' : 'Crear Cliente'}
                 </Button>

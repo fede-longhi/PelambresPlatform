@@ -1,7 +1,7 @@
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import Form from "@/app/ui/customers/create-form";
 
-export default function Page() {
+export default function Page() {    
     return (
         <main>
             <Breadcrumbs
@@ -14,7 +14,11 @@ export default function Page() {
                 },
                 ]}
             />
-            <Form />
+            <div className="flex justify-center">
+                <div className="w-fit m-2 bg-gray-100 p-6 rounded-md">
+                    <Form redirect />
+                </div>
+            </div>
         </main>
     )   
 }

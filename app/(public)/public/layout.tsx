@@ -8,7 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="shadow-md sticky top-0">
                 <PublicHeader />
             </div>
-            <div className="flex-grow md:overflow-y-auto md:p-12 bg-slate-100">
+            <div className="flex-grow md:overflow-y-auto bg-slate-100">
                 {children}
             </div>
         </div>

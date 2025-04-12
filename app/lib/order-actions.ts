@@ -46,8 +46,6 @@ export async function createOrder(
     });
   
     if (!validatedFields.success) {
-        console.log("fail");
-        console.log(validatedFields.error.flatten().fieldErrors);
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Missing Fields. Failed to Create Invoice.',
@@ -59,8 +57,6 @@ export async function createOrder(
     const amountInCents = amount * 100;
     const createdDate = new Date().toISOString().split('T')[0];
 
-    console.log(estimatedDate);
-
     try {
         await sql`
             INSERT INTO orders (customer_id, amount, status, created_date, tracking_code, estimated_date)
@@ -69,6 +65,45 @@ export async function createOrder(
     } catch (error) {
         console.log(error);
         return { message: 'Database Error: Failed to Insert Invoice.' };
+    }
+
+    revalidatePath('/admin/orders');
+    redirect('/admin/orders');
+}
+
+export async function updateOrder(
+    id: string,
+    _prevState: OrderFormState,
+    formData: FormData) {
+    const validatedFields = CreateOrder.safeParse({
+        customerId: formData.get('customerId'),
+        code: formData.get('code'),
+        status: formData.get('status'),
+        amount: formData.get('amount'),
+        estimatedDate: formData.get('estimatedDate'),
+    });
+  
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Invoice.',
+            payload: formData
+        };
+    }
+
+    const { customerId, code, status, amount, estimatedDate } = validatedFields.data;
+    const amountInCents = amount * 100;
+
+    try {
+        await sql`
+            UPDATE orders
+            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status},
+                tracking_code = ${code}, estimated_date = ${estimatedDate ?? null}
+            WHERE id = ${id}
+        `;
+    } catch (error) {
+        console.error(error);
+        return { message: 'Database Error: Failed to Update Order.' };
     }
 
     revalidatePath('/admin/orders');

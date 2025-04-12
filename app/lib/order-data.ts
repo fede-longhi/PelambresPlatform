@@ -11,7 +11,7 @@ export async function fetchFilteredOrders(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const quotes = await sql<OrderTable[]>`
+    const orders = await sql<OrderTable[]>`
       SELECT
         orders.id,
         orders.created_date,
@@ -22,7 +22,7 @@ export async function fetchFilteredOrders(
         customers.first_name,
         customers.last_name,
         customers.name,
-        customers.type
+        customers.type as customer_type
       FROM orders
       JOIN customers ON orders.customer_id = customers.id
       WHERE
@@ -36,10 +36,10 @@ export async function fetchFilteredOrders(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-    return quotes;
+    return orders;
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch quotes.');
+    throw new Error('Failed to fetch orders.');
   }
 }
 
@@ -77,7 +77,7 @@ export async function fetchOrderDetailByTrackingCode(code: string) {
             customers.first_name,
             customers.last_name,
             customers.name,
-            customers.type
+            customers.type as customer_type
         FROM orders
         JOIN customers ON orders.customer_id = customers.id
         WHERE
@@ -88,4 +88,89 @@ export async function fetchOrderDetailByTrackingCode(code: string) {
         console.error('Database Error: ', error);
         throw new Error('Failed to fetch order.');
     }
+}
+
+export async function fetchLastOrderDetail() {
+    try {
+        const data = await sql`SELECT
+            orders.id,
+            orders.created_date,
+            orders.estimated_date,
+            orders.status,
+            orders.tracking_code,
+            orders.amount,
+            customers.first_name,
+            customers.last_name,
+            customers.name,
+            customers.type as customer_type
+        FROM orders
+        JOIN customers ON orders.customer_id = customers.id
+        WHERE orders.status != 'delivered'
+        ORDER BY orders.created_date DESC
+        LIMIT 1
+        `;
+
+        return data[0];
+    } catch (error) {
+        console.error('Database Error: ', error);
+        throw new Error('Failed to fetch order.');
+    }
+}
+
+export async function fetchCustomerOrders(id: string) {
+    try {
+        const data = await sql`
+            SELECT
+                id,
+                created_date,
+                estimated_date,
+                status,
+                tracking_code,
+                amount
+            FROM orders
+            WHERE customer_id = ${id}
+            ORDER BY created_date DESC
+            LIMIT ${ITEMS_PER_PAGE}
+        `;
+        return data;
+    } catch (error) {
+        console.error('Database Error: ', error);
+        throw new Error('Failed to fetch orders for customer.');
+    }
+}
+
+export async function fetchOrderById(id: string) {
+    try {
+        const data = await sql<OrderTable[]>`
+          SELECT
+            orders.id,
+            orders.created_date,
+            orders.estimated_date,
+            orders.status,
+            orders.tracking_code,
+            orders.amount,
+            customers.id as customer_id,
+            customers.first_name,
+            customers.last_name,
+            customers.name,
+            customers.email,
+            customers.phone,
+            customers.type as customer_type
+          FROM orders
+          JOIN customers ON orders.customer_id = customers.id
+          WHERE
+            orders.id = ${id}
+        `;
+
+        const orders = data.map((order) => ({
+            ...order,
+            amount: order.amount / 100,
+        }));
+    
+        return orders[0];
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order with id: ' + id + '.');
+    }
+
 }
