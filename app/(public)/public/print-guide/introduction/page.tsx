@@ -1,6 +1,5 @@
-import { lusitana } from "@/app/ui/fonts";
 import { Header, Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
-import { Info, TipsAndUpdates } from "@mui/icons-material";
+import { Info } from "@mui/icons-material";
 
 export default function Page() {
     return (

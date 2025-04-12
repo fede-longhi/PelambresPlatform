@@ -1,8 +1,6 @@
 import { ExternalLinkButton, Header, Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ExternalLink, Info } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { Info } from "lucide-react";
 
 const filamentos = [
     {

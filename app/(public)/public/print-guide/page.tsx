@@ -1,4 +1,3 @@
-import { lusitana } from "@/app/ui/fonts";
 import { Header } from "@/app/ui/print-guide/components";
 import { Lightbulb } from "lucide-react";
 
