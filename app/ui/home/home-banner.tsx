@@ -4,8 +4,8 @@ import Image from 'next/image';
 
 export default function HomeBanner() {
     return (
-        <>
-        <div className="flex justify-center md:pt-20 pb-8 bg-primary">
+        <div className="bg-primary">
+            <div className="flex justify-center pt-20 pb-8 bg-primary">
                 <div
                     className={`flex flex-col items-center leading-none text-slate-100`}
                 >
@@ -71,6 +71,6 @@ export default function HomeBanner() {
                     </Link>
                 </div>
             </div>
-        </>
+        </div>
     )
 }

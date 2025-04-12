@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: 'my-blob-store.public.blob.vercel-storage.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.google.com',
+        port: '',
+      },
     ],
   },
 };
