@@ -3,13 +3,12 @@ import { fetchPrintJob } from "@/app/lib/print-job-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import { lusitana } from "@/app/ui/fonts";
 import { FinishPrintJob, StartPrintJob } from "@/app/ui/print-jobs/buttons";
-import { PrintJobModels } from "@/app/ui/print-jobs/model-details";
 import PrintJobStatusField from "@/app/ui/print-jobs/status-field";
 import { fetchPrintJobModels } from "@/app/lib/print-job-models-data";
 import Link from "next/link";
 import { Box, Download, FileBox } from "lucide-react";
 import { secondsToTime } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {STLViewer} from "@/app/ui/models/model-viewer";
 
 

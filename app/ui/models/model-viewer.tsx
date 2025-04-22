@@ -2,11 +2,10 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { TrackballControls, Environment } from "@react-three/drei";
-import { useEffect, useState, useRef } from "react";
+import { useRef } from "react";
 import { STLLoader } from "three-stdlib";
 import { useLoader } from "@react-three/fiber";
-import {Suspense, useMemo } from 'react';
-import { EffectComposer, SSAO, Bloom } from "@react-three/postprocessing";
+import { useMemo } from 'react';
 import * as THREE from "three";
 
 function STLModel({ url, autoRotate }: { url: string, autoRotate?: boolean }) {

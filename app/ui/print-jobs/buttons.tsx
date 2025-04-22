@@ -47,7 +47,8 @@ export function FinishPrintJob({id, revalidatePath} : {id:string, revalidatePath
 export function FailPrintJob({id, revalidatePath} : {id:string, revalidatePath?:string}) {
     const initialState: FailPrintJobFormState = {message: null, errors: {}, redirect: false, pathToRevalidate: revalidatePath }
     const failPrintJobWithId = failPrintJob.bind(null, id);
-    const [state, formAction] = useActionState(failPrintJobWithId, initialState);
+    const [_state, formAction] = useActionState(failPrintJobWithId, initialState);
+
     return (
         <Popover>
             <PopoverTrigger asChild>

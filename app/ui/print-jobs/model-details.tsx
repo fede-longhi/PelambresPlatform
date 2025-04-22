@@ -3,7 +3,7 @@
 import { PrintJobModelFile } from "@/app/lib/definitions";
 import { useEffect, useState } from "react";
 
-export async function PrintJobModels({ printJobId }: { printJobId: string }) {
+export function PrintJobModels({ printJobId }: { printJobId: string }) {
     const [models, setModels] = useState<PrintJobModelFile[]>([]);
     const [loading, setLoading] = useState(true);
   
