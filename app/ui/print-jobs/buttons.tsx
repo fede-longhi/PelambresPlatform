@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Ban, CirclePlay, CircleStop, Trash } from "lucide-react";
 import { FAIL_REASONS } from "@/app/lib/consts";
 import { useActionState } from "react";
-import FieldErrorDisplay from "@/components/ui/field-error-display";
 
 export function StartPrintJob({id, revalidatePath} : {id:string, revalidatePath?:string}) {
     
