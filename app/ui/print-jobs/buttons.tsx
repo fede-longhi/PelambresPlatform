@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Ban, CirclePlay, CircleStop, Trash } from "lucide-react";
 import { FAIL_REASONS } from "@/app/lib/consts";
 import { useActionState } from "react";
+import FieldErrorDisplay from "@/components/ui/field-error-display";
 
 export function StartPrintJob({id, revalidatePath} : {id:string, revalidatePath?:string}) {
     
@@ -47,7 +48,7 @@ export function FinishPrintJob({id, revalidatePath} : {id:string, revalidatePath
 export function FailPrintJob({id, revalidatePath} : {id:string, revalidatePath?:string}) {
     const initialState: FailPrintJobFormState = {message: null, errors: {}, redirect: false, pathToRevalidate: revalidatePath }
     const failPrintJobWithId = failPrintJob.bind(null, id);
-    const [_state, formAction] = useActionState(failPrintJobWithId, initialState);
+    const [state, formAction, isPending] = useActionState(failPrintJobWithId, initialState);
 
     return (
         <Popover>
@@ -57,6 +58,12 @@ export function FailPrintJob({id, revalidatePath} : {id:string, revalidatePath?:
                 </Button>
             </PopoverTrigger>
             <PopoverContent>
+                {
+                    !state.success && state.message &&
+                    <div>
+                        {state.message}
+                    </div>
+                }
                 <form action={formAction}>
                     <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
                         <Label htmlFor="failReason">Fail Reason</Label>
@@ -75,8 +82,13 @@ export function FailPrintJob({id, revalidatePath} : {id:string, revalidatePath?:
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button type="submit">
-                        Submit
+                    <Button type="submit" disabled={isPending}>
+                        {
+                            isPending ?
+                            "Loading..."
+                            :
+                            "Submit"
+                        }
                     </Button>
                 </form>
             </PopoverContent>
