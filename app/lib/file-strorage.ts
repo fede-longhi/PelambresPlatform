@@ -1,6 +1,6 @@
 import { put, PutBlobResult } from "@vercel/blob";
 import { FileData } from "./definitions";
-import { calculateFileHash } from "./utils";
+import { calculateFileHash } from "@/lib/utils";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
