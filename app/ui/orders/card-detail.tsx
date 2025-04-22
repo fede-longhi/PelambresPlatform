@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTable } from "@/app/lib/definitions";
 import { OrderStatusEditField } from "./status-edit-field";
-import { formatDateToLocal } from "@/app/lib/utils";
+import { formatDateToLocal } from "@/lib/utils";
 import { EditOrder } from "./buttons";
 
 function OrderDetailCard ({order} : {order: OrderTable}) {

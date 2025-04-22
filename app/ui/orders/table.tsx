@@ -1,5 +1,5 @@
 import { fetchFilteredOrders } from "@/app/lib/order-data";
-import { formatCurrency, formatDateToLocal } from "@/app/lib/utils";
+import { formatCurrency, formatDateToLocal } from "@/lib/utils";
 import { UpdateInvoice, DeleteInvoice } from "../invoices/buttons";
 import { OrderStatusEditField } from "./status-edit-field";
 import { DeleteOrder, EditOrder } from "./buttons";

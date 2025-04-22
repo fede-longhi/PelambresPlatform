@@ -4,7 +4,7 @@ import OrderStatusField from "./status-field";
 import { formatDate } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { OrderStatusEditField } from "./status-edit-field";
-import { formatCurrency } from "@/app/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import OrderDetailCard from "./card-detail";
 
 export async function OrderStatusDetailByCode({code} : {code:string}) {

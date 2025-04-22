@@ -1,5 +1,5 @@
 import { fetchFilteredQuotes } from "@/app/lib/quote-data";
-import { formatDateToLocal } from '@/app/lib/utils';
+import { formatDateToLocal } from '@/lib/utils';
 import Link from "next/link";
 
 export default async function QuotesTable({

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Ban, CirclePlay, CircleStop, Trash } from "lucide-react";
-import { FAIL_REASONS } from "@/config/consts";
+import { FAIL_REASONS } from "@/app/lib/consts";
 import { useActionState } from "react";
 
 export function StartPrintJob({id, revalidatePath} : {id:string, revalidatePath?:string}) {
