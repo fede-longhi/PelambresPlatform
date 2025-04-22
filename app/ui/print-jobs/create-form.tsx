@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { formatTime, getGcodeInfo } from "@/lib/utils";
+import { secondsToTime, getGcodeInfo } from "@/lib/utils";
 import { CircleX, File, Plus, Trash } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { filamentTypes } from "@/config/config";
@@ -129,7 +129,7 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                         gcodeInfo.estimatedTimeSec &&
                         <div className="flex flex-col">
                             <Label>Estimated printing time</Label>
-                            <span className="font-gra text-sm border rounded-md m-2 p-2 w-fit">{formatTime(gcodeInfo.estimatedTimeSec)}</span>
+                            <span className="font-gra text-sm border rounded-md m-2 p-2 w-fit">{secondsToTime(gcodeInfo.estimatedTimeSec)}</span>
                         </div>
                     }
 
@@ -161,7 +161,7 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                                 :
                                 <FileDropZone onFilesDropped={(files) => {
                                     if (files && files[0]) {
-                                        setGcodeFile(files[0]);
+                                        setModels([...models, files[0]]);
                                     }
                                 }} />
                             }

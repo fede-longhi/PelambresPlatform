@@ -3,7 +3,7 @@ import { OrderStatus } from "@/app/lib/order-definitions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 // import { DeleteOutline, NavigateBefore, NavigateNext } from "@mui/icons-material";
-import { Pencil, StepBack, StepForward, Trash } from "lucide-react";
+import { Pencil, PlusIcon, StepBack, StepForward, Trash } from "lucide-react";
 import Link from "next/link";
 
 export function GoBackStep({ id, status }: { id: string, status: OrderStatus }) {
@@ -21,6 +21,18 @@ export function AdvanceStep({ id, status }: { id: string, status: OrderStatus })
         <form action={advanceStepWithFields}>
             <Button type="submit" variant="outline" size="icon" className="hover:bg-primary hover:text-primary-foreground rounded-full w-6 h-6"><StepForward /></Button>
         </form>
+    )
+}
+
+export function CreateOrder() {
+    return (
+        <Link
+        href="/admin/orders/create"
+        className="flex h-10 w-40 items-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        >
+            <span>Create Order</span>
+            <PlusIcon className="h-5 md:ml-4" />
+        </Link>
     )
 }
 

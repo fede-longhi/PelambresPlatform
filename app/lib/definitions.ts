@@ -150,13 +150,26 @@ export type PrintJobStatus = 'pending' | 'printing' | 'postprocess' | 'finished'
 export type PrintJob = {
     id: string,
     name: string,
-    gcode_url: string,
-    model_file_url: string,
     status: PrintJobStatus,
     estimated_printing_time: number,
     order_id: string,
     started_at: string,
     finished_at: string,
+}
+
+export type PrintJobWithGcode = {
+    id: string,
+    name: string,
+    status: PrintJobStatus,
+    estimated_printing_time: number,
+    order_id: string,
+    started_at: string,
+    finished_at: string,
+    gcode_filename: string,
+    gcode_path: string,
+    gcode_mime_type: string,
+    gcode_size: number,
+    gcode_uploaded_at: string
 }
 
 export type GCodeInfo = {
@@ -166,9 +179,21 @@ export type GCodeInfo = {
 };
 
 export type FileData = {
+    id?: string;
     filename: string;
     path: string;
     mime_type: string;
     size: number;
     metadata?: object;
+    hash?: string;
+};
+
+export type PrintJobModelFile = {
+    id: string;
+    filename: string;
+    path: string;
+    mime_type: string;
+    size: number;
+    uploaded_at: string;
+    name: string;
 };

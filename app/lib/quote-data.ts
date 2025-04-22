@@ -19,7 +19,7 @@ export async function fetchFilteredQuotes(
         last_name,
         email,
         detail
-      FROM quotes
+      FROM quote_requests
       WHERE
         first_name ILIKE ${`%${query}%`} OR
         last_name ILIKE ${`%${query}%`} OR
@@ -38,7 +38,7 @@ export async function fetchFilteredQuotes(
 export async function fetchQuotesPages(query: string) {
   try {
     const data = await sql`SELECT COUNT(*)
-    FROM quotes
+    FROM quote_requests
     WHERE
         first_name ILIKE ${`%${query}%`} OR
         last_name ILIKE ${`%${query}%`} OR

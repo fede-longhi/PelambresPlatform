@@ -12,7 +12,9 @@ function OrderDetailCard ({order} : {order: OrderTable}) {
         <CardTitle className="text-lg font-semibold flex">
             <h2>Order # {order.id}</h2>
             <span className="flex-1" />
-            <EditOrder className="ml-2" id={order.id} />
+            <div className="ml-2 h-fit flex ">
+              <EditOrder id={order.id} />
+            </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

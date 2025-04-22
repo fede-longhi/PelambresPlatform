@@ -1,4 +1,4 @@
-import { OrderTable } from "./definitions";
+import { Order, OrderTable } from "./definitions";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -107,6 +107,33 @@ export async function fetchLastOrderDetail() {
         JOIN customers ON orders.customer_id = customers.id
         WHERE orders.status != 'delivered'
         ORDER BY orders.created_date DESC
+        LIMIT 1
+        `;
+
+        return data[0];
+    } catch (error) {
+        console.error('Database Error: ', error);
+        throw new Error('Failed to fetch order.');
+    }
+}
+
+export async function fetchNewestOrder() {
+    try {
+        const data = await sql<Order[]>`SELECT
+            orders.id,
+            orders.created_date,
+            orders.estimated_date,
+            orders.status,
+            orders.tracking_code,
+            orders.amount,
+            customers.first_name,
+            customers.last_name,
+            customers.name,
+            customers.type as customer_type
+        FROM orders
+        JOIN customers ON orders.customer_id = customers.id
+        WHERE orders.status != 'delivered'
+        ORDER BY orders.created_date ASC
         LIMIT 1
         `;
 
