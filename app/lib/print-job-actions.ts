@@ -5,7 +5,7 @@ import postgres from 'postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { FileData, PrintJob } from './definitions';
-import { FAIL_REASONS } from '@/config/consts';
+import { FAIL_REASONS, GCODE_FOLDER, MODELS_FOLDER } from '@/app/lib/consts';
 import { insertFormFiles, insertSingleFormFile } from './file-strorage';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -98,7 +98,7 @@ export async function createPrintJob(
         }
     }
     const gcodeFile = insertedGcodeResult.insertedFile;
-    const insertedFilesResult = await insertFormFiles(MODEL_FOLDER, formData);
+    const insertedFilesResult = await insertFormFiles(MODELS_FOLDER, formData);
 
 
     const createdPrintJob = await sql`INSERT INTO print_jobs (

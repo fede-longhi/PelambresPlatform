@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { secondsToTime, getGcodeInfo } from "@/lib/utils";
 import { CircleX, File, Plus, Trash } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { filamentTypes } from "@/config/config";
+import { FILAMENT_TYPES } from "@/app/lib/consts";
 
 interface PrintJobCreateForm {
     orderId?:string,
@@ -183,7 +183,7 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                             </SelectTrigger>
                             <SelectContent>
                                 {
-                                    filamentTypes.map((filament) => (
+                                    FILAMENT_TYPES.map((filament) => (
                                         <SelectItem key={filament.name} value={filament.name}>{filament.label}</SelectItem>
                                     ))
                                 }
