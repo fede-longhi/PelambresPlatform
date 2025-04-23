@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { secondsToTime, getGcodeInfo } from "@/lib/utils";
 import { CircleX, File, Plus, Trash } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
-import { FILAMENT_TYPES } from "@/app/lib/consts";
+import { FILAMENT_TYPES } from "@/lib/consts";
 
 interface PrintJobCreateForm {
     orderId?:string,
