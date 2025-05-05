@@ -1,7 +1,6 @@
 import { OrderTable } from "@/app/lib/definitions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrderCustomerName } from "@/lib/utils";
-import { EyeIcon } from "lucide-react";
 import Link from "next/link";
 import CustomerTypeField from "../customers/type-field";
 
@@ -10,10 +9,8 @@ export default function OrderCustomerDetailCard({order} : {order: OrderTable}) {
         <Card>
             <CardHeader>
                 <CardTitle className="text-lg font-semibold flex">
-                    <h2>Customer</h2>
-                    <span className="flex-1"/>
-                    <Link href={`/admin/customers/${order.customer_id}`} className="border rounded-md p-2">
-                        <EyeIcon size={16}/>
+                    <Link href={`/admin/customers/${order.customer_id}`}>
+                        <h2>Customer</h2>
                     </Link>
                 </CardTitle>
             </CardHeader>

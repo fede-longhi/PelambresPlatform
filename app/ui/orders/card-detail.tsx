@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTable } from "@/app/lib/definitions";
 import { OrderStatusEditField } from "./status-edit-field";
-import { formatDateToLocal } from "@/app/lib/utils";
+import { formatDateToLocal } from "@/lib/utils";
 import { EditOrder } from "./buttons";
 
 function OrderDetailCard ({order} : {order: OrderTable}) {
@@ -12,7 +12,9 @@ function OrderDetailCard ({order} : {order: OrderTable}) {
         <CardTitle className="text-lg font-semibold flex">
             <h2>Order # {order.id}</h2>
             <span className="flex-1" />
-            <EditOrder className="ml-2" id={order.id} />
+            <div className="ml-2 h-fit flex ">
+              <EditOrder id={order.id} />
+            </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

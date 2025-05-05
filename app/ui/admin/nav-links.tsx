@@ -9,6 +9,7 @@ import ConstructionIcon from '@mui/icons-material/Construction';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import { Calculator } from 'lucide-react';
 
 const links = [
     { name: 'Home', href: '/admin', icon: HomeIcon },
@@ -31,6 +32,11 @@ const links = [
         name: 'Customers',
         href: '/admin/customers',
         icon: PersonIcon,
+    },
+    {
+        name: 'Cotizador',
+        href: '/admin/quote-calculator',
+        icon: Calculator,
     },
 ];
 

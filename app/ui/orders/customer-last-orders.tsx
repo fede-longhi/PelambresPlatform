@@ -2,7 +2,7 @@ import { fetchCustomerOrders } from "@/app/lib/order-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import OrderStatusField from "./status-field";
-import { formatDateToLocal } from "@/app/lib/utils";
+import { formatDateToLocal } from "@/lib/utils";
 
 export default async function CustomerLastOrders({id, className} : {id: string, className?: string}) {
     const orders = await fetchCustomerOrders(id);

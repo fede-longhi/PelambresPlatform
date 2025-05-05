@@ -20,7 +20,7 @@ export default function PrintJobStatusField({status} : {status: PrintJobStatus }
 
     return(
         <span
-            className={`text-xs font-medium px-2 py-1 rounded-full border ${statusStyles[status]}`}
+            className={`text-xs font-medium px-2 py-1 rounded-full border items-center flex ${statusStyles[status]}`}
         >
             {statusLabels[status]}
         </span>

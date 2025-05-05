@@ -5,10 +5,10 @@ import postgres from 'postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { PrintJob } from './definitions';
-import { put } from '@vercel/blob';
+import { FAIL_REASONS, GCODE_FOLDER, MODELS_FOLDER } from '@/lib/consts';
+import { insertFormFiles, insertSingleFormFile } from './file-strorage';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
-
 
 const FormSchema = z.object({
     id: z.string().optional(),
@@ -22,7 +22,13 @@ const FormSchema = z.object({
     filament_type: z.enum(['pla', 'petg', 'tpu']).default('pla'),
 });
 
+const FailPrintJobFormSchema = z.object({
+    id: z.string().optional(),
+    failReason: z.enum(FAIL_REASONS.map(r => r.value) as [string, ...string[]]).default('other')
+});
+
 const CreatePrintJob = FormSchema.omit({ id: true });
+const FailPrintJob = FailPrintJobFormSchema.omit({ id: true });
 
 export type PrintJobFormState = {
     errors?: {
@@ -42,6 +48,16 @@ export type PrintJobFormState = {
     printJob?: PrintJob;
 };
 
+export type FailPrintJobFormState = {
+    errors?: {
+        failReason?: string[];
+    };
+    message?: string | null;
+    success?: boolean;
+    redirect?: boolean;
+    pathToRevalidate?: string;
+}
+
 export async function createPrintJob(
     _prevState: PrintJobFormState,
     formData: FormData
@@ -55,7 +71,6 @@ export async function createPrintJob(
     });
 
     if (!validatedFields.success) {
-        console.log(validatedFields.error.flatten().fieldErrors);
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: 'Faltan completar algunos campos.',
@@ -73,9 +88,8 @@ export async function createPrintJob(
         filament_type
     } = validatedFields.data;
 
-    const files = [];
-    const gcodeFile = formData.get("gcodeFile") as File;
-    if (!gcodeFile) {
+    const insertedGcodeResult = await insertSingleFormFile('gcodeFile', GCODE_FOLDER, formData);
+    if (!insertedGcodeResult.success || !insertedGcodeResult.insertedFile) {
         return {
             errors: {gcode_file: ["Please provide a gcode file"]},
             message: 'Faltan completar algunos campos.',
@@ -83,56 +97,35 @@ export async function createPrintJob(
             success: false,
         }
     }
-    const gcodeBlob = await put(gcodeFile.name, gcodeFile, {
-        access: 'public',
-    });
-    files.push({
-        filename: gcodeFile.name,
-        path: gcodeBlob.downloadUrl,
-        mime_type: gcodeFile.type,
-        size: gcodeFile.size
-    });
+    const gcodeFile = insertedGcodeResult.insertedFile;
+    const insertedFilesResult = await insertFormFiles(MODELS_FOLDER, formData);
 
-    const filesCount = Number(formData.get("filesCount"))
-    for (let i = 0; i < filesCount; i++) {
-        const file = formData.get(`file-${i}`) as File;
-        const blob = await put(file.name, file, {
-            access: 'public',
-        });
-        files.push({
-            filename: file.name,
-            path: blob.downloadUrl,
-            mime_type: file.type,
-            size: file.size
-        });
-    }
 
-    const values = files.map(file => [
-        file.filename,
-        file.path,
-        file.mime_type,
-        file.size,
-        (new Date()).toISOString(),
-    ]);
-
-    const insertedFiles = await sql`INSERT INTO "public"."files" (
-        filename, path, mime_type, size, uploaded_at
-    ) SELECT * FROM UNNEST(
-        ${values.map(v => v[0])}::text[],
-        ${values.map(v => v[1])}::text[],
-        ${values.map(v => v[2])}::text[],
-        ${values.map(v => v[3])}::int[],
-        ${values.map(v => v[4])}::timestamptz[]
-    ) RETURNING id, filename`;
-
-    const gcodeInsertedRow = insertedFiles.filter((row) => (row.filename == gcodeFile.name))[0];
-
-    await sql`INSERT INTO print_jobs (
+    const createdPrintJob = await sql`INSERT INTO print_jobs (
         name, gcode_id, status, estimated_printing_time, order_id, value, filament_type
     ) VALUES (
-        ${name}, ${gcodeInsertedRow.id}, ${status}, ${estimated_printing_time}, ${order_id}, ${value ? value*100 : null},
+        ${name}, ${gcodeFile.id ?? null}, ${status}, ${estimated_printing_time}, ${order_id}, ${value ? value*100 : null},
         ${filament_type ?? null}
-    )`;
+    ) RETURNING id`;
+
+    const allModels = [
+        ...(insertedFilesResult.insertedFiles ?? []),
+        ...(insertedFilesResult.existingFiles ?? []),
+    ];
+
+    if (allModels.length > 0) {
+        const modelFileIds = allModels.map((row) => (row.id ?? ""));
+        const modelNames = allModels.map((row) => (row.filename ?? ""));
+        const jobIds = Array(allModels.length).fill(createdPrintJob[0].id);
+    
+        await sql`INSERT INTO print_job_models (
+            print_job_id, file_id, name
+        ) SELECT * FROM UNNEST(
+            ${jobIds}::uuid[],
+            ${modelFileIds}::uuid[],
+            ${modelNames}::text[]
+        )`;
+    }
 
     revalidatePath(`/admin/orders/${order_id}`);
     redirect(`/admin/orders/${order_id}`);
@@ -140,6 +133,7 @@ export async function createPrintJob(
 
 export async function startPrintJob(id: string, pathToRevalidate?: string) {
     const now = new Date().toISOString();
+    console.log(now);
     await sql`UPDATE print_jobs
     SET status='printing', started_at=${now}
     WHERE id = ${id}`;
@@ -165,4 +159,38 @@ export async function finishPrintJob(id: string, pathToRevalidate?: string) {
     if (pathToRevalidate) {
         revalidatePath(pathToRevalidate);
     }
+}
+
+export async function failPrintJob(
+    id: string,
+    prevState: FailPrintJobFormState,
+    formData: FormData
+):Promise<FailPrintJobFormState> {
+    const validatedFields = FailPrintJob.safeParse({
+        failReason: formData.get('failReason'),
+    });
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Faltan completar algunos campos.',
+            success: false,
+        };
+    }
+
+    const {failReason} = validatedFields.data;
+
+    const now = new Date().toISOString();
+    await sql`UPDATE print_jobs
+                SET status='failed', finished_at=${now}, fail_reason=${failReason ?? null}
+                WHERE id = ${id}`;
+    
+    if (prevState.pathToRevalidate) {
+        revalidatePath(prevState.pathToRevalidate);
+        if (prevState.redirect) {
+            redirect(prevState.pathToRevalidate);
+        }
+    }
+
+    return {}
 }

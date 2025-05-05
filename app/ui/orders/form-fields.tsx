@@ -17,7 +17,7 @@ import { OrderStatuses } from "@/app/lib/order-definitions";
 import CustomerForm from "../customers/create-form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { generateCode, getCustomerName } from "@/lib/utils";
-import { TRACKING_CODE_CHARACTERS, TRACKING_CODE_LENGTH } from "@/config/consts";
+import { TRACKING_CODE_CHARACTERS, TRACKING_CODE_LENGTH } from "@/lib/consts";
 import { Dices } from "lucide-react";
 import FieldErrorDisplay from "@/components/ui/field-error-display";
 
