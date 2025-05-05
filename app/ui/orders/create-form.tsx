@@ -12,7 +12,7 @@ import { CustomerSelectField, StatusField, TrackingCodeInput } from "./form-fiel
 export default function CreateForm() {
     const router = useRouter();
     const initialState: OrderFormState = { message: null, errors: {} };
-    const [state, formAction] = useActionState(createOrder, initialState);
+    const [state, formAction, isPending] = useActionState(createOrder, initialState);
 
     return (
         <form action={formAction}>
@@ -53,8 +53,10 @@ export default function CreateForm() {
 
                 <div className="flex flex-row space-x-2">
                     <span className="flex-1" />
-                    <Button className="mt-4" type="button" variant="outline" onClick={() =>{router.back()}}>Cancel</Button>
-                    <Button className="mt-4" type="submit">Submit</Button>
+                    <Button className="mt-4" type="button" variant="outline" disabled={isPending} onClick={() =>{router.back()}}>Cancel</Button>
+                    <Button className="mt-4" type="submit" disabled={isPending}>
+                        {isPending ? 'Saving...' : 'Create Order'}
+                    </Button>
                 </div>
             </div>
         </form>

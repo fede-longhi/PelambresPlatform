@@ -1,7 +1,6 @@
 import type { NextAuthConfig } from 'next-auth';
 import { AUTHORIZED_USERS } from './app/lib/user-definitions';
-// import { getUser, createUser } from '@/app/lib/user-actions';
- 
+
 export const authConfig = {
     pages: {
         signIn: '/login',
@@ -14,10 +13,8 @@ export const authConfig = {
                 nextUrl.pathname.startsWith('/admin') ||
                 nextUrl.pathname.startsWith('/customer');
             
-            
-            
             if (isOnPrivateApp) {
-                if (!AUTHORIZED_USERS.includes(auth?.user?.email??"")){
+                if (!AUTHORIZED_USERS.includes(auth?.user?.email ?? "")){
                     return false;
                 } else if (isLoggedIn) {
                     return true;

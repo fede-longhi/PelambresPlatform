@@ -7,9 +7,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const formatCurrency = (amount: number) => {
-    return (amount / 100).toLocaleString('en-US', {
+    return (amount / 100).toLocaleString('es-AR', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'ARS',
     });
 };
 
@@ -143,4 +143,12 @@ export function dateLongStringToString(dateLongString: string) {
     String(date.getDate()).padStart(2, "0");
 
     return dateString;
+}
+
+export function getMonthNameFromDate(date: Date) {
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    return monthNames[date.getMonth()];
 }

@@ -5,9 +5,9 @@ import clsx from 'clsx';
 import {House, ScrollText, SwatchBook } from 'lucide-react';
 
 const links = [
-    { name: 'Inicio', href: '/public/print-guide', icon: House },
-    { name: 'Introducción', href: '/public/print-guide/introduction', icon: ScrollText },
-    { name: 'Guía Rápida', href: '/public/print-guide/quick-guide', icon: SwatchBook },
+    { name: 'Inicio', href: '/print-guide', icon: House },
+    { name: 'Introducción', href: '/print-guide/introduction', icon: ScrollText },
+    { name: 'Guía Rápida', href: '/print-guide/quick-guide', icon: SwatchBook },
 ];
 
 export default function NavLinks() {

@@ -145,6 +145,10 @@ export type Order = {
     customer_type: CustomerType
 }
 
+export type OrdersSummary = {
+    total_amount: number;
+}
+
 export type PrintJobStatus = 'pending' | 'printing' | 'postprocess' | 'finished' | 'failed';
 
 export type PrintJob = {

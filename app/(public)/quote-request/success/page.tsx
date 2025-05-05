@@ -16,7 +16,7 @@ export default function Page() {
                     Volver a la Home
                 </Link>
                 <Link
-                    href="/public/quote"
+                    href="/quote-request"
                     className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
                 >
                     Realizar otra cotización

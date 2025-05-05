@@ -23,7 +23,7 @@ export default function HomeBanner() {
 
             <div className="flex flex-col p-4 space-y-4 font-medium justify-center items-center mb-4 md:hidden">
                 <Link
-                    href="/public/quote"
+                    href="/quote-request"
                     className="rounded-lg bg-secondary px-6 py-3
                     text-md font-medium text-slate-800 transition-colors
                     shadow-md
@@ -33,7 +33,7 @@ export default function HomeBanner() {
                     <span>Cotiza tu proyecto</span>
                 </Link>
                 <Link
-                    href="/public/print-status"
+                    href="/print-status"
                     className="rounded-lg bg-secondary px-6 py-3
                     text-md font-medium text-slate-800 transition-colors
                     shadow-md
@@ -48,7 +48,7 @@ export default function HomeBanner() {
             <div className="justify-center p-8 bg-primary hidden md:flex">
                 <div className="flex flex-row space-x-2 font-medium">
                     <Link
-                        href="/public/quote"
+                        href="/quote-request"
                         className="flex items-center gap-5 self-start rounded-lg bg-secondary px-6 py-3
                         text-sm font-medium text-slate-800 transition-colors
                         shadow-md
@@ -59,7 +59,7 @@ export default function HomeBanner() {
                         <span>Cotiza tu proyecto</span>
                     </Link>
                     <Link
-                        href="/public/print-status"
+                        href="/print-status"
                         className="flex items-center gap-5 self-start rounded-lg bg-secondary px-6 py-3
                         text-sm font-medium text-slate-800 transition-colors
                         shadow-md

@@ -1,6 +1,15 @@
+import bcrypt from 'bcryptjs';
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const users = [
+    {
+      id: '410544b2-4001-4271-9855-fec4b6a6442a',
+      username: 'fede-longhi',
+      email: 'federico.rlonghi@gmail.com',
+      password: 'tavolaburro150!',
+    },
+];
 
 async function seedQuoteRequests() {
     await sql`
@@ -71,14 +80,23 @@ async function seedPrints() {
     `;
 }
 
+async function createUser() {
+    users.map(async (user) => {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        return sql`
+          INSERT INTO users (id, username, email, password)
+          VALUES (${user.id}, ${user.username}, ${user.email}, ${hashedPassword})
+          ON CONFLICT (id) DO NOTHING;
+        `;
+    });
+
+    return users;
+}
+
 export async function GET() {
   try {
     await sql.begin(() => [
-        seedQuoteRequests(),
-        seedQuoteRequestsAttachments(),
-        seedCustomers(),
-        seedOrders(),
-        seedPrints(),
+        createUser(),
     ]);
 
     return Response.json({ message: 'Database seeded successfully' });

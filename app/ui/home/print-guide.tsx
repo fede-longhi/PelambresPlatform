@@ -11,7 +11,7 @@ export default function PrintGuideBanner() {
             <h1 className={`${lusitana.className} font-medium text-[44px] my-12`}>
                 Impresión 3d
             </h1>
-            <Link href="/public/print-guide" className="flex items-center">
+            <Link href="/print-guide" className="flex items-center">
                 <School className="mr-2"/>
                 <span>Ver Guia</span>
             </Link>

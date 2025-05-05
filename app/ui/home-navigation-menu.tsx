@@ -9,21 +9,21 @@ export default function HomeNavigationMenu() {
         <NavigationMenu className="hidden md:flex bg-primary justify-end max-w-full p-2 sticky top-0">
             <NavigationMenuList>
                 <NavigationMenuItem>
-                    <Link href="/public/quote" legacyBehavior passHref>
+                    <Link href="/quote-request" legacyBehavior passHref>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                             Cotizá
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <Link href="/public/print-status" legacyBehavior passHref>
+                    <Link href="/print-status" legacyBehavior passHref>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                             Mi pedido
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                    <Link href="/public/print-guide" legacyBehavior passHref>
+                    <Link href="/print-guide" legacyBehavior passHref>
                         <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                             Guia de Impresión
                         </NavigationMenuLink>

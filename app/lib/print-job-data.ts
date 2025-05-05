@@ -38,9 +38,9 @@ export async function fetchOrderPrintJobs(orderId: string) {
         WHERE order_id=${orderId}
         ORDER BY 
             CASE status
-                WHEN 'pending' THEN 1
+                WHEN 'postprocess' THEN 1
                 WHEN 'printing' THEN 2
-                WHEN 'postprocess' THEN 3
+                WHEN 'pending' THEN 3
                 WHEN 'finished' THEN 4
                 WHEN 'failed' THEN 5
                 ELSE 6

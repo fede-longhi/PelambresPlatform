@@ -61,31 +61,32 @@ export async function createCustomer(
 
     const { name, firstName, lastName, email, phone, type } = validatedFields.data;
 
+    let insertedCustomers;
     try {
-        const insertedCustomers = await sql<Customer[]>`
+        insertedCustomers = await sql<Customer[]>`
         INSERT INTO customers (name, first_name, last_name, email, phone, type)
         VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone}, ${type})
         RETURNING id, name, first_name, last_name, type
         `;
-
-        if (prevState.redirect) {
-            revalidatePath('/admin/customers');
-            redirect('/admin/customers');
-        }
-
-        const newState: CustomerFormState = {
-            errors: {},
-            message: "success",
-            payload: formData,
-            redirect: prevState.redirect,
-            success: true,
-            customer: insertedCustomers[0],
-        }
-        return newState;
     } catch (error) {
         console.error(error);
         return { message: "Hubo un error al guardar el cliente." };
     }
+
+    if (prevState.redirect) {
+        revalidatePath('/admin/customers');
+        redirect('/admin/customers');
+    }
+
+    const newState: CustomerFormState = {
+        errors: {},
+        message: "success",
+        payload: formData,
+        redirect: prevState.redirect,
+        success: true,
+        customer: insertedCustomers[0],
+    }
+    return newState;
 }
 
 export async function deleteCustomer(id: string, path: string) {

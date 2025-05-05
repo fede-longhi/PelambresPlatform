@@ -99,7 +99,7 @@ export async function createQuote(
         return { message: 'Error insertando la cotización.' };
     }
     
-    redirect('/public/quote/success');
+    redirect('/quote-request/success');
 }
 
 async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
@@ -121,8 +121,8 @@ async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
         const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
-                user: process.env.GOOGLE_MAIL_USER, // Email
-                pass: process.env.GOOGLE_MAIL_PASSWORD, // Contraseña de aplicación
+                user: process.env.GOOGLE_MAIL_USER,
+                pass: process.env.GOOGLE_MAIL_PASSWORD,
             },
         });
 

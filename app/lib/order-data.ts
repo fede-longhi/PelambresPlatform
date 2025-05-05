@@ -1,4 +1,4 @@
-import { Order, OrderTable } from "./definitions";
+import { Order, OrdersSummary, OrderTable } from "./definitions";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -191,7 +191,7 @@ export async function fetchOrderById(id: string) {
 
         const orders = data.map((order) => ({
             ...order,
-            amount: order.amount / 100,
+            amount: order.amount,
         }));
     
         return orders[0];
@@ -199,5 +199,83 @@ export async function fetchOrderById(id: string) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order with id: ' + id + '.');
     }
+}
 
+export async function getOrderSalesValueFromMonth(month:number, year:number) {
+    const start = new Date(Date.UTC(year, month, 1)).toISOString();
+    const end = new Date(Date.UTC(year, month+1, 1)).toISOString();
+    
+    try {
+        const data = await sql<OrdersSummary[]>`
+            SELECT
+                SUM(amount) AS total_amount
+            FROM orders
+            WHERE
+                estimated_date >= ${start}::timestamptz
+                AND estimated_date < ${end}::timestamptz
+                
+                AND status = 'delivered'
+        `;
+
+        const orders = data.map((order) => ({
+            ...order,
+            total_amount: order.total_amount
+        }));
+    
+        return orders[0];
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order sales amount');
+    }
+}
+
+export async function getEstimatedOrderSalesValueFromMonth(month:number, year:number) {
+    const start = new Date(Date.UTC(year, month, 1)).toISOString();
+    const end = new Date(Date.UTC(year, month+1, 1)).toISOString(); 
+    
+    try {
+        const data = await sql<OrdersSummary[]>`
+            SELECT
+                SUM(amount) AS total_amount
+            FROM orders
+            WHERE
+                estimated_date >= ${start}::timestamptz
+                AND estimated_date < ${end}::timestamptz
+        `;
+
+        const orders = data.map((order) => ({
+            ...order,
+            total_amount: order.total_amount
+        }));
+
+        return orders[0];
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order sales amount');
+    }
+}
+
+export async function getEstimatedOrdersFromMonth(month:number, year:number) {
+    const start = new Date(Date.UTC(year, month, 1)).toISOString();
+    const end = new Date(Date.UTC(year, month+1, 1)).toISOString();
+    
+    try {
+        const data = await sql`
+            SELECT
+                amount,
+                tracking_code,
+                estimated_date,
+                delivered_date,
+                status
+            FROM orders
+            WHERE
+                estimated_date >= ${start}::timestamptz
+                AND estimated_date < ${end}::timestamptz
+        `;
+    
+        return data;
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order sales amount');
+    }
 }
