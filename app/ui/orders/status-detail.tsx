@@ -10,6 +10,7 @@ import OrderDetailCard from "./card-detail";
 export async function OrderStatusDetailByCode({code} : {code:string}) {
     
     const orders = await fetchOrderDetailByTrackingCode(code);
+
     const order = orders[0];
 
     return (
@@ -120,6 +121,13 @@ export async function LastOrderStatusDetail(
 
 export async function NewestOrderDetail() {
     const order = await fetchNewestOrder();
+    if (!order) {
+        return (
+            <div>
+                No data
+            </div>
+        )
+    }
 
     return (
         <OrderDetailCard order={order} />
