@@ -201,3 +201,35 @@ export type PrintJobModelFile = {
     uploaded_at: string;
     name: string;
 };
+
+export type ConfigurationVariable = {
+    id: string;
+    key: string;
+    value: string | null;
+    data_type: string | null;
+    created_at: string;
+    last_modified: string;
+    category: string | null;
+    description: string | null;
+}
+
+export type PrinterStatus = 'available' | 'maintenance' | 'offline' | 'printing';
+
+export type Printer = {
+    id: string;
+    name: string;
+    brand: string | null;
+    model: string | null;
+    power_consumption: number | null;
+    size_x: number | null;
+    size_y: number | null;
+    size_z: number | null;
+    status: PrinterStatus | null;
+};
+
+export type Filament = {
+    id: string;
+    type: string;
+    brand: string;
+    price_per_kg: number;
+};
