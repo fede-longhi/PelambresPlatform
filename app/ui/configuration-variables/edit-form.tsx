@@ -9,7 +9,7 @@ import FieldErrorDisplay from "@/components/ui/field-error-display";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfigurationVariable } from "@/app/lib/definitions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CONFIGURATION_VARIABLE_DATA_TYPES, FAIL_REASONS } from "@/lib/consts";
+import { CONFIGURATION_VARIABLE_DATA_TYPES } from "@/lib/consts";
 
 export default function EditConfigurationForm({configuration, onSuccess} : {configuration: ConfigurationVariable, onSuccess?: () => void}) {
     const initialState: ConfigurationVariableFormState = {

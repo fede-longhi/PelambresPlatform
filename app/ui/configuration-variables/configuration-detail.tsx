@@ -8,11 +8,3 @@ export function ConfigurationItemDetail({configuration, className} : {configurat
         </div>
     )
 }
-
-function ConfigurationValue({value, dataType}: {value: string | null, dataType: string}) {
-    return (
-        <div>
-
-        </div>
-    )
-}
