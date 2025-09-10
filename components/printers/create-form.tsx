@@ -1,6 +1,5 @@
 'use client';
 
-import { useFormState } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +17,7 @@ const initialState: PrinterFormState = {
 export default function PrinterCreateForm({ redirectAfterCreate = true, path, onSuccess }: { redirectAfterCreate?: boolean, path?: string, onSuccess?: ()=>void }) {
     const createPrinterWithRedirect = createPrinter.bind(null, { redirect: redirectAfterCreate, path: path });
     
-    const [state, formAction, isPending] = useActionState(createPrinterWithRedirect, initialState);
+    const [state, formAction] = useActionState(createPrinterWithRedirect, initialState);
     const { toast } = useToast();
     
     useEffect(() => {

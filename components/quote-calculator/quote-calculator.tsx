@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getConfiguration } from "@/app/lib/configuration-data";
 
 interface QuoteCalculatorProps {
     pricePerKg: number;

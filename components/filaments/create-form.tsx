@@ -1,10 +1,8 @@
 'use client';
 
-import { Label } from '@/components/ui/label';
 import { createFilament, FilamentFormState } from '@/app/lib/filament-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useActionState, useEffect } from 'react';
-import FieldErrorDisplay from '../ui/field-error-display';
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -33,7 +31,7 @@ const initialState:FilamentFormState = {message: null};
 export default function FilamentCreateForm({ redirectAfterCreate = true, path, onSuccess }: { redirectAfterCreate?: boolean, path?: string, onSuccess?: ()=>void }) {
     const createFilamentWithRedirect = createFilament.bind(null, { redirect: redirectAfterCreate, path: path });
     
-    const [state, formAction, isPending] = useActionState(createFilamentWithRedirect, initialState);
+    const [state] = useActionState(createFilamentWithRedirect, initialState);
 
     const { toast } = useToast();
     
@@ -51,8 +49,6 @@ export default function FilamentCreateForm({ redirectAfterCreate = true, path, o
     })
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
         console.log(values)
     }
 
