@@ -2,6 +2,7 @@ export const MODELS_FOLDER = 'models';
 export const GCODE_FOLDER = 'gcode';
 export const TRACKING_CODE_LENGTH = 6;
 export const TRACKING_CODE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+export const ITEMS_PER_PAGE = 6;
 
 export const FAIL_REASONS = [
     { value: "warping", label: "Warping" },
@@ -31,4 +32,19 @@ export const FILAMENT_TYPES = [
         name: "tpu",
         label: "TPU"
     },
+];
+
+export const CONFIGURATION_VARIABLE_DATA_TYPES = [
+    {
+        name: "number",
+        label: "number"
+    },
+    {
+        name: "text",
+        label: "text"
+    },
+    {
+        name: "boolean",
+        label: "boolean"
+    }
 ];

@@ -1,42 +1,55 @@
 'use client';
-import {
-    HomeIcon,
-    CubeIcon,
-} from '@heroicons/react/24/outline';
-import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
-import PersonIcon from '@mui/icons-material/Person';
-import ConstructionIcon from '@mui/icons-material/Construction';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
-import { Calculator } from 'lucide-react';
+import { BookUser, Calculator, FileBox, FileInput, Hammer, House, LifeBuoy, Printer, Settings } from 'lucide-react';
 
 const links = [
-    { name: 'Home', href: '/admin', icon: HomeIcon },
+    { 
+        name: 'Home',
+        href: '/admin',
+        icon: House
+    },
     {
-        name: 'Quotes',
-        href: '/admin/quotes',
-        icon: RequestQuoteIcon,
+        name: 'Quote Requests',
+        href: '/admin/quote-requests',
+        icon: FileInput,
     },
     {
         name: 'Orders',
         href: '/admin/orders',
-        icon: ConstructionIcon,
+        icon: FileBox,
     },
     {
         name: 'Print Jobs',
         href: '/admin/print-jobs',
-        icon: CubeIcon,
+        icon: Hammer,
     },
     {
         name: 'Customers',
         href: '/admin/customers',
-        icon: PersonIcon,
+        icon: BookUser,
+    },
+    {
+        name: 'Printers',
+        href: '/admin/printers',
+        icon: Printer,
+    },
+    {
+        name: 'Filaments',
+        href: '/admin/filaments',
+        icon: LifeBuoy,
     },
     {
         name: 'Cotizador',
         href: '/admin/quote-calculator',
         icon: Calculator,
+    },
+    {
+        name: 'Configuration',
+        href: '/admin/configuration',
+        icon: Settings,
     },
 ];
 

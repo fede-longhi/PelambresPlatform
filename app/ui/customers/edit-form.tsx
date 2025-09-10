@@ -1,13 +1,14 @@
 'use client';
 
 import { Customer } from '@/app/lib/definitions';
-import { Button } from '@/app/ui/button';
+import { Button } from '@/components/ui/button';
 import { useActionState, useEffect, useState } from 'react';
 import { CustomerFormState, updateCustomer} from '@/app/lib/customer-actions';
 import { Building2, CircleX, User } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import FieldErrorDisplay from '@/components/ui/field-error-display';
 
 export default function EditCustomerForm({
     customer,
@@ -111,11 +112,7 @@ export default function EditCustomerForm({
                         placeholder="Ingresa el nombre completo"
                         aria-describedby="name-error"
                     />
-                    <div id="name-error" aria-live="polite" aria-atomic="true">
-                        {state.errors?.name?.map((error) => (
-                            <p className="mt-2 text-xs text-red-500" key={error}>{error}</p>
-                        ))}
-                    </div>
+                    <FieldErrorDisplay id="name-error" errors={state.errors?.name}/>
                 </div>
                 <div className={customerType === "person" ? "" : "hidden"}>
                     <Label htmlFor="first-name">Nombre</Label>

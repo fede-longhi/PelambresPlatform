@@ -53,6 +53,21 @@ export async function LastOrderStatusDetail(
 ){
     const order = await fetchLastOrderDetail();
     
+    if (!order) {
+        return (
+            <Card className={className}>
+                <CardTitle className={titleClassName}>
+                    {title}
+                </CardTitle>
+                <CardDescription>
+                    <div>
+                        No data
+                    </div>
+                </CardDescription>
+            </Card>
+        )
+    }
+
     return (
         <Card className={className}>
             <CardHeader>
