@@ -16,7 +16,6 @@ export default function Dashboard() {
                 <NewestOrderDetail />
             </div>
 
-
             <div className="col-span-12 md:col-span-8">
             </div>
         </div>
