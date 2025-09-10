@@ -31,7 +31,7 @@ const initialState:FilamentFormState = {message: null};
 export default function FilamentCreateForm({ redirectAfterCreate = true, path, onSuccess }: { redirectAfterCreate?: boolean, path?: string, onSuccess?: ()=>void }) {
     const createFilamentWithRedirect = createFilament.bind(null, { redirect: redirectAfterCreate, path: path });
     
-    const [state, formAction, isPending] = useActionState(createFilamentWithRedirect, initialState);
+    const [state] = useActionState(createFilamentWithRedirect, initialState);
 
     const { toast } = useToast();
     
