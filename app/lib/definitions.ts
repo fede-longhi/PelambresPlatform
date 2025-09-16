@@ -233,3 +233,12 @@ export type Filament = {
     brand: string;
     price_per_kg: number;
 };
+
+export type BudgetItem = {
+    id: string;
+    name: string;
+    quantity: number;
+    individualPrice: number;
+    totalPrice: number;
+    discount: number;
+};
