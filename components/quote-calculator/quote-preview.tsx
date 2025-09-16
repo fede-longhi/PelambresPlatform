@@ -31,27 +31,9 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 
 import { CalendarIcon } from 'lucide-react';
-import { Add as AddIcon, ArrowBack, Delete, ExpandLess, MoreHoriz, MoreVert, PictureAsPdf } from '@mui/icons-material';
+import { ArrowBack, Delete, ExpandLess, MoreHoriz, MoreVert, PictureAsPdf } from '@mui/icons-material';
 
 type QuotePreviewProps = {
     items?: BudgetItem[];
@@ -74,18 +56,6 @@ type Sender = {
     phone?: string;
     url?: string;
 }
-
-// type Discount = {
-//     id: number;
-//     name: string;
-//     percentage: number;
-// }
-
-// type Tax = {
-//     id: number;
-//     name: string;
-//     percentage: number;
-// }
 
 function QuotePreview({items, onRemoveItem, onClearBudget}: QuotePreviewProps) {
     const contentRef = useRef<HTMLDivElement>(null);
@@ -301,24 +271,9 @@ function QuotePreview({items, onRemoveItem, onClearBudget}: QuotePreviewProps) {
                             <TableCell colSpan={getColSpan()}></TableCell>
                             <TableCell className="font-semibold text-right">Total</TableCell>
                             <TableCell className="text-right text-primary font-bold">${budgetTotal.toFixed(2)}</TableCell>
-                            {/* {
-                                isEditable &&
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger>
-                                            <MoreVert />
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem onClick={()=>setOpenDiscountDialog(true)}>Agregar descuento</DropdownMenuItem>
-                                            <DropdownMenuItem>Agregar impuesto</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            } */}
                         </TableRow>
                     </TableFooter>
                 </Table>
-                {/* <DiscountEditor onAddDiscount={handleAddDiscount} open={openDiscountDialog} onOpenChange={setOpenDiscountDialog}/> */}
                 {
                     isEditable &&
                     <div className="flex justify-end">
@@ -396,57 +351,6 @@ function QuotePreview({items, onRemoveItem, onClearBudget}: QuotePreviewProps) {
 };
 
 export default QuotePreview;
-
-// const DiscountEditor = ({onAddDiscount, open, onOpenChange} : {onAddDiscount?: (discount: Discount) => void, open: boolean, onOpenChange: (open: boolean) => void }) => {
-//     const [discount, setDiscount] = useState<Discount>({name: "Descuento", percentage: 0} as Discount);
-
-//     const handleAddDiscount = () => {
-//         onAddDiscount && onAddDiscount(discount);
-//         onOpenChange(false);
-//     }
-
-//     const handleCancel = () => {
-//         setDiscount({name: "Descuento", percentage: 0} as Discount);
-//         onOpenChange(false);
-//     }
-
-//     return (
-//         <Dialog open={open} onOpenChange={onOpenChange}>
-//                 <DialogContent className="sm:max-w-[425px]">
-//                     <DialogHeader>
-//                         <DialogTitle>Agregar Descuento</DialogTitle>
-//                         <DialogDescription>
-//                         Agrega un descuento al total del presupuesto.
-//                         </DialogDescription>
-//                     </DialogHeader>
-//                     <div className="grid gap-4">
-//                         <div className="grid gap-3">
-//                             <Label htmlFor="name">Nombre</Label>
-//                             <Input
-//                                 id="name"
-//                                 name="name"
-//                                 value={discount.name}
-//                                 onChange={(e) => {setDiscount({...discount, name: e.target.value})}} />
-//                         </div>
-//                         <div className="grid gap-3">
-//                             <Label htmlFor="percentage">Porcentaje</Label>
-//                             <Input
-//                                 id="percentage"
-//                                 name="percentage"
-//                                 value={discount.percentage}
-//                                 onChange={(e) => {setDiscount({...discount, percentage: parseFloat(e.target.value ? e.target.value : '0' )})}}/>
-//                         </div>
-//                     </div>
-//                     <DialogFooter>
-//                         <DialogClose asChild>
-//                         <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-//                         </DialogClose>
-//                         <Button type="submit" onClick={handleAddDiscount}>Agregar Descuento</Button>
-//                     </DialogFooter>
-//                 </DialogContent>
-//         </Dialog>
-//     )
-// }
 
 type ClientEditorProps = {
     client: Client;
