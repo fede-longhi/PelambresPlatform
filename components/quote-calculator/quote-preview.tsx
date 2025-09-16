@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/collapsible';
 
 import { CalendarIcon } from 'lucide-react';
-import { ArrowBack, Delete, ExpandLess, MoreHoriz, MoreVert, PictureAsPdf } from '@mui/icons-material';
+import { ArrowBack, Delete, ExpandLess, MoreHoriz, PictureAsPdf } from '@mui/icons-material';
 
 type QuotePreviewProps = {
     items?: BudgetItem[];
@@ -102,11 +102,11 @@ function QuotePreview({items, onRemoveItem, onClearBudget}: QuotePreviewProps) {
     }
     
     const handleRemoveItem = (id: string) => {
-        onRemoveItem && onRemoveItem(id);
+        onRemoveItem?.(id);
     }
 
     const handleClearBudget = () => {
-        onClearBudget && onClearBudget();
+        onClearBudget?.();
     }
 
     return (

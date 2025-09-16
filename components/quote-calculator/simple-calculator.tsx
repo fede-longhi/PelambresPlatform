@@ -4,16 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import AddIcon from '@mui/icons-material/Add';
-import { Visibility } from '@mui/icons-material';
 import QuotePreview from './quote-preview';
 import { BudgetItem } from '@/app/lib/definitions';
-
 
 export default function SimpleCalculator() {
     const [materialCost, setMaterialCost] = useState('20000');
@@ -89,7 +82,7 @@ export default function SimpleCalculator() {
 
     useEffect(() => {
         calculateCost();
-    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount]);
+    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount, calculateCost]);
 
     return (
         <div className="bg-gray-100 min-h-screen p-8 flex items-start">
