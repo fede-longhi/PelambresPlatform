@@ -10,8 +10,18 @@ import React, {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 
+type SimpleCalculatorResults = {
+    baseCost: number;
+    gain: number;
+    totalMaterialCost: number;
+    totalPrintTimeCost: number;
+    totalCost: number;
+    discountValue: number;
+    totalPriceAfterDiscount: number;
+};
+
 type SimpleCalculatorProps = {
-    onResultsChange?: (results: any) => void;
+    onResultsChange?: (results: SimpleCalculatorResults) => void;
     defaultMaterialCost?: number;
     defaultPrintTimeValue?: number;
     defaultMarkup?: number;
@@ -240,5 +250,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
         </div>
     );
 });
+
+SimpleCalculator.displayName = "SimpleCalculator";
 
 export default SimpleCalculator;

@@ -30,33 +30,6 @@ export default function SimpleCalculator() {
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState("1");
 
-    const calculateCost = () => {
-        const materialCostNum = parseFloat(materialCost) || 0;
-        const partWeightNum = parseFloat(partWeight) || 0;
-        const printTimeNum = parseFloat(printTime) || 0;
-        const printTimeValueNum = parseFloat(printTimeValue) || 0;
-        const extraMaterialCostNum = parseFloat(extraMaterialCost) || 0;
-        const extraHandworkNum = parseFloat(extraHandwork) || 0;
-        const markupNum = parseFloat(markup) || 0;
-        const itemDiscountNum = parseFloat(itemDiscount) || 0;
-
-        const calculatedMaterialCost = materialCostNum / 1000 * partWeightNum;
-        const calculatedPrintTimeCost = printTimeNum * printTimeValueNum;
-        const calculatedBaseCost = calculatedMaterialCost + calculatedPrintTimeCost + extraMaterialCostNum + extraHandworkNum;
-        const finalCost = calculatedBaseCost * (1 + markupNum / 100);
-        const gain = finalCost - calculatedBaseCost;
-        const calculatedDiscountValue = finalCost * (itemDiscountNum / 100);
-        const calculatedTotalPriceAfterDiscount = finalCost * (1 - itemDiscountNum / 100);
-
-        setBaseCost(calculatedBaseCost);
-        setGain(gain);
-        setTotalMaterialCost(calculatedMaterialCost);
-        setTotalPrintTimeCost(calculatedPrintTimeCost);
-        setTotalCost(finalCost);
-        setDiscountValue(calculatedDiscountValue);
-        setTotalPriceAfterDiscount(calculatedTotalPriceAfterDiscount);
-    };
-
     const handleAddToBudget = () => {
         if (!itemName) {
             return;
@@ -81,8 +54,31 @@ export default function SimpleCalculator() {
     };
 
     useEffect(() => {
-        calculateCost();
-    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount, calculateCost]);
+        const materialCostNum = parseFloat(materialCost) || 0;
+        const partWeightNum = parseFloat(partWeight) || 0;
+        const printTimeNum = parseFloat(printTime) || 0;
+        const printTimeValueNum = parseFloat(printTimeValue) || 0;
+        const extraMaterialCostNum = parseFloat(extraMaterialCost) || 0;
+        const extraHandworkNum = parseFloat(extraHandwork) || 0;
+        const markupNum = parseFloat(markup) || 0;
+        const itemDiscountNum = parseFloat(itemDiscount) || 0;
+
+        const calculatedMaterialCost = materialCostNum / 1000 * partWeightNum;
+        const calculatedPrintTimeCost = printTimeNum * printTimeValueNum;
+        const calculatedBaseCost = calculatedMaterialCost + calculatedPrintTimeCost + extraMaterialCostNum + extraHandworkNum;
+        const finalCost = calculatedBaseCost * (1 + markupNum / 100);
+        const gain = finalCost - calculatedBaseCost;
+        const calculatedDiscountValue = finalCost * (itemDiscountNum / 100);
+        const calculatedTotalPriceAfterDiscount = finalCost * (1 - itemDiscountNum / 100);
+
+        setBaseCost(calculatedBaseCost);
+        setGain(gain);
+        setTotalMaterialCost(calculatedMaterialCost);
+        setTotalPrintTimeCost(calculatedPrintTimeCost);
+        setTotalCost(finalCost);
+        setDiscountValue(calculatedDiscountValue);
+        setTotalPriceAfterDiscount(calculatedTotalPriceAfterDiscount);
+    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount]);
 
     return (
         <div className="bg-gray-100 min-h-screen p-8 flex items-start">

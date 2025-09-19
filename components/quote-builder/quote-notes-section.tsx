@@ -58,7 +58,7 @@ const NotesSection = ({isEditable, quoteInfo}:{isEditable:boolean, quoteInfo: Qu
                             <div className="flex justify-center">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <Button size="icon" variant="ghost" onClick={(e) => setNotesSection({...notesSection, showAddMoreNotes: true})}>
+                                        <Button size="icon" variant="ghost" onClick={() => setNotesSection({...notesSection, showAddMoreNotes: true})}>
                                             <AddIcon />
                                         </Button>
                                     </TooltipTrigger>

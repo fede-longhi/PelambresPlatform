@@ -1,4 +1,3 @@
-import SideNav from "@/app/ui/print-guide/side-nav";
  
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
