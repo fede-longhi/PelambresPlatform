@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { lusitana } from '@/app/ui/fonts';
 import { ArrowBack } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 
 export default function PublicHeader() {
     const router = useRouter();
