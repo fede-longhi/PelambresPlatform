@@ -29,6 +29,13 @@ export default function HomeNavigationMenu() {
                         </NavigationMenuLink>
                     </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                    <Link href="/tools" legacyBehavior passHref>
+                        <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                            Herramientas
+                        </NavigationMenuLink>
+                    </Link>
+                </NavigationMenuItem>
                 <span className="flex-1" />
                 {
                     !isProduction &&

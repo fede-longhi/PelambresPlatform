@@ -4,14 +4,27 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { lusitana } from '@/app/ui/fonts';
 import { ArrowBack } from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function PublicHeader() {
+    const router = useRouter();
+
+    function handleBackClick(e: React.MouseEvent) {
+        e.preventDefault();
+        router.back();
+    }
+
     return(
         <div className={`${lusitana.className} flex flex-row itmes-center leading-none bg-primary text-white p-4 md:pt-6 md:pl-6`}>
-            <Link href="/"
-            className="flex text-primary-foreground items-center text-sm">
-                <ArrowBack className="mr-2" />
-            </Link>
+            <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleBackClick}
+                className="mr-2"
+            >
+                <ArrowBack className="w-5 md:w-6"/>
+            </Button>
             <Link 
                 href="/"
                 className="flex flex-row items-center"
