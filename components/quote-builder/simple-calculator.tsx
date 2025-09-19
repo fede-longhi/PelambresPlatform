@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AddIcon from '@mui/icons-material/Add';
-import QuotePreview from './quote-preview';
+import QuoteBuilder from './quote-builder';
 import { BudgetItem } from '@/app/lib/definitions';
 
 export default function SimpleCalculator() {
@@ -29,33 +29,6 @@ export default function SimpleCalculator() {
     const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
     const [itemName, setItemName] = useState('');
     const [itemQuantity, setItemQuantity] = useState("1");
-
-    const calculateCost = () => {
-        const materialCostNum = parseFloat(materialCost) || 0;
-        const partWeightNum = parseFloat(partWeight) || 0;
-        const printTimeNum = parseFloat(printTime) || 0;
-        const printTimeValueNum = parseFloat(printTimeValue) || 0;
-        const extraMaterialCostNum = parseFloat(extraMaterialCost) || 0;
-        const extraHandworkNum = parseFloat(extraHandwork) || 0;
-        const markupNum = parseFloat(markup) || 0;
-        const itemDiscountNum = parseFloat(itemDiscount) || 0;
-
-        const calculatedMaterialCost = materialCostNum / 1000 * partWeightNum;
-        const calculatedPrintTimeCost = printTimeNum * printTimeValueNum;
-        const calculatedBaseCost = calculatedMaterialCost + calculatedPrintTimeCost + extraMaterialCostNum + extraHandworkNum;
-        const finalCost = calculatedBaseCost * (1 + markupNum / 100);
-        const gain = finalCost - calculatedBaseCost;
-        const calculatedDiscountValue = finalCost * (itemDiscountNum / 100);
-        const calculatedTotalPriceAfterDiscount = finalCost * (1 - itemDiscountNum / 100);
-
-        setBaseCost(calculatedBaseCost);
-        setGain(gain);
-        setTotalMaterialCost(calculatedMaterialCost);
-        setTotalPrintTimeCost(calculatedPrintTimeCost);
-        setTotalCost(finalCost);
-        setDiscountValue(calculatedDiscountValue);
-        setTotalPriceAfterDiscount(calculatedTotalPriceAfterDiscount);
-    };
 
     const handleAddToBudget = () => {
         if (!itemName) {
@@ -81,8 +54,31 @@ export default function SimpleCalculator() {
     };
 
     useEffect(() => {
-        calculateCost();
-    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount, calculateCost]);
+        const materialCostNum = parseFloat(materialCost) || 0;
+        const partWeightNum = parseFloat(partWeight) || 0;
+        const printTimeNum = parseFloat(printTime) || 0;
+        const printTimeValueNum = parseFloat(printTimeValue) || 0;
+        const extraMaterialCostNum = parseFloat(extraMaterialCost) || 0;
+        const extraHandworkNum = parseFloat(extraHandwork) || 0;
+        const markupNum = parseFloat(markup) || 0;
+        const itemDiscountNum = parseFloat(itemDiscount) || 0;
+
+        const calculatedMaterialCost = materialCostNum / 1000 * partWeightNum;
+        const calculatedPrintTimeCost = printTimeNum * printTimeValueNum;
+        const calculatedBaseCost = calculatedMaterialCost + calculatedPrintTimeCost + extraMaterialCostNum + extraHandworkNum;
+        const finalCost = calculatedBaseCost * (1 + markupNum / 100);
+        const gain = finalCost - calculatedBaseCost;
+        const calculatedDiscountValue = finalCost * (itemDiscountNum / 100);
+        const calculatedTotalPriceAfterDiscount = finalCost * (1 - itemDiscountNum / 100);
+
+        setBaseCost(calculatedBaseCost);
+        setGain(gain);
+        setTotalMaterialCost(calculatedMaterialCost);
+        setTotalPrintTimeCost(calculatedPrintTimeCost);
+        setTotalCost(finalCost);
+        setDiscountValue(calculatedDiscountValue);
+        setTotalPriceAfterDiscount(calculatedTotalPriceAfterDiscount);
+    }, [materialCost, partWeight, printTime, printTimeValue, extraMaterialCost, extraHandwork, markup, itemDiscount]);
 
     return (
         <div className="bg-gray-100 min-h-screen p-8 flex items-start">
@@ -267,11 +263,11 @@ export default function SimpleCalculator() {
 
                 <div id="budget-panel" className="flex-1 bg-white p-8 rounded-2xl shadow-lg">
                     <h2 className="text-3xl font-bold text-center text-primary mb-6">Presupuesto</h2>
-                    <QuotePreview
+                    <QuoteBuilder
                         items={budgetItems}
                         onRemoveItem={handleRemoveItem}
                         onClearBudget={() => setBudgetItems([])}>
-                    </QuotePreview>
+                    </QuoteBuilder>
                 </div>
             </div>
         </div>

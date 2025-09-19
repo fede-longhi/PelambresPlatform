@@ -234,6 +234,8 @@ export type Filament = {
     price_per_kg: number;
 };
 
+/* *** Quote *** */
+
 export type BudgetItem = {
     id: string;
     name: string;
@@ -242,3 +244,26 @@ export type BudgetItem = {
     totalPrice: number;
     discount: number;
 };
+
+export type QuoteInfo = {
+    date: Date | undefined;
+    quoteValidity: string;
+    client: Client;
+    sender: Sender;
+}
+
+export type Client = {
+    name?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+}
+
+export type Sender = {
+    name?: string;
+    completeName?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+    url?: string;
+}

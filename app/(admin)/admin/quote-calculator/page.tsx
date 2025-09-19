@@ -1,11 +1,11 @@
 import { getConfiguration } from "@/app/lib/configuration-data";
-import QuoteCalculator from "@/components/quote-calculator/quote-calculator";
-import SimpleCalculator from "@/components/quote-calculator/simple-calculator";
+import SimpleCalculator from "@/components/quote-builder/simple-calculator";
 import PageHeader from "@/components/ui/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default async function Page() {
     const pricePerkWh = await getConfiguration("power_price_per_kWh");
+    
     return (
         <div>
             <PageHeader title="Cotizador" />
@@ -21,10 +21,10 @@ export default async function Page() {
                 <TabsContent value="complete">
                     <div className="flex flex-row space-x-2">
                         <div className="bg-slate-200 p-6 rounded-lg">
-                            <QuoteCalculator pricePerKg={20000} pricePerHour={500}/>
+                            <SimpleCalculator />
                         </div>
                         <div className="bg-slate-200 p-6 rounded-lg">
-                            <span>Price per kWh: {pricePerkWh.value}</span>
+                            <span>Price per kWh: {pricePerkWh?.value}</span>
                         </div>
                     </div>
                 </TabsContent>
