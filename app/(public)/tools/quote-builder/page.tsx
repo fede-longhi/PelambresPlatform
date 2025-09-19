@@ -33,30 +33,18 @@ export default function Page(){
     }
 
     return(
-        <div className="flex flex-row justify-center w-full space-x-8 m-8">
-            <div className="flex flex-col space-y-4">
-                {
-                    !isCalculatorVisible &&
-                    <Calculate  
-                        className="text-primary cursor-pointer"
-                        sx={{ fontSize: 40}}
-                        onClick={() => {setIsCalculatorVisible(true); setIsItemFormVisible(false)}}
-                    />
-                }
-                {
-                    !isItemFormVisible &&
-                    <PostAdd
-                        className="text-primary cursor-pointer"
-                        sx={{fontSize: 40}}
-                        onClick={() => {setIsItemFormVisible(true); setIsCalculatorVisible(false)}}
-                    />
-                }
-            </div>
+        <div className="flex flex-col md:flex-row justify-center w-full space-y-2 md:space-x-8 md:m-8">
+            <ToolBox
+                isCalculatorVisible={isCalculatorVisible}
+                isItemFormVisible={isItemFormVisible} 
+                setIsCalculatorVisible={setIsCalculatorVisible}
+                setIsItemFormVisible={setIsItemFormVisible}
+            />
             {
                 isCalculatorVisible &&
-                <div className="flex-1 bg-white p-8 rounded-2xl shadow-lg max-w-[600px]">
+                <div className="flex-1 bg-white p-4 md:p-8 rounded-2xl shadow-lg md:max-w-[600px]">
                     <div className="flex flex-row justify-between">
-                        <h1 className="text-3xl font-bold text-center text-primary mb-6">Calculadora de Costo</h1>
+                        <h1 className="text-xl md:text-3xl font-bold text-center text-primary mb-6">Calculadora de Costo</h1>
                         <div className="flex justify-end mb-4 text-primary">
                             <Button
                                 className="rounded-full font-extrabold"
@@ -177,7 +165,7 @@ export default function Page(){
                     </Button>
                 </div>
             }
-            <div id="budget-panel" className="flex-1 bg-white p-8 rounded-2xl shadow-lg">
+            <div id="budget-panel" className="bg-white p-8 rounded-2xl shadow-lg">
                 <h2 className="text-3xl font-bold text-center text-primary mb-6">Presupuesto</h2>
                 <QuoteBuilder
                     items={budgetItems}
@@ -188,4 +176,45 @@ export default function Page(){
             </div>
         </div>
     )
+}
+
+const ToolBox = ({
+    isCalculatorVisible,
+    isItemFormVisible,
+    setIsCalculatorVisible,
+    setIsItemFormVisible,
+    className
+} : {
+    isCalculatorVisible: boolean,
+    isItemFormVisible: boolean,
+    setIsCalculatorVisible: (value: boolean) => void,
+    setIsItemFormVisible: (value: boolean) => void,
+    className?: string
+}) => {
+    return (
+        <div className={`flex flex-row md:flex-col justify-center md:justify-start mt-4 md:mt-0 space-x-16 md:space-x-0 md:space-y-4 ${className}`}>
+            {
+                !isCalculatorVisible &&
+                <div className="flex flex-col items-center w-8">
+                    <Calculate  
+                        className="text-primary cursor-pointer"
+                        sx={{ fontSize: 40 }}
+                        onClick={() => { setIsCalculatorVisible(true); setIsItemFormVisible(false) }}
+                    />
+                    <span className="text-sm text-center text-muted-foreground">Abrir calculadora</span>
+                </div>
+            }
+            {
+                !isItemFormVisible &&
+                <div className="flex flex-col items-center w-8">
+                    <PostAdd
+                        className="text-primary cursor-pointer"
+                        sx={{fontSize: 40}}
+                        onClick={() => {setIsItemFormVisible(true); setIsCalculatorVisible(false)}}
+                    />
+                    <span className="text-sm text-center text-muted-foreground">Abrir formulario de ítem</span>
+                </div>
+            }
+        </div>
+    );
 }

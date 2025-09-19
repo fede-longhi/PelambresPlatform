@@ -26,6 +26,7 @@ import ClientEditor from './quote-client-editor';
 import SenderEditor from './quote-sender-editor';
 import NotesSection from './quote-notes-section';
 import QuoteFooter from './quote-footer';
+import { QuoteList } from './quote-list';
 
 type QuoteBuilderProps = {
     items?: BudgetItem[];
@@ -56,52 +57,53 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
     });
 
     const handleExportToPdf = () => {
-        // Si la referencia al contenido no existe, no hacemos nada
         if (!contentRef.current) {
-            console.error("No se encontró el contenido para exportar.");
-            return;
-        }
+        console.error("No se encontró el contenido para exportar.");
+        return;
+    }
 
-        // Usamos un pequeño retraso para que React actualice el DOM antes de capturar el canvas
-        setTimeout(() => {
-            html2canvas(contentRef.current as HTMLDivElement, {
-                scale: 4,
-                useCORS: true
-            }).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
+    setTimeout(() => {
+        html2canvas(contentRef.current as HTMLDivElement, {
+            scale: 2,
+            useCORS: true
+        }).then((canvas) => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
 
-                // Dimensiones de la página A4 en mm
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                
-                // Definimos los márgenes en mm (por ejemplo, 10mm en cada lado)
-                const margin = 10;
-                const contentWidth = pdfWidth - (margin * 2);
-                const contentHeight = (canvas.height * contentWidth) / canvas.width;
-                
-                let position = margin;
-                let heightLeft = contentHeight;
+            // Dimensiones del PDF
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            // Márgenes para el contenido
+            const margin = 10;
+            const usableWidth = pdfWidth - (margin * 2);
+            const usableHeight = pdfHeight - (margin * 2);
 
-                // Agrega la primera imagen
-                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
-                heightLeft -= (pdfHeight - position);
-                
-                // Agrega páginas adicionales si el contenido es más largo
-                while (heightLeft > 0) {
-                    position = - (contentHeight - (pdfHeight - margin) - heightLeft);
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
-                    heightLeft -= (pdfHeight - margin);
-                }
+            // Dimensiones del canvas
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
 
-                const filename = getFileName();
-                pdf.save(filename);
-                
-            }).catch(err => {
-                console.error("Error al generar el PDF:", err);
-            });
-        }, 100);
+            // Calcular el factor de escala
+            const widthRatio = usableWidth / canvasWidth;
+            const heightRatio = usableHeight / canvasHeight;
+            const scaleFactor = Math.min(widthRatio, heightRatio);
+
+            // Calcular las dimensiones finales de la imagen en el PDF
+            const imgWidth = canvasWidth * scaleFactor;
+            const imgHeight = canvasHeight * scaleFactor;
+            
+            // Calcular la posición para centrar la imagen
+            const x = (pdfWidth - imgWidth) / 2;
+            const y = (pdfHeight - imgHeight) / 2;
+
+            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+            const filename = getFileName();
+            pdf.save(filename);
+        }).catch(err => {
+            console.error("Error al generar el PDF:", err);
+        });
+    }, 100);
     };
 
     const getFileName = () => {
@@ -126,12 +128,12 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
 
     return (
         <div>
-            <div className="flex flex-col w-full justify-center items-center" ref={contentRef}>
-                <div className="space-y-4 max-w-3xl">
+            <div className="flex flex-col md:max-w-3xl justify-center items-center" ref={contentRef}>
+                <div className="space-y-4">
                     {
                         isEditable &&
                         <div className="mb-4 space-y-4">
-                            <div className="mb-4 flex flex-row space-x-4">
+                            <div className="mb-4 flex flex-col md:flex-row space-y-2 md:space-x-4 items-center">
                                 <div className="rounded-md bg-gray-50 p-4 flex-1">
                                     <h2>Datos del cliente</h2>
                                     <ClientEditor
@@ -162,7 +164,7 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
                                 </div>
                             </div>
 
-                            <div className="flex flex-row gap-4 items-center rounded-md bg-gray-50 p-4">
+                            <div className="flex flex-col md:flex-row gap-4 items-center rounded-md bg-gray-50 p-4">
                                 <div className="flex flex-col">
                                     <Label htmlFor="date" className="mb-1">Fecha del presupuesto:</Label>
                                     <Popover>
@@ -203,7 +205,13 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
                         <QuoteHeader quoteInfo={quoteInfo}/>
                     }
 
-                    <QuoteTable items={items} isEditable={isEditable} onRemoveItem={handleRemoveItem} />
+                    <div className="hidden md:block">
+                        <QuoteTable items={items} isEditable={isEditable} onRemoveItem={handleRemoveItem} />
+                    </div>
+
+                    <div className="block md:hidden">
+                        <QuoteList items={items} isEditable={isEditable} onRemoveItem={handleRemoveItem} />
+                    </div>
 
                     {
                         isEditable &&

@@ -21,7 +21,7 @@ const QuoteTable = ({
 
     const [showDiscountColumn, setShowDiscountColumn] = useState(true);
 
-    const budgetTotal = items ? items.reduce((sum, item) => sum + (item.totalPrice * (1 - item.discount/100)), 0) : 0;
+    const budgetTotal = items ? items.reduce((sum, item) => sum + (item.individualPrice * item.quantity * (1 - item.discount/100)), 0) : 0;
 
     const getColSpan = () => {
         return showDiscountColumn ? 3 : 2;
