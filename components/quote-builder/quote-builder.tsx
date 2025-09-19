@@ -2,8 +2,8 @@
 
 import React, { useRef, useState } from 'react';
 
-import generatePDF, { Margin, Resolution } from 'react-to-pdf';
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 import { BudgetItem, QuoteInfo, Sender } from '@/app/lib/definitions';
 import { formatDateToLocal } from '@/lib/utils';
@@ -56,40 +56,52 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
     });
 
     const handleExportToPdf = () => {
-        const filename = getFileName();
+        // Si la referencia al contenido no existe, no hacemos nada
+        if (!contentRef.current) {
+            console.error("No se encontró el contenido para exportar.");
+            return;
+        }
 
-        html2pdf().set({
-            margin:       4,
-            filename:     filename,
-            image:        { type: 'png', quality: 1 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-        }).from(contentRef.current as HTMLElement).save();
+        // Usamos un pequeño retraso para que React actualice el DOM antes de capturar el canvas
+        setTimeout(() => {
+            html2canvas(contentRef.current as HTMLDivElement, {
+                scale: 4,
+                useCORS: true
+            }).then((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
 
-        // const options = {
-        //     filename: filename,
-        //     method: "save" as "save",
-        //     resolution: Resolution.HIGH,
-        //     page: {
-        //         margin: Margin.MEDIUM,
-        //         format: 'letter',
-        //     },
-        //     canvas: {
-        //         mimeType: 'image/png' as 'image/png',
-        //         qualityRatio: 1
-        //     },
-            
-        //     overrides: {
-        //         pdf: {
-        //             compress: true
-        //         },
-        //         canvas: {
-        //             useCORS: true
-        //         }
-        //     },
-        // };
+                // Dimensiones de la página A4 en mm
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                // Definimos los márgenes en mm (por ejemplo, 10mm en cada lado)
+                const margin = 10;
+                const contentWidth = pdfWidth - (margin * 2);
+                const contentHeight = (canvas.height * contentWidth) / canvas.width;
+                
+                let position = margin;
+                let heightLeft = contentHeight;
 
-        // generatePDF(contentRef, options);
+                // Agrega la primera imagen
+                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
+                heightLeft -= (pdfHeight - position);
+                
+                // Agrega páginas adicionales si el contenido es más largo
+                while (heightLeft > 0) {
+                    position = - (contentHeight - (pdfHeight - margin) - heightLeft);
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, contentHeight);
+                    heightLeft -= (pdfHeight - margin);
+                }
+
+                const filename = getFileName();
+                pdf.save(filename);
+                
+            }).catch(err => {
+                console.error("Error al generar el PDF:", err);
+            });
+        }, 100);
     };
 
     const getFileName = () => {
