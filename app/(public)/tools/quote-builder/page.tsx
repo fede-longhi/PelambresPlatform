@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from "react";
-import SimpleCalculator from "@/components/simple-calculator/simple-calculator";
+import SimpleCalculator, { SimpleCalculatorHandle } from "@/components/simple-calculator/simple-calculator";
 import QuoteBuilder from "@/components/quote-builder/quote-builder";
 import { Add, Close, Calculate, PostAdd } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,24 @@ import { Label } from '@/components/ui/label';
 import { BudgetItem } from '@/app/lib/definitions';
 
 export default function Page(){
-    const simpleCalculatorRef = useRef<typeof SimpleCalculator>(null);
+    const simpleCalculatorRef = useRef<SimpleCalculatorHandle>(null);
     const [isCalculatorVisible, setIsCalculatorVisible] = useState(true);
     const [isItemFormVisible, setIsItemFormVisible] = useState(false);
     const [item, setItem] = useState<BudgetItem>({ id: "", name: "", quantity: 1, individualPrice: 0, discount: 0, totalPrice: 0 });
     const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
 
     const addItemToBudget = () => {
-        item.id = budgetItems.length.toString();
-        if (!item.name) {
-            item.name = `item ${(budgetItems.length + 1).toString()}`;
+        const simpleCalculator = simpleCalculatorRef.current;
+        if (simpleCalculator) {
+            const results = simpleCalculator.getResults();
+            item.id = budgetItems.length.toString();
+            if (!item.name) {
+                item.name = `item ${(budgetItems.length + 1).toString()}`;
+            }
+            item.individualPrice = results.totalCost;
+            item.discount = results.discountPercentage || 0;
+            item.totalPrice = (item.individualPrice * item.quantity) * (1 - item.discount / 100);
         }
-        item.totalPrice = (item.individualPrice * item.quantity) * (1 - item.discount / 100);
         setBudgetItems([...budgetItems, item]);
         setItem({ id: "", name: "", quantity: 1, individualPrice: 0, discount: 0, totalPrice: 0 });
     }
@@ -177,7 +183,6 @@ export default function Page(){
                     items={budgetItems}
                     onClearBudget={() => setBudgetItems([])}
                     onRemoveItem={(id) => setBudgetItems(budgetItems.filter(item => item.id !== id))}
-
                     defaultSender={{}}
                 />
             </div>

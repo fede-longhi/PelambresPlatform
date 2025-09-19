@@ -17,8 +17,14 @@ type SimpleCalculatorResults = {
     totalPrintTimeCost: number;
     totalCost: number;
     discountValue: number;
+    discountPercentage: number;
     totalPriceAfterDiscount: number;
 };
+
+export interface SimpleCalculatorHandle {
+    getResults: () => SimpleCalculatorResults;
+    reset: () => void;
+}
 
 type SimpleCalculatorProps = {
     onResultsChange?: (results: SimpleCalculatorResults) => void;
@@ -27,7 +33,13 @@ type SimpleCalculatorProps = {
     defaultMarkup?: number;
 };
 
-const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, defaultPrintTimeValue, defaultMarkup }: SimpleCalculatorProps, ref) => {
+const SimpleCalculator = forwardRef<SimpleCalculatorHandle, SimpleCalculatorProps>(
+({
+    onResultsChange,
+    defaultMaterialCost,
+    defaultPrintTimeValue,
+    defaultMarkup 
+}: SimpleCalculatorProps, ref) => {
     const [materialCost, setMaterialCost] = useState(defaultMaterialCost?.toString() || '20000');
     const [partWeight, setPartWeight] = useState('0');
     const [printTimeValue, setPrintTimeValue] = useState(defaultPrintTimeValue?.toString() || '500');
@@ -62,6 +74,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
             totalPrintTimeCost,
             totalCost,
             discountValue,
+            discountPercentage: itemDiscountNum,
             totalPriceAfterDiscount,
         };
     }, [
@@ -79,7 +92,6 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
         if (onResultsChange) onResultsChange(results);
     }, [results, onResultsChange]);
 
-    // expone métodos al padre
     useImperativeHandle(
         ref,
         () => ({
@@ -105,6 +117,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
         totalPrintTimeCost,
         totalCost,
         discountValue,
+        discountPercentage,
         totalPriceAfterDiscount,
     } = results;
 
@@ -114,7 +127,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
             <div className="space-y-2">
                 <div>
                     <div className="flex flex-row gap-2">
-                        <div>
+                        <div className="flex flex-col justify-end gap-2">
                             <Label htmlFor="materialCost">Costo filamento por kilo ($)</Label>
                             <Input
                                 type="number"
@@ -124,7 +137,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                                 onChange={(e) => setMaterialCost(e.target.value)}
                             />
                         </div>
-                        <div>
+                        <div className="flex flex-col justify-end gap-2">
                             <Label htmlFor="partWeight">Peso de la pieza (gramos)</Label>
                             <Input
                                 type="number"
@@ -146,7 +159,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                 
                 <div>
                     <div className="flex flex-row gap-2">
-                        <div>
+                        <div className="flex flex-col justify-end gap-2">
                             <Label htmlFor="printValue">Precio hora de impresión</Label>
                             <Input
                                 type="number"
@@ -157,7 +170,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                             />
 
                         </div>
-                        <div>
+                        <div className="flex flex-col justify-end gap-2">
                             <Label htmlFor="printTime">Tiempo de impresión (horas)</Label>
                             <Input
                                 type="number"
@@ -177,7 +190,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                     </div>
                 </div>
                 <div>
-                    <Label htmlFor="extraMaterial" className="block text-sm font-medium text-gray-700">Costo extra materiales ($)</Label>
+                    <Label htmlFor="extraMaterial">Costo extra materiales ($)</Label>
                     <Input
                         type="number"
                         id="extraMaterial"
@@ -187,7 +200,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                     />
                 </div>
                 <div>
-                    <Label htmlFor="extraHandwork" className="block text-sm font-medium text-gray-700">Costo extra trabajo ($)</Label>
+                    <Label htmlFor="extraHandwork">Costo extra trabajo ($)</Label>
                     <Input
                         type="number"
                         id="extraHandwork"
@@ -197,7 +210,7 @@ const SimpleCalculator = forwardRef(({ onResultsChange, defaultMaterialCost, def
                     />
                 </div>
                 <div>
-                    <Label htmlFor="markup" className="block text-sm font-medium text-gray-700">Margen de ganancia (%)</Label>
+                    <Label htmlFor="markup">Margen de ganancia (%)</Label>
                     <Input
                         type="number"
                         id="markup"
