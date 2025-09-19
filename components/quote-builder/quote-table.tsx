@@ -33,14 +33,17 @@ const QuoteTable = ({
 
     return (
         <div>
-            <div className="flex flex-row items-center space-x-2 justify-end mb-2">
-                <Label htmlFor="toggle-discount-column" className="">Mostrar columna de descuento</Label>
-                <Switch
-                    id="toggle-discount-column"
-                    checked={showDiscountColumn}
-                    onCheckedChange={() => setShowDiscountColumn(!showDiscountColumn)}
-                />
-            </div>
+            {
+                isEditable &&
+                <div className="flex flex-row items-center space-x-2 justify-end mb-2">
+                    <Label htmlFor="toggle-discount-column" className="">Mostrar columna de descuento</Label>
+                    <Switch
+                        id="toggle-discount-column"
+                        checked={showDiscountColumn}
+                        onCheckedChange={() => setShowDiscountColumn(!showDiscountColumn)}
+                    />
+                </div>
+            }
             <Table>
                 <TableHeader>
                     <TableRow className="">
@@ -66,9 +69,9 @@ const QuoteTable = ({
                             <TableCell className="text-right">{item.quantity}</TableCell>
                             {
                                 showDiscountColumn &&
-                                <TableCell className="text-right">${(item.totalPrice * (item.discount/100)).toFixed(2)} ({item.discount.toFixed(2)}%)</TableCell>
+                                <TableCell className="text-right">${(item.individualPrice * item.quantity * (item.discount/100)).toFixed(2)} ({item.discount.toFixed(2)}%)</TableCell>
                             }
-                            <TableCell className="text-right">${(item.totalPrice * (1 - item.discount/100)).toFixed(2)}</TableCell>
+                            <TableCell className="text-right">${(item.individualPrice * item.quantity * (1 - item.discount/100)).toFixed(2)}</TableCell>
                             {
                                 isEditable &&
                                 <TableCell>

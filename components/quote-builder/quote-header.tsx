@@ -39,13 +39,16 @@ const QuoteHeader = ({quoteInfo} : {quoteInfo: QuoteInfo}) => {
                     </p>
                 </div>
             </div>
-            <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-                <h3 className="mb-2">Cliente</h3>
-                { quoteInfo.client.name && <p className="text-sm text-gray-500 my-0">Nombre: {quoteInfo.client.name}</p> }
-                { quoteInfo.client.address && <p className="text-sm text-gray-500 my-0">Dirección: {quoteInfo.client.address}</p> }
-                { quoteInfo.client.phone && <p className="text-sm text-gray-500 my-0">Teléfono: {quoteInfo.client.phone}</p> }
-                { quoteInfo.client.email && <p className="text-sm text-gray-500 my-0">Email: {quoteInfo.client.email}</p> }
-            </div>
+            { 
+                quoteInfo.client?.name &&
+                <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                    <h3 className="mb-2">Cliente</h3>
+                    { quoteInfo.client.name && <p className="text-sm text-gray-500 my-0">Nombre: {quoteInfo.client.name}</p> }
+                    { quoteInfo.client.address && <p className="text-sm text-gray-500 my-0">Dirección: {quoteInfo.client.address}</p> }
+                    { quoteInfo.client.phone && <p className="text-sm text-gray-500 my-0">Teléfono: {quoteInfo.client.phone}</p> }
+                    { quoteInfo.client.email && <p className="text-sm text-gray-500 my-0">Email: {quoteInfo.client.email}</p> }
+                </div>
+            }
         </div>
     );
 }

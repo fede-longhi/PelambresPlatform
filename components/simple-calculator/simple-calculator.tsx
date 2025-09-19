@@ -117,7 +117,6 @@ const SimpleCalculator = forwardRef<SimpleCalculatorHandle, SimpleCalculatorProp
         totalPrintTimeCost,
         totalCost,
         discountValue,
-        discountPercentage,
         totalPriceAfterDiscount,
     } = results;
 
@@ -160,7 +159,7 @@ const SimpleCalculator = forwardRef<SimpleCalculatorHandle, SimpleCalculatorProp
                 <div>
                     <div className="flex flex-row gap-2">
                         <div className="flex flex-col justify-end gap-2">
-                            <Label htmlFor="printValue">Precio hora de impresión</Label>
+                            <Label htmlFor="printValue">Costo hora de impresión</Label>
                             <Input
                                 type="number"
                                 id="printValue"
