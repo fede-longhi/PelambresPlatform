@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { BudgetItem } from '@/app/lib/definitions';
 
 export default function Page(){
-    const simpleCalculatorRef = useRef<SimpleCalculator>(null);
+    const simpleCalculatorRef = useRef<typeof SimpleCalculator>(null);
     const [isCalculatorVisible, setIsCalculatorVisible] = useState(true);
     const [isItemFormVisible, setIsItemFormVisible] = useState(false);
     const [item, setItem] = useState<BudgetItem>({ id: "", name: "", quantity: 1, individualPrice: 0, discount: 0, totalPrice: 0 });
