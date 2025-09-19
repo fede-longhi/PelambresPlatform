@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 
+import generatePDF, { Margin, Resolution } from 'react-to-pdf';
 import html2pdf from 'html2pdf.js';
 
 import { BudgetItem, QuoteInfo, Sender } from '@/app/lib/definitions';
@@ -57,15 +58,38 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
     const handleExportToPdf = () => {
         const filename = getFileName();
 
-        const options = {
-            filename: filename,
-            margin: 1,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-        };
+        html2pdf().set({
+            margin:       4,
+            filename:     filename,
+            image:        { type: 'png', quality: 1 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+        }).from(contentRef.current as HTMLElement).save();
 
-        html2pdf().set(options).from(contentRef.current!).save();
+        // const options = {
+        //     filename: filename,
+        //     method: "save" as "save",
+        //     resolution: Resolution.HIGH,
+        //     page: {
+        //         margin: Margin.MEDIUM,
+        //         format: 'letter',
+        //     },
+        //     canvas: {
+        //         mimeType: 'image/png' as 'image/png',
+        //         qualityRatio: 1
+        //     },
+            
+        //     overrides: {
+        //         pdf: {
+        //             compress: true
+        //         },
+        //         canvas: {
+        //             useCORS: true
+        //         }
+        //     },
+        // };
+
+        // generatePDF(contentRef, options);
     };
 
     const getFileName = () => {
@@ -90,109 +114,111 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
 
     return (
         <div>
-            <div className="space-y-4" ref={contentRef}>
-                {
-                    isEditable &&
-                    <div className="mb-4 space-y-4">
-                        <div className="mb-4 flex flex-row space-x-4">
-                            <div className="rounded-md bg-gray-50 p-4 flex-1">
-                                <h2>Datos del cliente</h2>
-                                <ClientEditor
-                                    client={quoteInfo.client}
-                                    setClient={(clientAction) => {
-                                        setQuoteInfo(prev => ({
-                                            ...prev,
-                                            client: typeof clientAction === 'function'
-                                                ? clientAction(prev.client)
-                                                : clientAction
-                                        }));
-                                    }}
-                                />
+            <div className="flex flex-col w-full justify-center items-center" ref={contentRef}>
+                <div className="space-y-4 max-w-3xl">
+                    {
+                        isEditable &&
+                        <div className="mb-4 space-y-4">
+                            <div className="mb-4 flex flex-row space-x-4">
+                                <div className="rounded-md bg-gray-50 p-4 flex-1">
+                                    <h2>Datos del cliente</h2>
+                                    <ClientEditor
+                                        client={quoteInfo.client}
+                                        setClient={(clientAction) => {
+                                            setQuoteInfo(prev => ({
+                                                ...prev,
+                                                client: typeof clientAction === 'function'
+                                                    ? clientAction(prev.client)
+                                                    : clientAction
+                                            }));
+                                        }}
+                                    />
+                                </div>
+                                <div className="rounded-md bg-gray-50 p-4 flex-1">
+                                    <h2>Tus Datos</h2>
+                                    <SenderEditor
+                                        sender={quoteInfo.sender}
+                                        setSender={(senderAction) => {
+                                            setQuoteInfo(prev => ({
+                                                ...prev,
+                                                sender: typeof senderAction === 'function'
+                                                    ? senderAction(prev.sender)
+                                                    : senderAction
+                                            }));
+                                        }}
+                                    />
+                                </div>
                             </div>
-                            <div className="rounded-md bg-gray-50 p-4 flex-1">
-                                <h2>Tus Datos</h2>
-                                <SenderEditor
-                                    sender={quoteInfo.sender}
-                                    setSender={(senderAction) => {
-                                        setQuoteInfo(prev => ({
-                                            ...prev,
-                                            sender: typeof senderAction === 'function'
-                                                ? senderAction(prev.sender)
-                                                : senderAction
-                                        }));
-                                    }}
-                                />
+
+                            <div className="flex flex-row gap-4 items-center rounded-md bg-gray-50 p-4">
+                                <div className="flex flex-col">
+                                    <Label htmlFor="date" className="mb-1">Fecha del presupuesto:</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                id="date"
+                                                variant="outline"
+                                                data-empty={!quoteInfo.date}
+                                                className="bg-white data-[empty=true]:text-muted-foreground data-[empty=true]:hover:text-primary-foreground data-[empty=true]:focus:text-primary-foreground w-[280px] justify-start text-left font-normal"
+                                            >
+                                            <CalendarIcon />
+                                            {quoteInfo.date ? formatDateToLocal(quoteInfo.date?.toString(), "es-AR") : <span>Seleccionar fecha</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0">
+                                            <Calendar mode="single" selected={quoteInfo.date} onSelect={setDate} />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                
+                                <div>
+                                    <Label htmlFor="quoteValidity" className="mb-1">Validez del presupuesto (días):</Label>
+                                    <Input
+                                        id="quoteValidity"
+                                        type="number"
+                                        inputMode="numeric" pattern="\d*"
+                                        value={quoteInfo.quoteValidity}
+                                        onChange={(e) => setQuoteInfo({...quoteInfo, quoteValidity: e.target.value})}
+                                        placeholder="Validez del presupuesto en días"
+                                        className="mb-2 w-[280px] bg-white"/>
+                                </div>
                             </div>
                         </div>
+                    }
 
-                        <div className="flex flex-row gap-4 items-center rounded-md bg-gray-50 p-4">
-                            <div className="flex flex-col">
-                                <Label htmlFor="date" className="mb-1">Fecha del presupuesto:</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            id="date"
-                                            variant="outline"
-                                            data-empty={!quoteInfo.date}
-                                            className="bg-white data-[empty=true]:text-muted-foreground data-[empty=true]:hover:text-primary-foreground data-[empty=true]:focus:text-primary-foreground w-[280px] justify-start text-left font-normal"
-                                        >
-                                        <CalendarIcon />
-                                        {quoteInfo.date ? formatDateToLocal(quoteInfo.date?.toString(), "es-AR") : <span>Seleccionar fecha</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={quoteInfo.date} onSelect={setDate} />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            
-                            <div>
-                                <Label htmlFor="quoteValidity" className="mb-1">Validez del presupuesto (días):</Label>
-                                <Input
-                                    id="quoteValidity"
-                                    type="number"
-                                    inputMode="numeric" pattern="\d*"
-                                    value={quoteInfo.quoteValidity}
-                                    onChange={(e) => setQuoteInfo({...quoteInfo, quoteValidity: e.target.value})}
-                                    placeholder="Validez del presupuesto en días"
-                                    className="mb-2 w-[280px] bg-white"/>
+                    {
+                        !isEditable &&
+                        <QuoteHeader quoteInfo={quoteInfo}/>
+                    }
+
+                    <QuoteTable items={items} isEditable={isEditable} onRemoveItem={handleRemoveItem} />
+
+                    {
+                        isEditable &&
+                        <div className="flex justify-end">
+                            <div className="flex flex-col space-y-2 w-max">
+                                {
+                                    items && items.length > 0 &&
+                                    <Button
+                                        variant="destructive"
+                                        onClick={handleClearBudget}
+                                        className=""
+                                    >
+                                        <Delete className="w-4 h-4" />
+                                        <span>Borrar todos los items</span>
+                                    </Button>
+                                }
                             </div>
                         </div>
-                    </div>
-                }
+                    }
 
-                {
-                    !isEditable &&
-                    <QuoteHeader quoteInfo={quoteInfo}/>
-                }
+                    <NotesSection isEditable={isEditable} quoteInfo={quoteInfo} />
 
-                <QuoteTable items={items} isEditable={isEditable} onRemoveItem={handleRemoveItem} />
-
-                {
-                    isEditable &&
-                    <div className="flex justify-end">
-                        <div className="flex flex-col space-y-2 w-max">
-                            {
-                                items && items.length > 0 &&
-                                <Button
-                                    variant="destructive"
-                                    onClick={handleClearBudget}
-                                    className=""
-                                >
-                                    <Delete className="w-4 h-4" />
-                                    <span>Borrar todos los items</span>
-                                </Button>
-                            }
-                        </div>
-                    </div>
-                }
-
-                <NotesSection isEditable={isEditable} quoteInfo={quoteInfo} />
-
-                <QuoteFooter quoteInfo={quoteInfo} isEditable={isEditable} />
+                    <QuoteFooter quoteInfo={quoteInfo} isEditable={isEditable} />
+                </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col items-center">
                 {
                     isEditable &&
                     <Button
@@ -210,15 +236,13 @@ function QuoteBuilder({items, onRemoveItem, onClearBudget, defaultSender=DEFAULT
                         <Button
                             variant="outline"
                             onClick={() => setIsEditable(!isEditable)}
-                            className="w-full"
-                        >
+                            >
                             <ArrowBack className="w-4 h-4" />
                             <span>Volver a editar</span>
                         </Button>
                         <Button
                             variant="secondary"
                             onClick={handleExportToPdf}
-                            className="w-full"
                         >
                             <PictureAsPdf className="w-4 h-4" />
                             <span>Exportar a PDF</span>
