@@ -15,7 +15,7 @@ export default function PublicHeader() {
     }
 
     return(
-        <div className={`${lusitana.className} flex flex-row items-center leading-none bg-primary text-white p-4 md:pt-6 md:pl-6 w-full`}>
+        <div className={`${lusitana.className} flex flex-row items-center leading-none bg-gradient-to-r from-primary to-yellow-500 text-white p-4 md:pt-6 md:pl-6 w-full`}>
             <ArrowBack
                 className="w-5 md:w-6 font-bold mr-2"
                 onClick={handleBackClick}
