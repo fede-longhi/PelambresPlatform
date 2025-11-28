@@ -1,11 +1,6 @@
-import HomeBanner from './ui/home/home-banner';
-import ContactBanner from './ui/home/contact-banner';
-import OurServicesBanner from './ui/home/our-services';
-import HomeNavigationMenu from './ui/home-navigation-menu';
 import Image from 'next/image';
 import Link from 'next/link';
-import Form from "@/app/ui/quote/quote-form"
-// import { Architecture, Factory, Handyman } from "@mui/icons-material";
+import Form from "@/app/ui/quote/quote-form";
 import { Package, DraftingCompass, Slice } from "lucide-react"; 
 import { GoogleReviews } from '@/components/google-reviews/google-reviews';
 
@@ -34,10 +29,10 @@ export default function Page() {
                             <Link href="/" className="text-3xl font-bold text-primary-foreground">Pelambres<span className="text-orange-200">3D</span></Link>
                         </div>
                         <nav className="hidden md:flex space-x-10">
-                            <Link href="/quote-request" className="text-base font-medium text-primary-foreground hover:text-orange-500">Cotizá</Link>
-                            <Link href='/print-status' className="text-base font-medium text-primary-foreground hover:text-orange-500">Mi Pedido</Link>
-                            <Link href='/tools' className="text-base font-medium text-primary-foreground hover:text-orange-500">Herramientas</Link>
-                            <Link href='/print-guide' className="text-base font-medium text-primary-foreground hover:text-orange-500">Guía de Impresión</Link>
+                            <Link href="/quote-request" className="text-base font-medium text-primary-foreground hover:text-primary">Cotizá</Link>
+                            <Link href='/print-status' className="text-base font-medium text-primary-foreground hover:text-primary">Mi Pedido</Link>
+                            <Link href='/tools' className="text-base font-medium text-primary-foreground hover:text-primary">Herramientas</Link>
+                            <Link href='/print-guide' className="text-base font-medium text-primary-foreground hover:text-primary">Guía de Impresión</Link>
                         </nav>
                     </div>
                 </div>
@@ -161,7 +156,7 @@ export default function Page() {
                 </section>
 
                 <section id="reseñas" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <GoogleReviews />
+                    <GoogleReviews showTimeDescription={false} />
                 </section>
 
                 <section id="contacto" className="bg-white py-16 sm:py-24">

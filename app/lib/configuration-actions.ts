@@ -72,7 +72,7 @@ export async function createConfigurationVariableFromForm(
         console.error(error);
         const isDuplicate = (typeof error === 'object' && error !== null && 'code' in error)
             ? (error as { code?: string }).code === '23505'
-            : false; // unique_violation
+            : false;
         return {
             message: isDuplicate
             ? "Ya existe una variable con esa clave."

@@ -23,7 +23,11 @@ interface PlaceDetails {
 	reviews: Review[];
 }
 
-export function GoogleReviews() {
+interface GoogleReviewsProps {
+	showTimeDescription?: boolean;
+}
+
+export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps) {
 	const [data, setData] = useState<PlaceDetails | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -36,14 +40,23 @@ export function GoogleReviews() {
 
 				if (!response.ok) {
 					const errorData = await response.json();
-					throw new Error(errorData.error || 'Fallo al cargar las reseñas');
+					throw new Error(errorData.error || 'Failed to load reviews');
 				}
 
 				const result: PlaceDetails = await response.json();
 				setData(result);
-			} catch (err: any) {
-				setError(err.message);
-				console.error("Error al obtener reseñas:", err);
+			} catch (err) {
+				let errorMessage = 'Unkown error occurred';
+
+				if (err instanceof Error) {
+					errorMessage = err.message;
+				} else if (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string') {
+					// Manejo de objetos que contienen una propiedad 'message' (común en errores de API)
+					errorMessage = err.message;
+				}
+				
+				setError(errorMessage);
+				console.error("Error getting reviews:", err);
 			} finally {
 				setIsLoading(false);
 			}
@@ -145,10 +158,12 @@ export function GoogleReviews() {
 						</div>
 
 						<p className="text-sm text-gray-600 mb-3 italic line-clamp-4">
-							"{review.text}"
+							&quot{review.text}&quot
 						</p>
 
-						<p className="text-xs text-gray-400 text-right">{review.relative_time_description}</p>
+						{showTimeDescription && (
+							<p className="text-xs text-gray-400 text-right">{review.relative_time_description}</p>
+						)}
 					</div>
 				))}
 			</div>
