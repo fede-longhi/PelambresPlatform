@@ -159,7 +159,7 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 						</div>
 
 						<p className="text-sm text-gray-600 mb-3 italic line-clamp-4">
-							&quot{review.text}&quot
+							&ldquo;{review.text}&rdquo;
 						</p>
 
 						{showTimeDescription && (
@@ -174,7 +174,7 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 					href={`https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+					className="inline-flex items-center rounded-full px-6 py-3 border border-transparent text-sm font-medium shadow-sm text-primary-foreground bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
 				>
 					Ver y Escribir más Reseñas en Google
 				</Link>

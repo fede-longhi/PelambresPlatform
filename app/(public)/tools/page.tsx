@@ -31,10 +31,9 @@ export default function Page() {
                     {tools.map((tool) => (
                         <div key={tool.id}>
                             <Link href={tool.path}
-                                className="bg-primary text-primary-foreground rounded-2xl shadow hover:shadow-lg transition overflow-hidden p-4 flex flex-col justify-center items-center"
+                                className="bg-primary text-primary-foreground rounded-2xl shadow hover:shadow-lg transition overflow-hidden p-4
+                                flex flex-col justify-center items-center hover:bg-yellow-500/50 hover:text-secondary-foreground"
                             >
-                                {/* <div className="flex flex-col justify-center items-center">
-                                </div> */}
                                 <div className="flex flex-col justify-center items-center">
                                     <div className="my-4">
                                         {tool.icon}

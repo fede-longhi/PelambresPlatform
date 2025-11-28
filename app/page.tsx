@@ -52,29 +52,23 @@ export default function Page() {
                                 <div className="mt-8 sm:mt-10 sm:flex sm:gap-4">
                                     <Link
                                     href='/quote-request'
-                                    className="bg-primary text-primary-foreground rounded-full px-6 py-3 items-center justify-center shadow-sm">
+                                    className="bg-primary text-primary-foreground rounded-full px-6 py-3 items-center justify-center shadow-sm hover:bg-primary-focus">
                                         Solicitar un presupuesto
                                     </Link>
-                                    <a href="#proyectos" className="mt-4 sm:mt-0 w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-indigo-600 text-base font-medium rounded-full text-indigo-600 bg-white hover:bg-indigo-50">
+                                    <Link href="/projects" className="mt-4 sm:mt-0 w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-indigo-600 text-base font-medium rounded-full text-indigo-600 bg-white hover:bg-primary hover:text-primary-foreground hover:border-transparent shadow-sm">
                                         Explorar proyectos
-                                    </a>
+                                    </Link>
                                 </div>
                             </div>
 
-                            {/* <div className="mt-12 lg:mt-0">
-                                <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-xl shadow-lg">
-                                    <img src="https://placehold.co/1200x800/222222/cccccc?text=Impresora+3D+en+acción" alt="Una impresora 3D en funcionamiento" className="w-full h-full object-cover rounded-xl" />
-                                </div>
-                            </div> */}
-
-                            <div className="mt-12 lg:mt-0">
-                                <div className="overflow-hidden rounded-xl shadow-lg">
+                            <div className="my-12 lg:mt-0">
+                                <div className="overflow-hidden rounded-xl shadow-lg aspect-w-16 aspect-h-9 h-full"> 
                                     <Image
-                                        src="/images/imagen_1.png"
+                                        src="/images/pelambres_ia_02.jpg"
                                         alt="Una impresora 3D en funcionamiento"
-                                        className="object-cover rounded-xl"
-                                        width={1200}
-                                        height={10}
+                                        className="object-cover w-full h-full rounded-xl" 
+                                        width={1600}
+                                        height={900}
                                     />
                                 </div>
                             </div>
