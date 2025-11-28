@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const GOOGLE_PLACE_ID = process.env.NEXT_PUBLIC_PELAMBRES_PLACE_ID || "";
 
@@ -168,16 +169,15 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 				))}
 			</div>
 
-			{/* Enlace para ver más reseñas en Google */}
 			<div className="mt-8 text-center">
-				<a
+				<Link
 					href={`https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+					className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
 				>
 					Ver y Escribir más Reseñas en Google
-				</a>
+				</Link>
 			</div>
 		</div>
 	);

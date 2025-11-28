@@ -29,7 +29,7 @@ export default function Page() {
                             <Link href="/" className="text-3xl font-bold text-primary-foreground">Pelambres<span className="text-orange-200">3D</span></Link>
                         </div>
                         <nav className="hidden md:flex space-x-10">
-                            <Link href="/quote-request" className="text-base font-medium text-primary-foreground hover:text-primary">Cotizá</Link>
+                            {/* <Link href="/quote-request" className="text-base font-medium text-primary-foreground hover:text-primary">Cotizá</Link> */}
                             <Link href='/print-status' className="text-base font-medium text-primary-foreground hover:text-primary">Mi Pedido</Link>
                             <Link href='/tools' className="text-base font-medium text-primary-foreground hover:text-primary">Herramientas</Link>
                             <Link href='/print-guide' className="text-base font-medium text-primary-foreground hover:text-primary">Guía de Impresión</Link>
