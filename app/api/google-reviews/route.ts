@@ -23,37 +23,6 @@ interface GoogleReview {
     googleMapsUri: string;
 }
 
-interface GooglePlaceDetails {
-    displayName: {
-        text: string;
-        languageCode: string;
-    };
-    rating: number;
-    userRatingCount: number;
-    reviews: GoogleReview[];
-    error?: {
-        message: string;
-        code: number;
-    };
-}
-
-interface FormattedReview {
-    author_name: string;
-    profile_photo_url: string;
-    author_uri: string;
-    rating: number;
-    relative_time_description: string;
-    text: string;
-    google_maps_uri: string;
-}
-
-interface FormattedPlaceDetails {
-    name: string;
-    rating: number;
-    user_ratings_total: number;
-    reviews: FormattedReview[];
-}
-
 export async function GET() {
     if (!GOOGLE_PLACES_API_KEY || !GOOGLE_PLACE_ID) {
         console.error('Error: GOOGLE_PLACES_API_KEY o GOOGLE_PLACE_ID no están definidos.');
