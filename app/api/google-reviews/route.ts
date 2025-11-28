@@ -6,6 +6,54 @@ const REVALIDATION_TIME = 60 * 60 * 24;
 const NEW_PLACES_API_BASE_URL = 'https://places.googleapis.com/v1/places';
 const LANGUAGE_CODE = 'es';
 
+
+// 1. Interfaz para la reseña cruda que viene de Google API (New)
+interface GoogleReview {
+    authorAttribution: {
+        displayName: string;
+        photoUri: string;
+        uri: string;
+    };
+    rating: number;
+    relativePublishTimeDescription: string;
+    text: {
+        text: string;
+        languageCode: string;
+    };
+    googleMapsUri: string;
+}
+
+interface GooglePlaceDetails {
+    displayName: {
+        text: string;
+        languageCode: string;
+    };
+    rating: number;
+    userRatingCount: number;
+    reviews: GoogleReview[];
+    error?: {
+        message: string;
+        code: number;
+    };
+}
+
+interface FormattedReview {
+    author_name: string;
+    profile_photo_url: string;
+    author_uri: string;
+    rating: number;
+    relative_time_description: string;
+    text: string;
+    google_maps_uri: string;
+}
+
+interface FormattedPlaceDetails {
+    name: string;
+    rating: number;
+    user_ratings_total: number;
+    reviews: FormattedReview[];
+}
+
 export async function GET() {
     if (!GOOGLE_PLACES_API_KEY || !GOOGLE_PLACE_ID) {
         console.error('Error: GOOGLE_PLACES_API_KEY o GOOGLE_PLACE_ID no están definidos.');
@@ -43,22 +91,17 @@ export async function GET() {
         });
 
         const data = await response.json();
-        console.log('Google Places API response:', data);
 
         if (data.error) {
             console.error('Error fetching Google Reviews:', data.error.message);
             return NextResponse.json({ error: data.error }, { status: 400 });
         }
 
-        data.reviews.forEach((review: any) => {
-            console.log('Review:' + JSON.stringify(review, null, 2));
-        });
-
         const formattedData = {
             name: data.displayName.text,
             rating: data.rating,
             user_ratings_total: data.userRatingCount,
-            reviews: data.reviews.map((review: any) => ({
+            reviews: (data.reviews as GoogleReview[]).map((review: GoogleReview) => ({
                 author_name: review.authorAttribution.displayName,
                 profile_photo_url: review.authorAttribution.photoUri,
                 author_uri: review.authorAttribution.uri,
