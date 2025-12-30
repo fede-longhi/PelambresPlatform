@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Order } from "@/app/lib/definitions";
+import { Order } from "@/types/definitions";
 import { OrderFormState, updateOrder } from "@/app/lib/order-actions";
 import { dateLongStringToString, getOrderCustomerName } from "@/lib/utils";
 import { CustomerSelectField, StatusField, TrackingCodeInput } from "./form-fields";

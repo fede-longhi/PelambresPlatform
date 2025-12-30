@@ -1,7 +1,7 @@
 'use server';
 
 import postgres from 'postgres';
-import { Filament } from './definitions';
+import { Filament } from '../../types/definitions';
 import { ITEMS_PER_PAGE } from '@/lib/consts';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });

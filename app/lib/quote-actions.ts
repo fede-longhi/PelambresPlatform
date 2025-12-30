@@ -1,11 +1,11 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
 import { put } from '@vercel/blob';
 import postgres from 'postgres';
 import nodemailer from 'nodemailer';
-import { QuoteTable } from './definitions';
+import { QuoteTable } from '../../types/definitions';
+import { MAX_FILE_ATTACHMENT_SIZE_BYTES, MAX_FILE_ATTACHMENT_SIZE_MB } from '@/lib/consts';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -14,8 +14,9 @@ const FormSchema = z.object({
     email: z.string({
         invalid_type_error: 'Ingresa un email de contacto.',
     }).email({message: 'Tiene que ingresar un email valido.'}),
-    firstName: z.string(),
-    lastName: z.string(),
+    name: z.string({
+        invalid_type_error: 'Ingresa un nombre.',
+    }),
     phone: z.string()
     .trim()
     .regex(/^\+?[0-9\s-]+$/, "Debe contener solo números, espacios, guiones y opcionalmente empezar con +")
@@ -33,23 +34,22 @@ const CreateQuote = FormSchema.omit({ id: true, date: true });
 export type QuoteFormState = {
     errors?: {
       email?: string[];
-      firstName?: string[];
-      lastName?: string[];
+      name?: string[];
       phone?: string[];
       detail?: string[];
     };
     message?: string | null;
+    status?: string | null;
     payload?: FormData;
 };
 
 export async function createQuote(
     _prevState: QuoteFormState,
     formData: FormData,
-) {
+) : Promise<QuoteFormState>{
     const validatedFields = CreateQuote.safeParse({
         email: formData.get('email'),
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
+        name: formData.get('name'),
         phone: formData.get('phone'),
         detail: formData.get('detail'),
     });
@@ -63,12 +63,12 @@ export async function createQuote(
     }
 
     
-    const { email, firstName, lastName, phone, detail } = validatedFields.data;
+    const { email, name, phone, detail } = validatedFields.data;
     const date = new Date().toISOString().split('T')[0];
     try {
         const result = await sql`
-        INSERT INTO quote_requests (first_name, last_name, email, phone, detail, date)
-        VALUES (${firstName}, ${lastName}, ${email}, ${phone}, ${detail}, ${date})
+        INSERT INTO quote_requests (name, email, phone, detail, date)
+        VALUES (${name}, ${email}, ${phone}, ${detail}, ${date})
         RETURNING id
         `;
         
@@ -76,39 +76,56 @@ export async function createQuote(
         const files: File[] = [];
         for (let i = 0; i < filesCount; i++) {
             const file = formData.get(`file-${i}`) as File;
+
+            if (!(file instanceof File) || file.size === 0) {
+                //TODO: manejar error de archivo inválido
+                continue; 
+            }
+            
+            if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
+                //TODO: manejar error de archivo muy grande
+                return {
+                    message: `El archivo ${file.name} excede el límite de ${MAX_FILE_ATTACHMENT_SIZE_MB}MB.`,
+                    payload: formData,
+                };
+            }
+
             files.push(file);
-            const blob = await put(file.name, file, {
-                access: 'public',
-            });
-            await sql`
+        }
+
+        const blobUploads = files.map(file => 
+            put(file.name, file, { access: 'public' })
+        );
+        const uploadedBlobs = await Promise.all(blobUploads);
+        const dbInserts = uploadedBlobs.map(blob => sql`
             INSERT INTO quote_request_attachments(quote_request_id, file_url)
             VALUES (${result[0].id}, ${blob.downloadUrl})
-            `;
-        }
+        `);
+        await Promise.all(dbInserts);
+
         sendQuoteEmail({
             id: '',
-            first_name: firstName,
-            last_name: lastName,
+            name: name,
             phone: phone,
             detail: detail,
             email: email,
             date: date
-        }, files);
+        } as QuoteTable, files);
     } catch (error) {
         console.error(error);
-        return { message: 'Error insertando la cotización.' };
+        return { status: 'error', message: 'Error insertando la cotización.' };
     }
-    
-    redirect('/quote-request/success');
+
+    return { status: 'success', message: null, errors: {} };
 }
 
 async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
     try {
         const to = "pelambres3d@gmail.com";
-        const subject = `NEW QUOTE REQUEST - ${quote.first_name} ${quote.last_name}`;
+        const subject = `NEW QUOTE REQUEST - ${quote.name}`;
         const body = `
             <h2>Nuevo pedido de cotización</h2>
-            <p><strong>Nombre:</strong> ${quote.first_name} ${quote.last_name}</p>
+            <p><strong>Nombre:</strong> ${quote.name}</p>
             <p><strong>Email:</strong> ${quote.email}</p>
             <p><strong>Teléfono:</strong> ${quote.phone}</p>
             <p><strong>Fecha:</strong> ${quote.date}</p>
@@ -141,10 +158,10 @@ async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
             to,
             subject,
             html: body,
-            attachments, // Adjuntar archivos
+            attachments,
         });
-        console.log("📩 Correo enviado con éxito:", info.response);
+        console.log("Correo enviado con éxito:", info.response);
     } catch (error) {
-        console.error("❌ Error enviando el correo:", error);
+        console.error("Error enviando el correo:", error);
     }
 }

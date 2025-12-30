@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import FieldErrorDisplay from "@/components/ui/field-error-display";
 import { Textarea } from "@/components/ui/textarea";
-import { ConfigurationVariable } from "@/app/lib/definitions";
+import { ConfigurationVariable } from "@/types/definitions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CONFIGURATION_VARIABLE_DATA_TYPES } from "@/lib/consts";
 

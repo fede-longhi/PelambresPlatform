@@ -1,6 +1,6 @@
 'use client';
 
-import { GCodeInfo } from "@/app/lib/definitions";
+import { GCodeInfo } from "@/types/definitions";
 import { createPrintJob, PrintJobFormState } from "@/app/lib/print-job-actions";
 import { Button } from "@/components/ui/button";
 import FileDropZone from "@/components/ui/drop-files";

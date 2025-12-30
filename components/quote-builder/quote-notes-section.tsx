@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import {Add as AddIcon, Delete, VisibilityOff} from "@mui/icons-material";
-import type { QuoteInfo } from "@/app/lib/definitions";
+import type { QuoteInfo } from "@/types/definitions";
 
 export type NotesSection = {
     visible: boolean;

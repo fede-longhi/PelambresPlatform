@@ -4,6 +4,9 @@ export const TRACKING_CODE_LENGTH = 6;
 export const TRACKING_CODE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 export const ITEMS_PER_PAGE = 6;
 
+export const MAX_FILE_ATTACHMENT_SIZE_MB = 10;
+export const MAX_FILE_ATTACHMENT_SIZE_BYTES = MAX_FILE_ATTACHMENT_SIZE_MB * 1024 * 1024;
+
 export const FAIL_REASONS = [
     { value: "warping", label: "Warping" },
     { value: "under_extrusion", label: "Under-extrusion" },
@@ -48,3 +51,7 @@ export const CONFIGURATION_VARIABLE_DATA_TYPES = [
         label: "boolean"
     }
 ];
+
+
+export const NEW_PLACES_API_BASE_URL = 'https://places.googleapis.com/v1/places';
+export const GOOGLE_WRITEREVIEW_URI = 'https://search.google.com/local/writereview';

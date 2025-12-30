@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import MoreHoriz from "@mui/icons-material/MoreHoriz";
 import ExpandLess from "@mui/icons-material/ExpandLess";
-import type { Client } from "@/app/lib/definitions";
+import type { Client } from "@/types/definitions";
 
 
 type ClientEditorProps = {

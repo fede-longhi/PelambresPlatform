@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { ConfigurationVariable } from "./definitions";
+import { ConfigurationVariable } from "../../types/definitions";
 import { revalidatePath } from 'next/cache';
 
 import postgres from 'postgres';
@@ -72,7 +72,7 @@ export async function createConfigurationVariableFromForm(
         console.error(error);
         const isDuplicate = (typeof error === 'object' && error !== null && 'code' in error)
             ? (error as { code?: string }).code === '23505'
-            : false; // unique_violation
+            : false;
         return {
             message: isDuplicate
             ? "Ya existe una variable con esa clave."

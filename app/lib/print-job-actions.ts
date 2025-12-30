@@ -4,7 +4,7 @@ import { z } from 'zod';
 import postgres from 'postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { PrintJob } from './definitions';
+import { PrintJob } from '../../types/definitions';
 import { FAIL_REASONS, GCODE_FOLDER, MODELS_FOLDER } from '@/lib/consts';
 import { insertFormFiles, insertSingleFormFile } from './file-strorage';
 

@@ -64,7 +64,12 @@ export default async function QuotesTable({
                                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
                                     <Link  href={`/admin/quotes/${quote.id}`}>
                                         <div className="flex items-center gap-3">
-                                            <p>{quote.first_name}, {quote.last_name}</p>
+                                            { 
+                                                quote.first_name || quote.last_name ?
+                                                <p>{quote.first_name}, {quote.last_name}</p>
+                                                :
+                                                <p>{quote.name}</p>
+                                            }
                                         </div>
                                     </Link> 
                                 </td>

@@ -7,7 +7,7 @@ import { Add, Close, Calculate, PostAdd } from '@mui/icons-material';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BudgetItem } from '@/app/lib/definitions';
+import { BudgetItem } from '@/types/definitions';
 
 export default function Page(){
     const simpleCalculatorRef = useRef<SimpleCalculatorHandle>(null);

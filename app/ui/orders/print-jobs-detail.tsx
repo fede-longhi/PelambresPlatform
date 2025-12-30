@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { PrintJob } from "@/app/lib/definitions";
+import { PrintJob } from "@/types/definitions";
 import PrintJobCreateForm from "@/app/ui/print-jobs/create-form";
 import PrintJobList from "@/app/ui/print-jobs/print-job-list";
 import { Button } from "@/components/ui/button";

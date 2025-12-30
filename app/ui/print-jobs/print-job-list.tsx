@@ -1,4 +1,4 @@
-import { PrintJob } from "@/app/lib/definitions";
+import { PrintJob } from "@/types/definitions";
 import { PrintJobItemDetail } from "./item-detail";
 
 export default function PrintJobList({printJobs} : {printJobs?: PrintJob[]}) {

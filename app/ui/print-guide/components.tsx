@@ -3,7 +3,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { lusitana } from "@/app/ui/fonts";
 import { cn } from "@/lib/utils";
-import { ExternalLink} from "lucide-react";
+import { BookOpen, ExternalLink} from "lucide-react";
+
+interface SectionHeaderProps {
+    title: string;
+    icon?: React.ReactNode; // Permite pasar cualquier componente o elemento React como icono
+}
+
+export function SectionHeader({ title, icon }: SectionHeaderProps) {
+    return (
+        <header className={cn(`${lusitana.className} flex items-center pb-6 pt-4 px-4 rounded-t-md mb-6 shadow-sm rounded-t-md`)}>
+            <div className="mr-3 text-primary">
+                {icon ? icon : <BookOpen className="w-6 h-6" />}
+            </div>
+
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                {title}
+            </h2>
+        </header>
+    );
+}
+
 
 export function Header({title, className} : {title: string, className?: string}) {
     return (
@@ -13,13 +33,13 @@ export function Header({title, className} : {title: string, className?: string})
     )
 }
 
-export function SectionHeader({title, className} : {title?: string, className?: string}) {
-    return (
-        <h2 className={cn(`${lusitana.className} font-medium text-[32px] bg-primary text-primary-foreground p-2 px-8 mb-2`, className)}>
-            {title}
-        </h2>
-    );
-}
+// export function SectionHeader({title, className} : {title?: string, className?: string}) {
+//     return (
+//         <h2 className={cn(`${lusitana.className} font-medium text-[32px] bg-primary text-primary-foreground p-2 px-8 mb-2`, className)}>
+//             {title}
+//         </h2>
+//     );
+// }
 
 const Section = React.forwardRef<
   HTMLDivElement,

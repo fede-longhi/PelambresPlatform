@@ -1,4 +1,4 @@
-import { Customer } from "@/app/lib/definitions";
+import { Customer } from "@/types/definitions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditCustomerButton } from "./buttons";
 

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AddIcon from '@mui/icons-material/Add';
 import QuoteBuilder from './quote-builder';
-import { BudgetItem } from '@/app/lib/definitions';
+import { BudgetItem } from '@/types/definitions';
 
 export default function SimpleCalculator() {
     const [materialCost, setMaterialCost] = useState('20000');

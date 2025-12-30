@@ -1,4 +1,4 @@
-import { Order, OrdersSummary, OrderTable } from "./definitions";
+import { Order, OrdersSummary, OrderTable } from "../../types/definitions";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });

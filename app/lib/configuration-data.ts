@@ -1,7 +1,7 @@
 'use server';
 
 import postgres from 'postgres';
-import { ConfigurationVariable } from './definitions';
+import { ConfigurationVariable } from '../../types/definitions';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 

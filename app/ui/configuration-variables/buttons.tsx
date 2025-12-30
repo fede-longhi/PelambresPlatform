@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import CreateConfigurationForm from "@/app/ui/configuration-variables/create-form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Plus } from "lucide-react";
-import { ConfigurationVariable } from "@/app/lib/definitions";
+import { ConfigurationVariable } from "@/types/definitions";
 import EditConfigurationForm from "./edit-form";
 
 export function CreateConfigurationButton() {

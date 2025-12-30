@@ -1,4 +1,4 @@
-import { ConfigurationVariable } from "@/app/lib/definitions";
+import { ConfigurationVariable } from "@/types/definitions";
 import { cn } from "@/lib/utils";
 
 export function ConfigurationItemDetail({configuration, className} : {configuration: ConfigurationVariable, className?: string}) {

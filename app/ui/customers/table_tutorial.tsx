@@ -3,7 +3,7 @@ import { lusitana } from '@/app/ui/fonts';
 import Search from '@/app/ui/search';
 import {
   FormattedCustomersTable,
-} from '@/app/lib/definitions';
+} from '@/types/definitions';
 
 export default async function CustomersTable({
   customers,

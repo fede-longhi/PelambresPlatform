@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infografía de Costos de Impresión 3D</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2D0047;
+            color: #FFFFFF;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .highlight-pink { color: #FFB266; }
+        .highlight-yellow { color: #7F58AF; }
+        .highlight-blue { color: #DC0073; }
+        .bg-highlight-pink { background-color: #FFB266; }
+        .bg-highlight-yellow { background-color: #7F58AF; }
+        .bg-highlight-blue { background-color: #DC0073; }
+        .bg-dark-blue { background-color: #2D0047; }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center my-12 md:my-20">
+            <h1 class="text-4xl md:text-6xl font-black uppercase tracking-wider">El <span class="highlight-yellow">ADN</span> de tus Impresiones</h1>
+            <p class="text-lg md:text-xl mt-4 max-w-3xl mx-auto">Descubre los costos reales de la impresión 3D y convierte tu pasión en un proyecto sostenible.</p>
+        </header>
+
+        <section id="fundamentals" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-8">¿Costo o Gasto? ¡Vamos a aclarar!</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="glass-card p-6 text-center">
+                    <h3 class="text-2xl font-bold highlight-blue mb-2">Costo</h3>
+                    <p class="text-lg">Es la **inversión directa** que haces para **producir** tu pieza. ¡Es recuperable!</p>
+                    <div class="text-4xl mt-4">🧵</div>
+                    <p class="mt-2 font-bold">Ej: Filamento</p>
+                </div>
+                <div class="glass-card p-6 text-center">
+                    <h3 class="text-2xl font-bold highlight-pink mb-2">Gasto</h3>
+                    <p class="text-lg">Es lo que necesitas para que tu negocio (o hobby) **funcione** en general.</p>
+                    <div class="text-4xl mt-4">💡</div>
+                    <p class="mt-2 font-bold">Ej: Publicidad, parte de la luz</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="pillars" class="my-20">
+            <h2 class="text-3xl font-bold text-center mb-10">El costo se esconde en 3 lugares</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-6xl mb-4">🧵</div>
+                    <h3 class="text-2xl font-bold highlight-yellow">Material</h3>
+                    <p>La cantidad de filamento que consume tu creación.</p>
+                </div>
+                <div class="glass-card p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                     <div class="text-6xl mb-4">⏰</div>
+                    <h3 class="text-2xl font-bold highlight-yellow">Tiempo</h3>
+                    <p>Las horas que tu máquina trabaja para dar vida a la pieza.</p>
+                </div>
+                <div class="glass-card p-8 text-center transform hover:scale-105 transition-transform duration-300">
+                     <div class="text-6xl mb-4">⚡</div>
+                    <h3 class="text-2xl font-bold highlight-yellow">Energía</h3>
+                    <p>La electricidad necesaria para fundir el material capa por capa.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="deep-dive" class="my-20">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Costos Variables: El Filamento</h3>
+                    <p class="mb-6">Este costo cambia con cada impresión. Piezas más grandes o densas usan más material. Es crucial conocer el precio por gramo de tus filamentos.</p>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="filamentCostChart"></canvas>
+                    </div>
+                     <p class="text-center text-sm mt-2">Costo promedio por kilogramo de diferentes tipos de filamento.</p>
+                </div>
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Costos Fijos: La Máquina</h3>
+                    <p class="mb-6">El valor de tu impresora es un costo fijo. Lo distribuimos a lo largo de su vida útil para asignar una pequeña parte a cada impresión.</p>
+                    <div class="text-center bg-dark-blue rounded-lg p-6">
+                        <p class="text-lg">Impresora de $400 / 4000 horas de vida</p>
+                        <p class="text-7xl font-black my-4 highlight-pink">$0.10</p>
+                        <p class="text-xl font-bold">por hora de uso</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculation" class="my-20">
+            <h2 class="text-3xl font-bold text-center mb-10">Ejemplo Práctico: ¿Cuánto cuesta este llavero?</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
+                <div class="lg:col-span-2">
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                        <div class="glass-card p-4 text-center">
+                            <p class="font-bold text-lg highlight-yellow">Filamento</p>
+                            <p class="text-4xl font-black">$0.20</p>
+                        </div>
+                        <div class="text-4xl font-bold highlight-blue">+</div>
+                        <div class="glass-card p-4 text-center">
+                            <p class="font-bold text-lg highlight-yellow">Tiempo y Energía</p>
+                            <p class="text-4xl font-black">$0.115</p>
+                        </div>
+                        <div class="text-4xl font-bold highlight-blue">=</div>
+                        <div class="bg-highlight-pink text-white p-6 rounded-lg text-center">
+                            <p class="font-bold text-lg">Costo Total</p>
+                            <p class="text-5xl font-black">$0.315</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="chart-container h-64 md:h-80 mx-auto">
+                    <canvas id="keychainCostChart"></canvas>
+                    <p class="text-center text-sm mt-2">Composición del costo total del llavero.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="price" class="my-20 text-center max-w-4xl mx-auto">
+             <h2 class="text-3xl font-bold mb-4">De Costo a Precio: ¡Ponle valor a tu trabajo!</h2>
+             <p class="text-lg mb-8">El costo es lo que gastas. El precio es lo que cobras. La diferencia es tu ganancia, que recompensa tu tiempo, habilidad y creatividad.</p>
+             <div class="glass-card p-8 inline-block">
+                <p class="text-3xl font-bold">
+                    <span class="bg-dark-blue p-2 rounded-lg">Costo Total</span> 
+                    <span class="mx-4 highlight-yellow">+</span> 
+                    <span class="bg-dark-blue p-2 rounded-lg">Margen de Ganancia</span> 
+                    <span class="mx-4 highlight-yellow">=</span> 
+                    <span class="bg-highlight-pink text-white p-2 rounded-lg">Precio Final</span>
+                </p>
+             </div>
+        </section>
+
+        <footer class="text-center mt-20 mb-10 border-t border-gray-700 pt-8">
+            <h3 class="text-2xl font-bold">¡A imprimir con conocimiento!</h3>
+            <div class="flex justify-center space-x-8 mt-4 text-gray-400">
+                <span>Entiende tus costos</span>
+                <span>Valora tu trabajo</span>
+                <span>Establece un precio justo</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const tooltipTitleCallback = (tooltipItems) => {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                if (Array.isArray(label)) {
+                    return label.join(' ');
+                } else {
+                    return label;
+                }
+            };
+            
+            const wrapLabels = (label) => {
+                const max_width = 16;
+                if (label.length <= max_width) return label;
+                
+                const words = label.split(' ');
+                let lines = [];
+                let currentLine = '';
+                
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    if ((currentLine + ' ' + word).trim().length > max_width) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            };
+
+            const chartDefaults = {
+                color: '#FFFFFF',
+                font: {
+                    family: "'Inter', sans-serif",
+                    size: 14
+                }
+            };
+            
+            Chart.defaults.plugins.legend.labels = chartDefaults;
+            Chart.defaults.plugins.tooltip.titleFont = chartDefaults.font;
+            Chart.defaults.plugins.tooltip.bodyFont = chartDefaults.font;
+            Chart.defaults.scale.ticks = chartDefaults;
+
+
+            const filamentCtx = document.getElementById('filamentCostChart').getContext('2d');
+            new Chart(filamentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['PLA', 'PETG', 'ABS', 'TPU Flexible'],
+                    datasets: [{
+                        label: 'Costo por Kg (USD)',
+                        data: [20, 25, 22, 45],
+                        backgroundColor: ['#7F58AF', '#FFB266', '#7F58AF', '#FFB266'],
+                        borderColor: '#2D0047',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { title: tooltipTitleCallback } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            title: { display: true, text: 'Costo (USD)', color: '#FFFFFF'}
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            const keychainCtx = document.getElementById('keychainCostChart').getContext('2d');
+            new Chart(keychainCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Filamento', 'Tiempo y Energía'],
+                    datasets: [{
+                        label: 'Composición de Costo',
+                        data: [0.20, 0.115],
+                        backgroundColor: ['#FFB266', '#7F58AF'],
+                        borderColor: '#2D0047',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { title: tooltipTitleCallback } }
+                    },
+                    cutout: '60%'
+                }
+            });
+        });
+    </script>
+</body>
+</html>

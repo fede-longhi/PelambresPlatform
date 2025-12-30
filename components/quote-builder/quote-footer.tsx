@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { QuoteInfo } from "@/app/lib/definitions";
+import { QuoteInfo } from "@/types/definitions";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Add, Delete, Done, Edit } from "@mui/icons-material";

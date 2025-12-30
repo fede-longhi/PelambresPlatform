@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { lusitana } from '@/app/ui/fonts';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowLeft } from 'lucide-react'; 
 import { useRouter } from 'next/navigation';
 
 export default function PublicHeader() {
@@ -15,31 +15,30 @@ export default function PublicHeader() {
     }
 
     return(
-        <div className={`${lusitana.className} flex flex-row items-center leading-none bg-primary text-white p-4 md:pt-6 md:pl-6 w-full`}>
-            <ArrowBack
-                className="w-5 md:w-6 font-bold mr-2"
+        <div className={`${lusitana.className} flex items-center justify-start leading-none 
+                       bg-gradient-to-r from-primary to-yellow-500 shadow-md sticky top-0 z-50 p-4 md:p-6 w-full`}>
+            <ArrowLeft
+                className="w-6 h-6 mr-3 cursor-pointer transition text-white hover:text-white/80" 
                 onClick={handleBackClick}
             />
+            
             <Link 
                 href="/"
-                className="flex flex-row items-center"
+                className="flex items-center space-x-2"
             >
                 <Image
                     src="/pelambres_logo.svg"
-                    width={32}
-                    height={32}
-                    className="hidden md:block m-2"
-                    alt="Logo of Pelambres"
+                    width={40}
+                    height={40}
+                    className="w-8 h-8 md:w-10 md:h-10" 
+                    alt="Logo de Pelambres"
+                    priority={true}
                 />
-                <Image
-                    src="/pelambres_logo.svg"
-                    width={64}
-                    height={64}
-                    className="md:hidden block mr-2"
-                    alt="Logo of Pelambres"
-                />
-                <h1 className="text-white font-normal text-[32px]">Pelambres</h1>
+                <h1 className="text-primary-foreground font-normal text-[28px] md:text-[32px]">
+                    Pelambres
+                </h1>
             </Link>
+
             <span className="flex-1" />
         </div>
     )

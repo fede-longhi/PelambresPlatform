@@ -1,6 +1,6 @@
 "use client";
 
-import { PrintJobModelFile } from "@/app/lib/definitions";
+import { PrintJobModelFile } from "@/types/definitions";
 import { useEffect, useState } from "react";
 
 export function PrintJobModels({ printJobId }: { printJobId: string }) {

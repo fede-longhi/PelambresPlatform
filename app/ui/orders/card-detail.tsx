@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OrderTable } from "@/app/lib/definitions";
+import { OrderTable } from "@/types/definitions";
 import { OrderStatusEditField } from "./status-edit-field";
 import { formatDateToLocal } from "@/lib/utils";
 import { EditOrder } from "./buttons";

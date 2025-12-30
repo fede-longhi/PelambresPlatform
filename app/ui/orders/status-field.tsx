@@ -1,4 +1,4 @@
-import { OrderStatus, OrderStatuses } from "@/app/lib/order-definitions"
+import { OrderStatus, OrderStatuses } from "@/types/order-definitions"
 import { cn } from "@/lib/utils";
 
 export default function OrderStatusField({className, statusName} : {className?: string, statusName: OrderStatus}) {

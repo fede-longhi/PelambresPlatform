@@ -1,4 +1,4 @@
-import { OrderStatus } from "@/app/lib/order-definitions";
+import { OrderStatus } from "@/types/order-definitions";
 import { AdvanceStep, GoBackStep } from "./buttons";
 import OrderStatusField from "./status-field";
 

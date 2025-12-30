@@ -1,4 +1,4 @@
-import { CustomerType } from "@/app/lib/definitions";
+import { CustomerType } from "@/types/definitions";
 import { Badge } from "@/components/ui/badge";
 import { Building2, User } from "lucide-react";
 

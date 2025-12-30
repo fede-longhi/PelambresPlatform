@@ -1,4 +1,4 @@
-import { PrintJob } from "@/app/lib/definitions";
+import { PrintJob } from "@/types/definitions";
 import { DeletePrintJob, FailPrintJob, FinishPrintJob, StartPrintJob } from "./buttons";
 import PrintJobStatusField from "./status-field";
 import Link from "next/link";
