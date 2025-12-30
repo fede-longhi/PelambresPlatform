@@ -35,7 +35,7 @@ export default function Footer() {
                                 height={32}
                                 alt="Logo de Pelambres"
                             />
-                            <span className="text-xl font-bold text-white">Pelambres<span className="text-primary">3D</span></span>
+                            <span className="text-xl font-bold text-white">Pelambres<span className="text-primary/80">3D</span></span>
                         </Link>
                         <p className="text-sm text-gray-400 max-w-xs">
                             Transformamos ideas en piezas funcionales y prototipos de alta calidad para creadores y negocios.
@@ -114,7 +114,7 @@ export default function Footer() {
 
                 {/* Derechos de Autor */}
                 <div className="pt-8 mt-8 border-t border-gray-800 text-center">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                         &copy; {currentYear} Pelambres 3D. Todos los derechos reservados.
                     </p>
                 </div>
