@@ -29,7 +29,6 @@ export default function TrackingCodeSearch() {
     return (
         <div className="flex flex-col md:flex-row md:items-end justify-center items-center">
             <div className="flex flex-col">
-                <Label htmlFor="code" className="mb-2">Código de trackeo</Label>
                 <InputOTP
                     className=""
                     id="code"

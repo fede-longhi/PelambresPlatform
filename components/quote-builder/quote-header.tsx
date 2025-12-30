@@ -1,5 +1,5 @@
 import React from "react";
-import { QuoteInfo } from "@/app/lib/definitions";
+import { QuoteInfo } from "@/types/definitions";
 import { formatDateToLocal } from '@/lib/utils';
 
 const QuoteHeader = ({quoteInfo} : {quoteInfo: QuoteInfo}) => {

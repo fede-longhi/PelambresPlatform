@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
-import { OrderStatus, OrderStatuses } from './order-definitions';
+import { OrderStatus, OrderStatuses } from '../../types/order-definitions';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 

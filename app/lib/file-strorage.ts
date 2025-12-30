@@ -1,5 +1,5 @@
 import { put, PutBlobResult } from "@vercel/blob";
-import { FileData } from "./definitions";
+import { FileData } from "../../types/definitions";
 import { calculateFileHash } from "@/lib/utils";
 import postgres from 'postgres';
 

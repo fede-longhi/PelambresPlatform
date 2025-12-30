@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
 import {Add, Business, Person, Search, UnfoldMore } from '@mui/icons-material';
-import { Customer } from "@/app/lib/definitions";
+import { Customer } from "@/types/definitions";
 import {
     Popover,
     PopoverContent,
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/popover";
 import { useDebouncedCallback } from 'use-debounce';
 import { fetchFilteredCustomers } from "@/app/lib/customer-data";
-import Spinner from "@/components/ui/spinner";
-import { OrderStatuses } from "@/app/lib/order-definitions";
+import { Spinner } from "@/components/ui/spinner";
+import { OrderStatuses } from "@/types/order-definitions";
 import CustomerForm from "../customers/create-form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { generateCode, getCustomerName } from "@/lib/utils";

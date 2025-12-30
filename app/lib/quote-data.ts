@@ -1,4 +1,4 @@
-import { QuoteTable } from "./definitions";
+import { QuoteTable } from "../../types/definitions";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -17,6 +17,7 @@ export async function fetchFilteredQuotes(
             date,
             first_name,
             last_name,
+            name,
             email,
             detail
         FROM quote_requests
@@ -42,6 +43,7 @@ export async function fetchQuotesPages(query: string) {
         WHERE
             first_name ILIKE ${`%${query}%`} OR
             last_name ILIKE ${`%${query}%`} OR
+            name ILIKE ${`%${query}%`} OR
             email ILIKE ${`%${query}%`}
     `;
 

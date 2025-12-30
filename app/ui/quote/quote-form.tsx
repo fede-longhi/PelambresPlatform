@@ -1,22 +1,48 @@
 'use client';
 
 import { createQuote, QuoteFormState } from '@/app/lib/quote-actions';
-import { useRef, useActionState, useState } from 'react';
+import { useRef, useActionState, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AddIcon from '@mui/icons-material/Add';
-import ErrorIcon from '@mui/icons-material/Error';
-import { Upload, FileText, X } from 'lucide-react';
+import { Upload, FileText, X, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Form() {
     const [attachments, setAttachments] = useState<Array<File>>([]);
-    const initialState: QuoteFormState = { message: null, errors: {}};
+    const initialState: QuoteFormState = { message: null, errors: {} };
     const [state, formAction, isPending] = useActionState(createQuote, initialState);
     const [isDragging, setIsDragging] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
+
+    useEffect(() => {
+
+        if (state.status === 'success') {
+            toast({
+                title: 'Solicitud de cotización enviada',
+                description: "Nos pondremos en contacto a la brevedad, generalmente dentro de las 24 horas. ¡Gracias por tu solicitud!",
+                variant: "default",
+            });
+
+            // formRef.current?.reset();
+            setAttachments([]);
+            setIsSubmitted(true);
+        }
+        
+        else if (state.status === 'error') {
+            toast({
+                title: "Error al enviar la solicitud",
+                description: "Hubo un problema al enviar tu solicitud de cotización. Por favor, intenta nuevamente más tarde.",
+                variant: "destructive", 
+            });
+            setIsSubmitted(true);
+        }
+    }, [state, toast]);
 
     const addFiles = (files: FileList | null) => {
         if (files) {    
@@ -67,16 +93,20 @@ export default function Form() {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
+
+    if (isSubmitted) {
+        return <SubmissionSuccessMessage />;
+    }
     
     return (
         <form action={handleSubmit} className="space-y-2">
             <div aria-live="polite" aria-atomic="true">
-                {state.message ? (
-                    <div className="flex flex-row items-center mt-2 text-sm text-red-500 border bg-slate-100 rounded-md p-2">
-                        <ErrorIcon className="mr-2"/>
-                        <p >{state.message}</p>
+                {state.message && (
+                    <div className="flex flex-row items-center mt-2 text-sm text-red-500 border border-red-200 bg-red-50 rounded-md p-3">
+                        <AlertTriangle className="mr-3 h-5 w-5"/>
+                        <p className="font-medium">{state.message}</p>
                     </div>
-                ) : null}
+                )}
             </div>
             <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8">
                 <div>
@@ -161,21 +191,18 @@ export default function Form() {
                 </div>
             </div>
             <div>
-                <Label htmlFor="file-upload">Adjuntar Archivos</Label> {/* Use Label for consistency */}
+                <Label htmlFor="file-upload">Adjuntar Archivos</Label>
                 
-                {/* Hidden File Input */}
-                {/* We remove the 'id' and 'name' attributes from the input to prevent it from auto-submitting */}
                 <input 
-                id="file-upload" // Keep the ID for the label
+                id="file-upload"
                 type='file' 
-                name='file-upload' // Keep a name, but it's mainly for ref/state
-                multiple // IMPORTANT: Keep this since you handle multiple files
+                name='file-upload'
+                multiple
                 className='sr-only'
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 />
                 
-                {/* === DRAG AND DROP AREA === */}
                 {attachments.length === 0 && (
                     <div
                         className={`mt-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer
@@ -183,7 +210,7 @@ export default function Form() {
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()} // Click anywhere to open file dialog
+                        onClick={() => fileInputRef.current?.click()}
                     >
                         <Upload className='w-8 h-8 text-muted-foreground' />
                         <div className="space-y-1 text-center mt-2">
@@ -197,7 +224,6 @@ export default function Form() {
                     </div>
                 )}
 
-                {/* === FILE LIST DISPLAY (Updated Styling) === */}
                 <ul className="space-y-2 mt-4">
                     {attachments.map((attachment, i) => (
                         <li 
@@ -205,13 +231,13 @@ export default function Form() {
                             className="flex items-center justify-between p-3 border rounded-md bg-white shadow-sm"
                         >
                             <div className='flex items-center space-x-3'>
-                                <FileText className="w-5 h-5 text-primary"/> {/* Using Lucide Icon */}
+                                <FileText className="w-5 h-5 text-primary"/>
                                 <div>
                                     <p className='text-sm font-medium truncate max-w-xs'>{attachment.name}</p>
                                     <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
                                 </div>
                             </div>
-                            {/* Use shadcn Button for consistent styling */}
+                            
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -219,13 +245,12 @@ export default function Form() {
                                 onClick={() => removeFile(i)}
                                 className="h-8 w-8 p-0"
                             >
-                                <X className="w-4 h-4 text-red-500" /> {/* Using Lucide Icon */}
+                                <X className="w-4 h-4 text-red-500" />
                                 <span className="sr-only">Eliminar archivo</span>
                             </Button>
                         </li>
                     ))}
                     
-                    {/* Button to add more files, visible once files are added */}
                     {attachments.length > 0 && (
                         <Button
                             type="button"
@@ -251,3 +276,21 @@ export default function Form() {
         </form>
     )
 }
+
+
+const SubmissionSuccessMessage = () => (
+    <div className="flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-xl text-center">
+        <CheckCircle className="w-16 h-16 text-primary mb-6" />
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            ¡Solicitud Recibida con Éxito!
+        </h2>
+        <p className="text-xl text-muted-foreground max-w-lg mb-4">
+            Hemos recibido tus archivos y detalles del proyecto.
+        </p>
+
+        <div className="inline-flex items-center p-4 bg-primary/10 rounded-lg text-primary font-semibold text-lg mb-8">
+            <Clock className="w-8 h-8 mx-3" />
+            Nos pondremos en contacto contigo dentro de las próximas 24 horas con tu cotización personalizada.
+        </div>
+    </div>
+);

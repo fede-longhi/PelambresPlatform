@@ -1,6 +1,6 @@
 'use client';
 
-import { Customer } from '@/app/lib/definitions';
+import { Customer } from '@/types/definitions';
 import { Button } from '@/components/ui/button';
 import { useActionState, useEffect, useState } from 'react';
 import { CustomerFormState, updateCustomer} from '@/app/lib/customer-actions';

@@ -1,10 +1,10 @@
 import TrackingCodeSearch from "@/app/ui/orders/code-search";
 import { OrderStatusDetailByCode } from "@/app/ui/orders/status-detail";
 import { StatusDetailSkeleton } from "@/app/ui/skeletons";
-import { ArrowBack } from "@mui/icons-material";
+import PageHeader from "@/components/layout/page-header";
 import { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
     title: 'Estado de la orden',
@@ -19,25 +19,33 @@ export default async function Page(props: {
     const query = searchParams?.query || '';
 
     return (
-        <div className="flex flex-col justify-center items-center">
-            <div className="flex flex-col w-full md:w-auto mt-6 shadow-md bg-slate-200">
-                <h1 className="text-center bg-primary text-primary-foreground rounded-t-md p-4 text-[32px] font-medium">
-                    Estado de impresión
-                </h1>
-                <div className="flex flex-col justify-center p-6 md:p-12">
-                    <TrackingCodeSearch />
-
-                    <div className="mt-8 mx-4">
+        <div className="flex justify-center py-12 w-full">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <PageHeader
+                    title="Estado de impresión"
+                    description="Verificá el estado de tu orden de impresión 3D ingresando el código de seguimiento proporcionado." />
+                <Card className="w-full max-w-2xl mx-auto shadow-xl">
+                    <CardHeader>
+                        <CardTitle className="flex items-center text-2xl">
+                            Código de Seguimiento
+                        </CardTitle>
+                        <CardDescription>
+                            Ingresá el código de seguimiento que te proporcionamos al confirmar tu orden de impresión.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="mb-8">
+                            <TrackingCodeSearch />
+                        </div>
                         {
                             query &&
                             <Suspense key={query} fallback={<StatusDetailSkeleton />}>
                                 <OrderStatusDetailByCode code={query}/>
                             </Suspense>
                         }
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
-            <Link href="/" className="rounded-md border px-2 py-1 mt-4 border-primary text-secondary-foreground items-center shadow text-sm"><ArrowBack className="mr-2" />Volver</Link>
         </div>
-    )
+    );
 }

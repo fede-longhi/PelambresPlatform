@@ -1,4 +1,4 @@
-import { PrintJobStatus } from "@/app/lib/definitions";
+import { PrintJobStatus } from "@/types/definitions";
 
 export default function PrintJobStatusField({status} : {status: PrintJobStatus }) {
 

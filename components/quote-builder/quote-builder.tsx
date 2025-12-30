@@ -5,7 +5,7 @@ import React, { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-import { BudgetItem, QuoteInfo, Sender } from '@/app/lib/definitions';
+import { BudgetItem, QuoteInfo, Sender } from '@/types/definitions';
 import { formatDateToLocal } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';

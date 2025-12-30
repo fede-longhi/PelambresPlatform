@@ -1,13 +1,11 @@
+import { NEW_PLACES_API_BASE_URL } from '@/lib/consts';
 import { NextResponse } from 'next/server';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACE_ID = process.env.NEXT_PUBLIC_PELAMBRES_PLACE_ID;
 const REVALIDATION_TIME = 60 * 60 * 24;
-const NEW_PLACES_API_BASE_URL = 'https://places.googleapis.com/v1/places';
 const LANGUAGE_CODE = 'es';
 
-
-// 1. Interfaz para la reseña cruda que viene de Google API (New)
 interface GoogleReview {
     authorAttribution: {
         displayName: string;

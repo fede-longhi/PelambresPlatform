@@ -1,4 +1,4 @@
-import { PrintJobModelFile, PrintJobWithGcode } from "@/app/lib/definitions";
+import { PrintJobModelFile, PrintJobWithGcode } from "@/types/definitions";
 import { fetchPrintJob } from "@/app/lib/print-job-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import { lusitana } from "@/app/ui/fonts";

@@ -1,4 +1,4 @@
-import { ConfigurationVariable } from "@/app/lib/definitions";
+import { ConfigurationVariable } from "@/types/definitions";
 import { cn } from "@/lib/utils";
 import ConfigurationTable from "./confiuguration-table";
 

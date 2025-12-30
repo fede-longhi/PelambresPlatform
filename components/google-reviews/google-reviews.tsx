@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { GoogleReviewsSkeleton } from './google-review-skeleton';
+import { GOOGLE_WRITEREVIEW_URI } from '@/lib/consts';
 
 const GOOGLE_PLACE_ID = process.env.NEXT_PUBLIC_PELAMBRES_PLACE_ID || "";
 
@@ -52,7 +54,6 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 				if (err instanceof Error) {
 					errorMessage = err.message;
 				} else if (typeof err === 'object' && err !== null && 'message' in err && typeof err.message === 'string') {
-					// Manejo de objetos que contienen una propiedad 'message' (común en errores de API)
 					errorMessage = err.message;
 				}
 				
@@ -108,11 +109,13 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 	};
 
 	if (isLoading) {
-		return <div className="text-center p-8">Cargando comentarios...</div>;
+		return (
+			<GoogleReviewsSkeleton />
+		);
 	}
 
 	if (error) {
-		return <div className="text-center p-8 text-red-500">Error: {error}</div>;
+		return <div className="text-center p-8 text-red-500"></div>;
 	}
 
 	if (!data || !data.reviews || data.reviews.length === 0) {
@@ -171,7 +174,7 @@ export function GoogleReviews({ showTimeDescription = true }: GoogleReviewsProps
 
 			<div className="mt-8 text-center">
 				<Link
-					href={`https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`}
+					href={`${GOOGLE_WRITEREVIEW_URI}?placeid=${GOOGLE_PLACE_ID}`}
 					target="_blank"
 					rel="noopener noreferrer"
 					className="inline-flex items-center rounded-full px-6 py-3 border border-transparent text-sm font-medium shadow-sm text-primary-foreground bg-primary hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"

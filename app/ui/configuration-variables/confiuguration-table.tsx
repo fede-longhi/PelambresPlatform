@@ -1,4 +1,4 @@
-import { ConfigurationVariable } from "@/app/lib/definitions";
+import { ConfigurationVariable } from "@/types/definitions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTimeToLocal } from "@/lib/utils";
 import { EditValueButton } from "./buttons";

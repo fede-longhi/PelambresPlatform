@@ -1,4 +1,4 @@
-import { PrintJobModelFile } from "./definitions";
+import { PrintJobModelFile } from "../../types/definitions";
 import postgres from 'postgres';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });

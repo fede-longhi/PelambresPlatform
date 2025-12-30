@@ -1,6 +1,6 @@
 'use server';
 
-import type { User } from '@/app/lib/definitions';
+import type { User } from '@/types/definitions';
 import postgres from 'postgres';
 import bcrypt from 'bcryptjs';
 

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { put } from '@vercel/blob';
 import postgres from 'postgres';
 import nodemailer from 'nodemailer';
-import { QuoteTable } from './definitions';
+import { QuoteTable } from '../../types/definitions';
 import { MAX_FILE_ATTACHMENT_SIZE_BYTES, MAX_FILE_ATTACHMENT_SIZE_MB } from '@/lib/consts';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -40,13 +40,14 @@ export type QuoteFormState = {
       detail?: string[];
     };
     message?: string | null;
+    status?: string | null;
     payload?: FormData;
 };
 
 export async function createQuote(
     _prevState: QuoteFormState,
     formData: FormData,
-) {
+) : Promise<QuoteFormState>{
     const validatedFields = CreateQuote.safeParse({
         email: formData.get('email'),
         name: formData.get('name'),
@@ -91,14 +92,6 @@ export async function createQuote(
             }
 
             files.push(file);
-
-            // const blob = await put(file.name, file, {
-            //     access: 'public',
-            // });
-            // await sql`
-            // INSERT INTO quote_request_attachments(quote_request_id, file_url)
-            // VALUES (${result[0].id}, ${blob.downloadUrl})
-            // `;
         }
 
         const blobUploads = files.map(file => 
@@ -121,10 +114,10 @@ export async function createQuote(
         } as QuoteTable, files);
     } catch (error) {
         console.error(error);
-        return { message: 'Error insertando la cotización.' };
+        return { status: 'error', message: 'Error insertando la cotización.' };
     }
-    
-    redirect('/quote-request/success');
+
+    return { status: 'success', message: null, errors: {} };
 }
 
 async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
@@ -166,10 +159,10 @@ async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
             to,
             subject,
             html: body,
-            attachments, // Adjuntar archivos
+            attachments,
         });
-        console.log("📩 Correo enviado con éxito:", info.response);
+        console.log("Correo enviado con éxito:", info.response);
     } catch (error) {
-        console.error("❌ Error enviando el correo:", error);
+        console.error("Error enviando el correo:", error);
     }
 }

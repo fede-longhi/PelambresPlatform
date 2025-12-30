@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ErrorIcon from '@mui/icons-material/Error';
-import { Customer } from '@/app/lib/definitions';
+import { Customer } from '@/types/definitions';
 import { Business, Person } from '@mui/icons-material';
 
 interface CustomerFormProps {

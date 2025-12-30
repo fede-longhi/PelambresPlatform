@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import MoreHoriz from "@mui/icons-material/MoreHoriz";
 import ExpandLess from "@mui/icons-material/ExpandLess";
-import type { Sender } from "@/app/lib/definitions";
+import type { Sender } from "@/types/definitions";
 
 const SenderEditor = ({sender, setSender }: {sender: Sender, setSender: React.Dispatch<React.SetStateAction<Sender>>}) => {
     const [showMore, setShowMore] = useState(false);

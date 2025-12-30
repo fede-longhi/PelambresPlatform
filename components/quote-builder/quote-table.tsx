@@ -2,7 +2,7 @@
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Delete } from '@mui/icons-material';
-import { BudgetItem } from '@/app/lib/definitions';
+import { BudgetItem } from '@/types/definitions';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useState } from "react";

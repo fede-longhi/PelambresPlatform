@@ -1,4 +1,4 @@
-import { Customer, GCodeInfo, OrderTable, Revenue } from "@/app/lib/definitions";
+import { Customer, GCodeInfo, OrderTable, Revenue } from "@/types/definitions";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 

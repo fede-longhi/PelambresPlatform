@@ -1,5 +1,5 @@
 import postgres from 'postgres';
-import { PrintJob, PrintJobWithGcode } from './definitions';
+import { PrintJob, PrintJobWithGcode } from '../../types/definitions';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 

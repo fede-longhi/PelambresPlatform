@@ -51,3 +51,7 @@ export const CONFIGURATION_VARIABLE_DATA_TYPES = [
         label: "boolean"
     }
 ];
+
+
+export const NEW_PLACES_API_BASE_URL = 'https://places.googleapis.com/v1/places';
+export const GOOGLE_WRITEREVIEW_URI = 'https://search.google.com/local/writereview';

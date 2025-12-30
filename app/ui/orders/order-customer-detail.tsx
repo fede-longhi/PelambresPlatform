@@ -1,4 +1,4 @@
-import { OrderTable } from "@/app/lib/definitions";
+import { OrderTable } from "@/types/definitions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getOrderCustomerName } from "@/lib/utils";
 import Link from "next/link";

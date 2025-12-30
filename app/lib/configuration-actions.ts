@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { ConfigurationVariable } from "./definitions";
+import { ConfigurationVariable } from "../../types/definitions";
 import { revalidatePath } from 'next/cache';
 
 import postgres from 'postgres';

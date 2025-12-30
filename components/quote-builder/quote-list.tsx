@@ -1,4 +1,4 @@
-import { BudgetItem } from "@/app/lib/definitions";
+import { BudgetItem } from "@/types/definitions";
 import { Delete } from "@mui/icons-material";
 import { Button } from "@/components/ui/button";
 
