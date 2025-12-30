@@ -78,16 +78,22 @@ export default function Footer() {
                     <div className="space-y-4 col-span-2 md:col-span-1">
                         <h3 className="text-lg font-semibold text-white">Contacto</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li className="flex items-center space-x-2">
-                                <Mail className="w-4 h-4 text-primary" />
-                                <span>pelambres3d@gmail.com</span>
-                            </li>
-                            <li className="flex items-center space-x-2">
-                                <MapPin className="w-4 h-4 text-primary" />
-                                <span>Martínez, Buenos Aires, Argentina</span>
+                            <li>
+                                <Link
+                                href={`mailto:${mailAddress}`} 
+                                className="flex items-center space-x-2 hover:text-primary transition-colors cursor-pointer">
+                                    <Mail className="w-4 h-4 text-primary" />
+                                    <span>{mailAddress}</span>
+                                </Link>
                             </li>
                             <li>
-                                 <Link
+                                <Link href="https://maps.app.goo.gl/epG7Ayvaf6esnJwz5" aria-label="Ubicación" target='_blank' className="flex items-center space-x-2 hover:text-primary transition">
+                                    <MapPin className="w-4 h-4 text-primary" />
+                                    <span>Martínez, Buenos Aires, Argentina</span>
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
                                 href={`https://wa.me/5491158928659?text=${textToShare}`} aria-label="Whatsapp" target='_blank'
                                 className="hover:text-primary transition">
                                     <WhatsApp className="text-green-600" fontSize="small"/>

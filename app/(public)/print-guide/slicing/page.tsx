@@ -16,7 +16,7 @@ export default function SlicingPage() {
                     
                     <h3 className="text-xl font-semibold mt-6">Verificación de la Malla (Manifold)</h3>
                     <p>
-                        Es crucial que tu modelo sea "manifold" (cerrado) para que el software laminador (slicer) sepa exactamente dónde está el interior y el exterior de la pieza. Una malla no manifold puede causar errores o agujeros en la impresión final.
+                        Es crucial que tu modelo sea &quot;manifold&quot; (cerrado) para que el software laminador (slicer) sepa exactamente dónde está el interior y el exterior de la pieza. Una malla no manifold puede causar errores o agujeros en la impresión final.
                     </p>
                     
                     <ul className="list-disc list-inside ml-4 space-y-2">
