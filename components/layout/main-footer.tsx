@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, MapPin } from 'lucide-react'; // Íconos para contacto y redes
+import { Mail, MapPin } from 'lucide-react';
 import { WhatsApp, Instagram } from '@mui/icons-material';
 
 const navLinks = [
@@ -35,7 +35,7 @@ export default function Footer() {
                                 height={32}
                                 alt="Logo de Pelambres"
                             />
-                            <span className="text-xl font-bold text-white">Pelambres<span className="text-primary/80">3D</span></span>
+                            <span className="text-xl font-bold text-white">Pelambres<span className="text-violet-400">3D</span></span>
                         </Link>
                         <p className="text-sm text-gray-400 max-w-xs">
                             Transformamos ideas en piezas funcionales y prototipos de alta calidad para creadores y negocios.
