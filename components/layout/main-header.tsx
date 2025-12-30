@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { DollarSign, ArrowRight, Menu, X } from 'lucide-react';
 
-const isProduction = process.env.IS_PRODUCTION === 'true'; 
 
 const navItems = [
     { title: "Mi Pedido", href: "/print-status" },
@@ -15,6 +14,7 @@ const navItems = [
 ];
 
 export default function MainHeader() {
+    const isProduction = process.env.IS_PRODUCTION === 'true'; 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
