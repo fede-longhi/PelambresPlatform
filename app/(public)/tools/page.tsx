@@ -42,7 +42,7 @@ export default function ToolsPage() {
             <div className="max-w-6xl mx-auto px-4">
                 
                 <PageHeader 
-                    className="my-6 justify-center" 
+                    className="my-6 justify-center  " 
                     textClassName="text-4xl text-center" 
                     title="Herramientas para la comunidad Maker"
                 />

@@ -1,15 +1,6 @@
 import React from 'react';
-import Link from 'next/link';
-import { BookOpen, ChevronRight, Info } from 'lucide-react';
-import { Header, Section, SectionContent, SectionHeader } from '@/app/ui/print-guide/components';
-
-const guideSections = [
-    { title: "Introducción a la Impresión 3D", slug: "introduccion" },
-    { title: "Materiales Comunes (PLA, PETG, ABS)", slug: "materiales" },
-    { title: "Diseño y Formato de Archivos (STL)", slug: "formatos" },
-    { title: "Tolerancias y Acabados", slug: "tolerancias" },
-    { title: "Preguntas Frecuentes (FAQ)", slug: "faq" },
-];
+import { Info } from 'lucide-react';
+import { Section, SectionContent, SectionHeader } from '@/app/ui/print-guide/components';
 
 export default function Page() {
 

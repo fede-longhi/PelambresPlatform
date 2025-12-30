@@ -1,16 +1,12 @@
-// app/print-guide/slicing/page.tsx
-
 import React from 'react';
 import Link from 'next/link';
 import { Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
-import { Slice, Settings, FileCheck, Layers, Info } from 'lucide-react'; 
+import { Slice, Settings, FileCheck, Info } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 
 export default function SlicingPage() {
     return (
         <div className="space-y-12">
-
-            {/* Sección 1: El Archivo STL y Su Verificación */}
             <Section>
                 <SectionHeader title="El Archivo STL y la Integridad del Modelo" icon={<FileCheck />} />
                 <SectionContent className="space-y-4">
@@ -80,8 +76,6 @@ export default function SlicingPage() {
                 </SectionContent>
             </Section>
             
-
-            {/* Sección 3: Exportación y Envío */}
             <Section>
                 <SectionHeader title="Optimización del Archivo Final" icon={<Settings />} />
                 <SectionContent className="space-y-4">

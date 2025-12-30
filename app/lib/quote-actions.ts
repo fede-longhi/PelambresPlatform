@@ -1,7 +1,6 @@
 'use server';
 
 import { z } from 'zod';
-import { redirect } from 'next/navigation';
 import { put } from '@vercel/blob';
 import postgres from 'postgres';
 import nodemailer from 'nodemailer';
