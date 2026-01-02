@@ -3,7 +3,8 @@ import { inter } from '@/app/ui/fonts';
 import { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
- 
+import { Analytics } from "@vercel/analytics/next"
+
 export const metadata: Metadata = {
     title: {
         template: '%s | Pelambres',
@@ -27,6 +28,7 @@ export default function RootLayout({
                     </TooltipProvider>
                 </main>
                 <Toaster />
+                <Analytics/>
             </body>
         </html>
     );
