@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'http://googleusercontent.com/pelambres3d.com.ar/1';
+  const baseUrl = 'https://pelambres3d.com.ar';
 
   return [
     { url: baseUrl, lastModified: new Date() },
