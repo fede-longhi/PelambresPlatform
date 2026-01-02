@@ -9,7 +9,8 @@ export const metadata: Metadata = {
         template: '%s | Pelambres',
         default: 'Pelambres',
     },
-    description: 'Pelambres - Servicio de Impresión 3d.',
+    description: 'Servicio profesional de impresión 3D en Martínez, Buenos Aires. Especialistas en prototipado rápido, repuestos industriales y diseño personalizado FDM/SLA.',
+    keywords: ['impresión 3d martínez', 'impresión 3d zona norte', 'prototipado rápido', 'piezas industriales 3d', 'pelambres 3d'],
 };
 
 export default function RootLayout({

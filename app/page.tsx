@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 import Form from "@/app/ui/quote/quote-form";
 import { Package, DraftingCompass, Slice, PencilRuler } from "lucide-react"; 
 import { GoogleReviews } from '@/components/google-reviews/google-reviews';
@@ -7,8 +8,35 @@ import MainHeader from '@/components/layout/main-header';
 import MainFooter from '@/components/layout/main-footer';
 
 export default function Page() {
+
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Pelambres 3D",
+        "image": "https://pelambres.com.ar/images/pelambres_ia_02.jpg",
+        "description": "Servicio de impresión 3D profesional y diseño industrial en Martínez.",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Martínez",
+            "addressRegion": "Buenos Aires",
+            "addressCountry": "AR"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": -34.4929125,
+            "longitude": -58.5192373
+        },
+        "url": "https://pelambres.com.ar",
+        "telephone": "+541158928659"
+    };
+
     return (
         <div className="flex min-h-screen flex-col w-full bg-gray-100 text-gray-800">
+            <Script
+                id="faq-schema"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <MainHeader />
 
             <main className="space-y-20">
@@ -17,7 +45,7 @@ export default function Page() {
                         <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
                             <div className="relative z-10 lg:py-12">
                                 <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
-                                    Transformamos tus ideas en realidad con <span className="text-primary">impresión 3D</span>
+                                    Impresión 3D Profesional
                                 </h1>
                                 <p className="mt-4 text-xl text-gray-500">
                                     Ofrecemos servicios de prototipado rápido, fabricación de piezas y diseño personalizado con la más alta precisión.
@@ -66,7 +94,7 @@ export default function Page() {
                         <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
                             <Image
                                 src="/images/pieza_automotriz.png"
-                                alt="Prototipo de un automóvil en 3D"
+                                alt="Repuesto automotriz fabricado con impresión 3D de alta resistencia"
                                 width={1024}
                                 height={1024}
                                 className="w-full h-56 object-cover" />
@@ -81,7 +109,7 @@ export default function Page() {
                         <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
                             <Image
                                 src="/images/pieza_industrial.png"
-                                alt="Pieza de maquinaria impresa en 3D"
+                                alt="Pieza mecánica industrial impresa en 3D para maquinaria"
                                 width={1024}
                                 height={1024}
                                 className="h-56 object-cover" />
@@ -95,7 +123,7 @@ export default function Page() {
                         <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
                             <Image
                                 src="/images/baby_groot_w.png"
-                                alt="Figura artística impresa en 3D"
+                                alt="Figura de colección Baby Groot impresa en 3D con acabado artístico"
                                 width={1024}
                                 height={768}
                                 className="h-56 object-cover" />
