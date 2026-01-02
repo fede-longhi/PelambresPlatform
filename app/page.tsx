@@ -45,7 +45,7 @@ export default function Page() {
                         <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
                             <div className="relative z-10 lg:py-12">
                                 <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
-                                    Impresión 3D Profesional
+                                    Servicio de Impresión 3D <span className="text-primary">Profesional</span>
                                 </h1>
                                 <p className="mt-4 text-xl text-gray-500">
                                     Ofrecemos servicios de prototipado rápido, fabricación de piezas y diseño personalizado con la más alta precisión.
