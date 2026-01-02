@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/admin/', // Bloquea carpetas privadas si las tuvieras
+      disallow: '/admin/',
     },
-    sitemap: 'http://googleusercontent.com/pelambres3d.com.ar/sitemap.xml/2',
+    sitemap: 'https://pelambres3d.com.ar/sitemap.xml',
   };
 }
