@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, MapPin } from 'lucide-react'; // Íconos para contacto y redes
+import { Mail, MapPin } from 'lucide-react';
 import { WhatsApp, Instagram } from '@mui/icons-material';
 
 const navLinks = [
@@ -35,7 +35,7 @@ export default function Footer() {
                                 height={32}
                                 alt="Logo de Pelambres"
                             />
-                            <span className="text-xl font-bold text-white">Pelambres<span className="text-primary">3D</span></span>
+                            <span className="text-xl font-bold text-white">Pelambres<span className="text-violet-400">3D</span></span>
                         </Link>
                         <p className="text-sm text-gray-400 max-w-xs">
                             Transformamos ideas en piezas funcionales y prototipos de alta calidad para creadores y negocios.
@@ -87,14 +87,18 @@ export default function Footer() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href="https://maps.app.goo.gl/epG7Ayvaf6esnJwz5" aria-label="Ubicación" target='_blank' className="flex items-center space-x-2 hover:text-primary transition">
+                                <Link
+                                href="https://maps.app.goo.gl/epG7Ayvaf6esnJwz5"
+                                target='_blank'
+                                className="flex items-center space-x-2 hover:text-primary transition">
                                     <MapPin className="w-4 h-4 text-primary" />
                                     <span>Martínez, Buenos Aires, Argentina</span>
                                 </Link>
                             </li>
                             <li>
                                 <Link
-                                href={`https://wa.me/5491158928659?text=${textToShare}`} aria-label="Whatsapp" target='_blank'
+                                href={`https://wa.me/5491158928659?text=${textToShare}`}
+                                target='_blank'
                                 className="hover:text-primary transition">
                                     <WhatsApp className="text-green-600" fontSize="small"/>
                                     <span className="ml-2">+54 9 11 5892-8659</span>
@@ -112,9 +116,8 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Derechos de Autor */}
                 <div className="pt-8 mt-8 border-t border-gray-800 text-center">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                         &copy; {currentYear} Pelambres 3D. Todos los derechos reservados.
                     </p>
                 </div>

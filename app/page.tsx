@@ -58,7 +58,7 @@ export default function Page() {
 
                 <section id="proyectos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <h2 className="text-3xl font-extrabold text-center text-gray-900 sm:text-4xl">Nuestros Proyectos</h2>
-                    <p className="mt-4 text-center text-gray-500 max-w-2xl mx-auto">
+                    <p className="mt-4 text-center text-gray-600 max-w-2xl mx-auto">
                         Mira algunos de los trabajos que hemos hecho. Desde prototipos industriales hasta figuras artísticas, todo es posible.
                     </p>
                     <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
