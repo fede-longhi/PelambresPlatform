@@ -59,7 +59,7 @@ export default function BeatScannerPro() {
     const [showSettings, setShowSettings] = useState(false);
     const [editingSlot, setEditingSlot] = useState<{ rIdx: number, sIdx: number } | null>(null);
 
-    const [isMetronomeActive, setIsMetronomeActive] = useState(true);
+    const [isMetronomeActive, setIsMetronomeActive] = useState(false);
     const lastBeatRef = useRef<number | null>(null);
     
     const clickRef = useRef<HTMLAudioElement>(null);
@@ -329,7 +329,7 @@ export default function BeatScannerPro() {
                     onClick={() => { resetGame(); setView('PLAY'); }}
                     className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${view === 'PLAY' ? 'bg-primary text-black shadow-lg shadow-primary/20' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
-                    <Play size={18} fill={view === 'PLAY' ? 'black' : 'none'} /> JUGAR
+                    <Music size={18}/> JUGAR
                 </button>
                 <button 
                     onClick={() => { resetGame(); setView('EDIT'); }}
@@ -346,7 +346,11 @@ export default function BeatScannerPro() {
                     {/* HUD */}
                     <div className="mb-6 w-full flex justify-between items-end border-b border-zinc-800/50 pb-4">
                         <div className="flex flex-col">
-                            <h1 className="text-xl md:text-2xl font-black tracking-tighter text-primary italic uppercase">CORD CAWAT BEAT</h1>
+                            <div className="flex flex-row gap-2 items-center">
+                                <Zap size={24} />
+                                <h1 className="text-xl md:text-2xl font-black tracking-tighter text-primary italic uppercase">CORD CAWAT BEAT</h1>
+                            </div>
+
                             <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">Mastering Rhythms</p>
                         </div>
                         <div className="text-right">
@@ -425,6 +429,14 @@ export default function BeatScannerPro() {
 
                         {/* SIDEBAR MODOS */}
                         <div className="flex flex-row lg:flex-col gap-3 w-full lg:w-40 order-2">
+                            <button 
+                                onClick={() => setShowSettings(!showSettings)} 
+                                disabled={gameState !== 'IDLE'}
+                                className={`h-12 w-12 md:h-16 md:w-16 rounded-full flex items-center justify-center transition-all ${gameState !== 'IDLE' ? 'hidden' : 'flex'} ${showSettings ? 'bg-zinc-700 text-white rotate-90' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'}`}
+                            >
+                                <Settings2 size={28} />
+                            </button>
+
                             <button
                                 onClick={() => setIsRandomMode(!isRandomMode)}
                                 disabled={gameState !== 'IDLE'}
@@ -446,7 +458,7 @@ export default function BeatScannerPro() {
                             >
                                 <Music size={18} className={isMetronomeActive ? "animate-bounce" : ""} />
                                 <span className="text-[10px] font-black uppercase tracking-widest">
-                                    {isMetronomeActive ? "METRONOMO ON" : "METRONOMO OFF"}
+                                    {isMetronomeActive ? "METRONOME ON" : "METRONOME OFF"}
                                 </span>
                             </button>
                         </div>
@@ -477,13 +489,6 @@ export default function BeatScannerPro() {
                                     </button>
                                 </div>
                             )}
-                            <button 
-                                onClick={() => setShowSettings(!showSettings)} 
-                                disabled={gameState !== 'IDLE'}
-                                className={`h-12 w-12 md:h-16 md:w-16 rounded-full flex items-center justify-center transition-all ${gameState !== 'IDLE' ? 'hidden' : 'flex'} ${showSettings ? 'bg-zinc-700 text-white rotate-90' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'}`}
-                            >
-                                <Settings2 size={28} />
-                            </button>
                         </div>
 
                         <div className="flex flex-col flex-1 lg:flex-none gap-2 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-800">
@@ -581,7 +586,7 @@ export default function BeatScannerPro() {
                                     className="w-full lg:w-auto bg-primary text-primary-foreground rounded-xl font-black shadow-lg shadow-primary/10 px-8 hover:scale-105 transition-transform"
                                 >
                                     <Upload size={18} className="mr-2" /> 
-                                    IMPORTAR
+                                    IMPORT
                                 </Button>
 
                                 {/* INPUT OCULTO */}
