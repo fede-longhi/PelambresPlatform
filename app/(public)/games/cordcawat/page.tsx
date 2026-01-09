@@ -72,14 +72,21 @@ export default function BeatScannerPro() {
     useEffect(() => {
         const savedWords = localStorage.getItem('bs_words');
         const savedLevels = localStorage.getItem('bs_levels');
-        const savedBpm = localStorage.getItem('bs_bpm');
+        const savedConfig = localStorage.getItem('bs_config');
+
         if (savedWords) setWords(JSON.parse(savedWords));
         if (savedLevels) {
             const parsed = JSON.parse(savedLevels);
             setLevels(parsed);
             setActiveLevels(parsed);
         }
-        if (savedBpm) setBpm(Number(savedBpm));
+        
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            if (config.bpm) setBpm(config.bpm);
+            if (config.initialWait) setInitialWait(config.initialWait);
+            if (config.waitBetween) setWaitBetween(config.waitBetween);
+        }
     }, []);
 
     
@@ -319,6 +326,7 @@ export default function BeatScannerPro() {
             }
         };
         reader.readAsText(file);
+        e.target.value = "";
     };
 
     return (
@@ -380,10 +388,17 @@ export default function BeatScannerPro() {
                                         }`}>
                                             <Image src={wordData?.image || '/placeholder.png'} className="w-full h-full object-cover" alt="" width={400} height={400} />
                                             {isFirstMatch && gameState !== 'IDLE' && (
-                                                <div className="absolute inset-0 flex items-end justify-center pointer-events-none md:mb-2 px-2">
-                                                    <div className="bg-yellow-400 px-1 py-1 md:px-5 md:py-2 rounded-lg shadow-2xl border-2 border-white/50">
-                                                        <span className="text-[12px] sm:text-xl md:text-3xl font-black uppercase text-zinc-950 italic leading-none"
-                                                            style={{ WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill' }}>
+                                                <div className="absolute inset-x-0 bottom-1 flex justify-center pointer-events-none px-1 md:bottom-3 md:px-2">
+                                                    {/* Contenedor más delgado en mobile (py-0.5 y px-2) y con borde más fino */}
+                                                    <div className="bg-yellow-400 px-2 py-0.5 md:px-5 md:py-2 rounded-md md:rounded-xl shadow-lg border-[1px] border-white/50 md:border-2">
+                                                        <span 
+                                                            className="text-[9px] sm:text-xl md:text-3xl font-black uppercase text-zinc-950 italic leading-none block"
+                                                            style={{ 
+                                                                // Reducimos el stroke en mobile para que no empaste la letra
+                                                                WebkitTextStroke: window.innerWidth < 768 ? '0.5px white' : '1.5px white', 
+                                                                paintOrder: 'stroke fill' 
+                                                            }}
+                                                        >
                                                             {wordKey}
                                                         </span>
                                                     </div>
