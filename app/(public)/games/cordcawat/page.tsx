@@ -8,6 +8,7 @@ import {
   Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 // --- TIPOS ---
 type GameState = 'IDLE' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'FINISHED';
@@ -354,7 +355,7 @@ export default function BeatScannerPro() {
                             <p className="text-zinc-600 text-[10px] font-bold uppercase tracking-widest">Mastering Rhythms</p>
                         </div>
                         <div className="text-right">
-                            <span className="text-zinc-500 text-[10px] font-bold block uppercase tracking-tighter">Nivel Actual</span>
+                            <span className="text-zinc-500 text-[10px] font-bold block uppercase tracking-tighter">Round</span>
                             <span className="text-3xl md:text-5xl font-black font-mono leading-none">
                                 {currentRound}<span className="text-zinc-800">/</span>{activeLevels.length}
                             </span>
@@ -375,12 +376,12 @@ export default function BeatScannerPro() {
                                         <div key={i} className={`relative rounded-xl overflow-hidden transition-all duration-150 border-[3px] md:border-[8px] ${
                                             activeBuffer === i 
                                             ? 'border-primary scale-[1.03] z-10 shadow-[0_0_50px_rgba(var(--primary),0.5)]' 
-                                            : (gameState === 'PLAYING' && !isWaitPhase ? 'border-zinc-900 opacity-20 scale-95' : 'border-zinc-800 opacity-100')
+                                            : (gameState === 'PLAYING' && !isWaitPhase ? 'border-zinc-900 scale-95' : 'border-zinc-800')
                                         }`}>
-                                            <img src={wordData?.image || '/placeholder.png'} className="w-full h-full object-cover" alt="" />
+                                            <Image src={wordData?.image || '/placeholder.png'} className="w-full h-full object-cover" alt="" width={400} height={400} />
                                             {isFirstMatch && gameState !== 'IDLE' && (
-                                                <div className="absolute inset-0 flex items-end justify-center pointer-events-none mb-2 md:mb-5 px-2 animate-in zoom-in duration-300">
-                                                    <div className="bg-yellow-400 px-3 py-1 md:px-5 md:py-2 rounded-lg shadow-2xl border-2 border-white/50 transform -rotate-1">
+                                                <div className="absolute inset-0 flex items-end justify-center pointer-events-none md:mb-2 px-2">
+                                                    <div className="bg-yellow-400 px-1 py-1 md:px-5 md:py-2 rounded-lg shadow-2xl border-2 border-white/50">
                                                         <span className="text-[12px] sm:text-xl md:text-3xl font-black uppercase text-zinc-950 italic leading-none"
                                                             style={{ WebkitTextStroke: '1.5px white', paintOrder: 'stroke fill' }}>
                                                             {wordKey}
@@ -450,7 +451,7 @@ export default function BeatScannerPro() {
 
                             <button
                                 onClick={() => setIsMetronomeActive(!isMetronomeActive)}
-                                className={`flex-1 lg:flex-none flex flex-row lg:flex-col items-center justify-center gap-2 p-3 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all ${
+                                className={`flex-1 lg:flex-none flex flex-row lg:flex-col items-center justify-center gap-3 p-4 md:p-6 rounded-3xl border-2 transition-all ${
                                     isMetronomeActive 
                                     ? 'bg-amber-500/20 border-amber-500 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)]' 
                                     : 'bg-zinc-900 border-zinc-800 text-zinc-500'
@@ -623,7 +624,7 @@ export default function BeatScannerPro() {
                                                         className="relative aspect-square bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden hover:border-primary hover:scale-105 transition-all group"
                                                     >
                                                         {currentWord?.image ? (
-                                                            <img src={currentWord.image} className="w-full h-full object-cover" />
+                                                            <Image src={currentWord.image} className="w-full h-full object-cover" alt="" width={400} height={400} />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full"><Plus size={12} className="text-zinc-800" /></div>
                                                         )}
@@ -649,8 +650,8 @@ export default function BeatScannerPro() {
                     <div className="bg-zinc-900 border border-zinc-800 w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h2 className="text-2xl font-black uppercase tracking-tighter">Seleccionar Asset</h2>
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Ronda {editingSlot.rIdx + 1} — Beat {editingSlot.sIdx + 1}</p>
+                                <h2 className="text-2xl font-black uppercase tracking-tighter">Select Word</h2>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Round {editingSlot.rIdx + 1} — Beat {editingSlot.sIdx + 1}</p>
                             </div>
                             <button onClick={() => setEditingSlot(null)} className="h-12 w-12 rounded-full bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-colors">
                                 <X size={24} />
@@ -667,7 +668,7 @@ export default function BeatScannerPro() {
                                     }}
                                     className="group relative aspect-square rounded-2xl overflow-hidden border-2 border-zinc-800 hover:border-primary transition-all bg-zinc-950"
                                 >
-                                    <img src={w.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={w.name} />
+                                    <Image src={w.image} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt={w.name} width={400} height={400} />
                                     <div className="absolute inset-x-0 bottom-0 bg-black/80 py-2 text-center">
                                         <span className="text-[10px] font-black uppercase tracking-tighter">{w.name}</span>
                                     </div>
