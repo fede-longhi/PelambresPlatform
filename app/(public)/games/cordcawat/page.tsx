@@ -46,7 +46,7 @@ export default function BeatScannerPro() {
     
     // --- ESTADOS DE JUEGO ---
     const [bpm, setBpm] = useState(186);
-    const [initialWait, setInitialWait] = useState(6.6);
+    const [initialWait, setInitialWait] = useState(5);
     const [waitBetween, setWaitBetween] = useState(2.62);
     const [gameState, setGameState] = useState<GameState>('IDLE');
     const [currentRound, setCurrentRound] = useState(1);
