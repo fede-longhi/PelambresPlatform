@@ -3,7 +3,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Play, RotateCcw, Zap, Timer, Settings2, Pause, 
-  Edit3, Plus, Trash2, Save, Music, LayoutGrid, X 
+  Edit3, Plus, Trash2, Save, Music, LayoutGrid, X, 
+  Download,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -58,10 +60,12 @@ export default function BeatScannerPro() {
     const [editingSlot, setEditingSlot] = useState<{ rIdx: number, sIdx: number } | null>(null);
 
     const [isMetronomeActive, setIsMetronomeActive] = useState(true);
-    const clickRef = useRef<HTMLAudioElement>(null);
     const lastBeatRef = useRef<number | null>(null);
     
+    const clickRef = useRef<HTMLAudioElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // --- PERSISTENCIA ---
     useEffect(() => {
@@ -77,12 +81,18 @@ export default function BeatScannerPro() {
         if (savedBpm) setBpm(Number(savedBpm));
     }, []);
 
+    
+
     const saveSettings = () => {
         localStorage.setItem('bs_words', JSON.stringify(words));
         localStorage.setItem('bs_levels', JSON.stringify(levels));
-        localStorage.setItem('bs_bpm', bpm.toString());
+
+        const config = { bpm, initialWait, waitBetween };
+        localStorage.setItem('bs_config', JSON.stringify(config));
+
         setActiveLevels(levels);
-        alert("Configuración guardada");
+        
+        alert("Configuración guardada en este navegador.");
     };
 
     // --- LÓGICA DE SINCRONIZACIÓN ---
@@ -104,10 +114,7 @@ export default function BeatScannerPro() {
                         const index = Math.floor((time - roundStartTime) / stepDuration);
 
                         if (index !== lastBeatRef.current) {
-                            if (isMetronomeActive && clickRef.current) {
-                                clickRef.current.currentTime = 0;
-                                clickRef.current.play().catch(() => {});
-                            }
+                            playClick();
                             lastBeatRef.current = index;
                         }
                         setActiveBuffer(index);
@@ -172,21 +179,11 @@ export default function BeatScannerPro() {
         let count = 3;
         setCountdown(count);
 
-        // --- NUEVO: Metrónomo previo al inicio ---
-        const beatInterval = (60 / bpm) * 1000;
-        const metronomeInterval = setInterval(() => {
-            playClick();
-        }, beatInterval);
-
-        // El primer click suena inmediatamente al presionar Play
-        playClick();
-
         // Intervalo visual del 3, 2, 1
         const timer = setInterval(() => {
             count--;
             if (count <= 0) {
                 clearInterval(timer);
-                clearInterval(metronomeInterval); // Detenemos este intervalo para que el audio tome el control
                 setGameState('PLAYING');
                 if (audioRef.current) {
                     audioRef.current.currentTime = 0;
@@ -280,6 +277,47 @@ export default function BeatScannerPro() {
             console.error("Error generating random levels:", error);
             return INITIAL_LEVELS;
         }
+    };
+
+    // Exportar configuración a un archivo JSON
+    const exportData = () => {
+        const data = { 
+            words, 
+            levels, 
+            config: { bpm, initialWait, waitBetween } 
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `beat-scanner-pack.json`;
+        link.click();
+    };
+
+    // Importar configuración desde un archivo JSON
+    const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target?.result as string);
+                if (data.words) setWords(data.words);
+                if (data.levels) {
+                    setLevels(data.levels);
+                    setActiveLevels(data.levels);
+                }
+                if (data.config) {
+                    setBpm(data.config.bpm);
+                    setInitialWait(data.config.initialWait);
+                    setWaitBetween(data.config.waitBetween);
+                }
+                alert("Pack cargado correctamente.");
+            } catch (err) {
+                alert("Error al leer el archivo JSON.");
+            }
+        };
+        reader.readAsText(file);
     };
 
     return (
@@ -411,26 +449,11 @@ export default function BeatScannerPro() {
                                     {isMetronomeActive ? "METRONOMO ON" : "METRONOMO OFF"}
                                 </span>
                             </button>
-
-                            <div className="flex flex-col flex-1 lg:flex-none gap-2 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-800">
-                                <span className="text-[10px] text-zinc-500 font-black uppercase text-center mb-2">Speed Factor</span>
-                                <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5">
-                                    {SPEED_OPTIONS.map(v => (
-                                        <button 
-                                            key={v} 
-                                            onClick={() => setSpeed(v)} 
-                                            className={`text-[10px] py-2 rounded-lg font-bold transition-colors ${speed === v ? 'bg-primary text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
-                                        >
-                                            {v}x
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                     </div>
 
                     {/* CONTROLES FLOTANTES */}
-                    <div className="mt-12 flex items-center gap-6 relative">
+                    <div className="mt-12 flex flex-col items-center gap-6 relative">
                         <div className="bg-zinc-900/90 backdrop-blur-xl p-4 rounded-full border border-zinc-800 flex items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                             {gameState === 'IDLE' ? (
                                 <button 
@@ -463,9 +486,25 @@ export default function BeatScannerPro() {
                             </button>
                         </div>
 
+                        <div className="flex flex-col flex-1 lg:flex-none gap-2 bg-zinc-900/50 p-4 rounded-3xl border border-zinc-800">
+                            <span className="text-[10px] text-zinc-500 font-black uppercase text-center mb-2">Speed</span>
+                            <div className="grid grid-cols-4 lg:grid-cols-8 gap-1.5">
+                                {SPEED_OPTIONS.map(v => (
+                                    <button 
+                                        key={v} 
+                                        onClick={() => setSpeed(v)} 
+                                        className={`text-[10px] p-2 rounded-lg font-bold transition-colors ${speed === v ? 'bg-primary text-black' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}
+                                    >
+                                        {v}x
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* PANEL DE CONFIGURACIÓN RÁPIDA */}
                         {showSettings && (
                             <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90vw] max-w-[440px] bg-zinc-900 border border-zinc-800 p-8 rounded-[2.5rem] shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-8 duration-300">
+                                <button className="absolute top-4 right-4 text-zinc-500" onClick={() => setShowSettings(false)}><X /></button>
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="flex flex-col gap-2">
                                         <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Master BPM</span>
@@ -534,8 +573,29 @@ export default function BeatScannerPro() {
                                 <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sequence design</p>
                             </div>
                             <div className="flex flex-col mt-2 lg:mt-0 lg:flex-row gap-3">
-                                {/* <Button onClick={() => setLevels([...levels, Array(8).fill(words[0]?.name.toLowerCase() || "")])} variant="secondary" className="rounded-xl font-bold">New Round</Button> */}
-                                <Button onClick={saveSettings} className="w-full lg:w-auto bg-primary text-black rounded-xl font-black shadow-lg shadow-primary/10 px-8 hover:scale-105 transition-transform"><Save size={18} className="mr-2"/> SAVE CHANGES</Button>
+                                <Button onClick={exportData} className="w-full lg:w-auto bg-primary text-primary-foreground rounded-xl font-black shadow-lg shadow-primary/10 px-8 hover:scale-105 transition-transform">
+                                    <Download size={18} className="mr-2" /> EXPORT
+                                </Button>
+                                <Button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="w-full lg:w-auto bg-primary text-primary-foreground rounded-xl font-black shadow-lg shadow-primary/10 px-8 hover:scale-105 transition-transform"
+                                >
+                                    <Upload size={18} className="mr-2" /> 
+                                    IMPORTAR
+                                </Button>
+
+                                {/* INPUT OCULTO */}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={importData}
+                                    className="hidden"
+                                    accept=".json"
+                                />
+                                <Button onClick={saveSettings} className="w-full lg:w-auto bg-primary text-primary-foreground rounded-xl font-black shadow-lg shadow-primary/10 px-8 hover:scale-105 transition-transform">
+                                    <Save size={18} className="mr-2"/>
+                                    SAVE CHANGES
+                                </Button>
                             </div>
                         </div>
 
@@ -543,12 +603,11 @@ export default function BeatScannerPro() {
                             {levels.map((round, rIdx) => (
                                 <div key={rIdx} className="bg-zinc-900/20 p-6 rounded-[2rem] border border-zinc-800 hover:bg-zinc-900/40 transition-colors relative group">
                                     <div className="flex justify-between items-center mb-4">
-                                        <span className="text-xs font-black text-zinc-600 uppercase tracking-[0.4em]">Sequence 0{rIdx + 1}</span>
+                                        <span className="text-xs font-black text-zinc-600 uppercase tracking-[0.4em]">Round 0{rIdx + 1}</span>
                                         <button onClick={() => setLevels(levels.filter((_, i) => i !== rIdx))} className="opacity-0 group-hover:opacity-100 text-zinc-700 hover:text-red-500 transition-all"><X size={20}/></button>
                                     </div>
                                     <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
                                         {round.map((slot, sIdx) => {
-                                            // Buscamos la imagen del asset actual para la miniatura
                                             const currentWord = words.find(w => w.name.toLowerCase() === slot.toLowerCase());
                                             
                                             return (
@@ -559,12 +618,12 @@ export default function BeatScannerPro() {
                                                         className="relative aspect-square bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden hover:border-primary hover:scale-105 transition-all group"
                                                     >
                                                         {currentWord?.image ? (
-                                                            <img src={currentWord.image} className="w-full h-full object-cover opacity-50 group-hover:opacity-100" />
+                                                            <img src={currentWord.image} className="w-full h-full object-cover" />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full"><Plus size={12} className="text-zinc-800" /></div>
                                                         )}
-                                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 transition-opacity">
-                                                            <Edit3 size={14} className="text-primary" />
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <Edit3 size={32} className="text-primary rounded-full opacity-0 group-hover:opacity-100 bg-zinc-800 transition-opacity p-1" />
                                                         </div>
                                                     </button>
                                                     <span className="text-[9px] text-center text-zinc-500 font-bold uppercase truncate px-1">{slot}</span>
@@ -614,7 +673,7 @@ export default function BeatScannerPro() {
                 </div>
             )}
             
-            <audio ref={audioRef} src="/audio/stwbg.mp3" />
+            <audio ref={audioRef} src="/audio/stwbg_single.mp3" />
             <audio ref={clickRef} src="/audio/metronomo.mp3" preload="auto" />
 
             <style jsx global>{`
