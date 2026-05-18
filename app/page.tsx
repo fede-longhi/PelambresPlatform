@@ -8,7 +8,6 @@ import MainHeader from '@/components/layout/main-header';
 import MainFooter from '@/components/layout/main-footer';
 
 export default function Page() {
-
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",

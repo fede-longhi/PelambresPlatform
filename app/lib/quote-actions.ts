@@ -1,11 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { put } from '@vercel/blob';
 import postgres from 'postgres';
 import nodemailer from 'nodemailer';
 import { QuoteTable } from '../../types/definitions';
-import { MAX_FILE_ATTACHMENT_SIZE_BYTES, MAX_FILE_ATTACHMENT_SIZE_MB } from '@/lib/consts';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -66,73 +64,86 @@ export async function createQuote(
     const { email, name, phone, detail } = validatedFields.data;
     const date = new Date().toISOString().split('T')[0];
     try {
+        // 1. Insertar la cotización en la base de datos
         const result = await sql`
         INSERT INTO quote_requests (name, email, phone, detail, date)
         VALUES (${name}, ${email}, ${phone}, ${detail}, ${date})
         RETURNING id
         `;
         
-        const filesCount = Number(formData.get("filesCount"))
-        const files: File[] = [];
-        for (let i = 0; i < filesCount; i++) {
-            const file = formData.get(`file-${i}`) as File;
-
-            if (!(file instanceof File) || file.size === 0) {
-                //TODO: manejar error de archivo inválido
-                continue; 
-            }
+        // 2. Recuperar las URLs que nos mandó el Frontend
+        const fileUrlsRaw = formData.get('attachments') as string | null;
+        let uploadedUrls: { pathname: string; downloadUrl: string }[] = [];
+        
+        if (fileUrlsRaw) {
+            uploadedUrls = JSON.parse(fileUrlsRaw);
             
-            if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
-                //TODO: manejar error de archivo muy grande
-                return {
-                    message: `El archivo ${file.name} excede el límite de ${MAX_FILE_ATTACHMENT_SIZE_MB}MB.`,
-                    payload: formData,
-                };
-            }
-
-            files.push(file);
+            // 3. Insertar las URLs en la tabla de adjuntos
+            const dbInserts = uploadedUrls.map(url => sql`
+                INSERT INTO quote_request_attachments(quote_request_id, file_url)
+                VALUES (${result[0].id}, ${url.downloadUrl})
+            `);
+            await Promise.all(dbInserts);
         }
 
-        const blobUploads = files.map(file => 
-            put(file.name, file, { access: 'public' })
-        );
-        const uploadedBlobs = await Promise.all(blobUploads);
-        const dbInserts = uploadedBlobs.map(blob => sql`
-            INSERT INTO quote_request_attachments(quote_request_id, file_url)
-            VALUES (${result[0].id}, ${blob.downloadUrl})
-        `);
-        await Promise.all(dbInserts);
-
-        sendQuoteEmail({
+        // 4. Enviar el email (Ahora pasamos las URLs en lugar de los objetos File)
+        await sendQuoteEmail({
             id: '',
             name: name,
             phone: phone,
             detail: detail,
             email: email,
             date: date
-        } as QuoteTable, files);
+        } as QuoteTable, uploadedUrls);
+
     } catch (error) {
         console.error(error);
-        return { status: 'error', message: 'Error insertando la cotización.' };
+        return { status: 'error', message: 'Error insertando la cotización.', payload: formData };
     }
 
     return { status: 'success', message: null, errors: {} };
 }
 
-async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
+async function sendQuoteEmail(quote: QuoteTable, attachments: { pathname: string; downloadUrl: string }[]) {
     try {
         const to = "pelambres3d@gmail.com";
         const subject = `NEW QUOTE REQUEST - ${quote.name}`;
         const body = `
-            <h2>Nuevo pedido de cotización</h2>
-            <p><strong>Nombre:</strong> ${quote.name}</p>
-            <p><strong>Email:</strong> ${quote.email}</p>
-            <p><strong>Teléfono:</strong> ${quote.phone}</p>
-            <p><strong>Fecha:</strong> ${quote.date}</p>
-            <p><strong>Detalles:</strong></p>
-            <p>${quote.detail}</p>
-            <hr>
-            <p>Este mensaje fue enviado desde la plataforma de Pelambres.</p>
+            <div style="font-family: Arial, sans-serif; color: #222;">
+            <h2 style="color: #2d7a7b;">Nuevo pedido de cotización</h2>
+            <table style="border-collapse: collapse;">
+                <tr>
+                <td style="padding: 4px 8px;"><strong>Nombre:</strong></td>
+                <td style="padding: 4px 8px;">${quote.name}</td>
+                </tr>
+                <tr>
+                <td style="padding: 4px 8px;"><strong>Email:</strong></td>
+                <td style="padding: 4px 8px;">${quote.email}</td>
+                </tr>
+                <tr>
+                <td style="padding: 4px 8px;"><strong>Teléfono:</strong></td>
+                <td style="padding: 4px 8px;">${quote.phone}</td>
+                </tr>
+                <tr>
+                <td style="padding: 4px 8px;"><strong>Fecha:</strong></td>
+                <td style="padding: 4px 8px;">${quote.date}</td>
+                </tr>
+            </table>
+            <div style="margin-top: 16px;">
+                <p style="margin-bottom: 4px;"><strong>Detalles del proyecto:</strong></p>
+                <div style="background: #f6f6f6; padding: 12px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                ${quote.detail.replace(/\n/g, "<br>")}
+                </div>
+            </div>
+            <div>
+                <p><strong>Archivos adjuntos:</strong></p>
+                <ul>
+                ${attachments.map(attachment => `<li><a href="${attachment.downloadUrl}">${attachment.pathname}</a></li>`).join('')}
+                </ul>
+            </div>
+            <hr style="margin: 24px 0;">
+            <p style="font-size: 0.95em; color: #888;">Este mensaje fue enviado desde la plataforma de Pelambres.</p>
+            </div>
         `;
 
         const transporter = nodemailer.createTransport({
@@ -143,22 +154,22 @@ async function sendQuoteEmail(quote: QuoteTable, files: File[]) {
             },
         });
 
-        const attachments = await Promise.all(
-            files.map(async (file) => {
-                const buffer = await file.arrayBuffer();
-                return {
-                    filename: file.name,
-                    content: Buffer.from(buffer),
-                };
-            })
-        );
+        // const attachments = await Promise.all(
+        //     files.map(async (file) => {
+        //         const buffer = await file.arrayBuffer();
+        //         return {
+        //             filename: file.name,
+        //             content: Buffer.from(buffer),
+        //         };
+        //     })
+        // );
 
         const info = await transporter.sendMail({
             from: `"Pelambres 3D" <${process.env.GOOGLE_MAIL_USER}>`,
             to,
             subject,
             html: body,
-            attachments,
+            // attachments,
         });
         console.log("Correo enviado con éxito:", info.response);
     } catch (error) {
