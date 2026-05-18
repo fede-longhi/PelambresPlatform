@@ -1,13 +1,17 @@
 'use client';
 
+import { useRef, useEffect, useState, startTransition } from 'react';
+
+import AddIcon from '@mui/icons-material/Add';
+import { upload } from '@vercel/blob/client';
+import { Upload, FileText, X, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+
 import { createQuote, QuoteFormState } from '@/app/lib/quote-actions';
-import { useRef, useActionState, useEffect, useState } from 'react';
+import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import AddIcon from '@mui/icons-material/Add';
-import { Upload, FileText, X, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Form() {
@@ -16,6 +20,8 @@ export default function Form() {
     const [state, formAction, isPending] = useActionState(createQuote, initialState);
     const [isDragging, setIsDragging] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
@@ -78,12 +84,53 @@ export default function Form() {
         setAttachments(attachments.filter((_, i) => (i!=index)));
     }
 
-    const handleSubmit = async (formData: FormData) => {
-        attachments.forEach((file, i) => {
-            formData.append(`file-${i}`, file);
-        });
-        formData.append('filesCount', String(attachments.length));
-        formAction(formData);
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+
+        setIsUploadingFiles(true);
+        setUploadProgress(0);
+        
+        try {
+            const totalBytes = attachments.reduce((acc, file) => acc + file.size, 0);
+            const loadedBytesPerFile: Record<string, number> = {};
+            const uploadedBlobs = await Promise.all(
+                attachments.map(async (file) => {
+                    const blob = upload(file.name, file, {
+                        access: 'public',
+                        handleUploadUrl: '/api/upload',
+                        onUploadProgress: (progressEvent) => {
+                            loadedBytesPerFile[file.name] = progressEvent.loaded;
+                            
+                            const totalLoaded = Object.values(loadedBytesPerFile).reduce((acc, val) => acc + val, 0);
+                            
+                            const percentage = Math.round((totalLoaded / totalBytes) * 100);
+                            setUploadProgress(percentage);
+                        }
+                    });
+                    return blob;
+                })
+            );
+            formData.append('filesCount', String(attachments.length));
+            formData.append('attachments', JSON.stringify(uploadedBlobs.map(blob => (
+                { pathname: blob.pathname, downloadUrl: blob.downloadUrl }
+            ))));
+            setIsUploadingFiles(false);
+            
+            startTransition(() => {
+                formAction(formData);
+            });
+
+        } catch (error) {
+            console.log(error);
+            toast({
+                title: 'Error subiendo archivos',
+                description: 'Hubo un problema de conexión al subir tus archivos.',
+                variant: 'destructive'
+            });
+        } finally {
+            setIsUploadingFiles(false);
+        }
     };
 
     const formatFileSize = (bytes: number): string => {
@@ -99,7 +146,7 @@ export default function Form() {
     }
     
     return (
-        <form action={handleSubmit} className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-2">
             <div aria-live="polite" aria-atomic="true">
                 {state.message && (
                     <div className="flex flex-row items-center mt-2 text-sm text-red-500 border border-red-200 bg-red-50 rounded-md p-3">
@@ -263,14 +310,28 @@ export default function Form() {
                     )}
                 </ul>
             </div>
+            {isUploadingFiles && (
+                <div className="sm:col-span-2 mt-4 max-w-md mx-auto w-full">
+                    <div className="flex justify-between mb-1">
+                        <span className="text-sm font-medium text-primary">Subiendo archivos...</span>
+                        <span className="text-sm font-medium text-primary">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
+                        <div 
+                            className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out" 
+                            style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                    </div>
+                </div>
+            )}
             
             <div className="sm:col-span-2 text-center">
+                {isUploadingFiles}
                 <Button
                     type="submit"
-                    disabled={isPending}
-                    
+                    disabled={isPending || isUploadingFiles}
                     className="h-12 w-full bg-primary text-primary-foreground sm:w-auto rounded-full text-base font-medium px-8 py-4">
-                        {isPending ? 'Enviando...' : 'Enviar Solicitud'}
+                        {isUploadingFiles ? 'Subiendo archivos...' : isPending ? 'Enviando Cotización...' : 'Enviar Solicitud'}
                 </Button>
             </div>
         </form>
@@ -291,6 +352,24 @@ const SubmissionSuccessMessage = () => (
         <div className="inline-flex items-center p-4 bg-primary/10 rounded-lg text-primary font-semibold text-lg mb-8">
             <Clock className="w-8 h-8 mx-3" />
             Nos pondremos en contacto contigo dentro de las próximas 24 horas con tu cotización personalizada.
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+            <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => (window.location.href = '/')}
+            >
+                Volver al inicio
+            </Button>
+            <Button
+                type="button"
+                className="w-full"
+                onClick={() => window.location.reload()}
+            >
+                Nueva solicitud
+            </Button>
         </div>
     </div>
 );
