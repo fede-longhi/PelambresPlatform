@@ -51,10 +51,22 @@ export default function Page() {
                         <p>En los siguientes links podes buscar modelos hechos por la comunidad:</p>
                         <div className="m-2 flex flex-col w-fit space-y-2">
                             <ExternalLinkButton
+                                name="Makerworld"
+                                description="pagina oficial de bambu lab"
+                                href="https://www.makerworld.com/"
+                                domain="makerworld.com"
+                            />
+                            <ExternalLinkButton
                                 name="Thingiverse"
                                 description="todos los modelos son gratis"
                                 href="https://www.thingiverse.com/"
                                 domain="thingiverse.com"
+                            />
+                            <ExternalLinkButton
+                                name="Printables"
+                                description="pagina oficial de prusa"
+                                href="https://www.printables.com/"
+                                domain="printables.com"
                             />
                             <ExternalLinkButton
                                 href="https://cults3d.com/"
@@ -130,8 +142,8 @@ export default function Page() {
                                 domain="grilon3.com.ar"
                             />
                         </div>
-
-                        Además podes encontrar más opciones en:
+                        Hoy en día el mercado se amplía constantemente y hay muchas más opciones de filamentos, si tenés alguna preferencia o querés un tipo de filamento específico no dudes en preguntarnos!
+                        {/* Además podes encontrar más opciones en:
                         <div className="m-2 flex flex-col w-fit space-y-2">
                             <ExternalLinkButton
                                 href="https://hellbot.com.ar/11-filamentos/"
@@ -139,9 +151,8 @@ export default function Page() {
                                 domain="hellbot.com.ar"
                             />
                             <span className="text-sm text-gray-700">
-                            Consultar por otras opciones
                             </span>
-                        </div>
+                        </div> */}
 
 
                     </SectionContent>

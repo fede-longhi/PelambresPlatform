@@ -59,26 +59,22 @@ export async function createQuote(
             payload: formData,
         };
     }
-
     
     const { email, name, phone, detail } = validatedFields.data;
     const date = new Date().toISOString().split('T')[0];
     try {
-        // 1. Insertar la cotización en la base de datos
         const result = await sql`
         INSERT INTO quote_requests (name, email, phone, detail, date)
         VALUES (${name}, ${email}, ${phone}, ${detail}, ${date})
         RETURNING id
         `;
         
-        // 2. Recuperar las URLs que nos mandó el Frontend
         const fileUrlsRaw = formData.get('attachments') as string | null;
         let uploadedUrls: { pathname: string; downloadUrl: string }[] = [];
         
         if (fileUrlsRaw) {
             uploadedUrls = JSON.parse(fileUrlsRaw);
             
-            // 3. Insertar las URLs en la tabla de adjuntos
             const dbInserts = uploadedUrls.map(url => sql`
                 INSERT INTO quote_request_attachments(quote_request_id, file_url)
                 VALUES (${result[0].id}, ${url.downloadUrl})
@@ -86,9 +82,8 @@ export async function createQuote(
             await Promise.all(dbInserts);
         }
 
-        // 4. Enviar el email (Ahora pasamos las URLs en lugar de los objetos File)
         await sendQuoteEmail({
-            id: '',
+            id: result[0].id,
             name: name,
             phone: phone,
             detail: detail,
@@ -154,22 +149,11 @@ async function sendQuoteEmail(quote: QuoteTable, attachments: { pathname: string
             },
         });
 
-        // const attachments = await Promise.all(
-        //     files.map(async (file) => {
-        //         const buffer = await file.arrayBuffer();
-        //         return {
-        //             filename: file.name,
-        //             content: Buffer.from(buffer),
-        //         };
-        //     })
-        // );
-
         const info = await transporter.sendMail({
             from: `"Pelambres 3D" <${process.env.GOOGLE_MAIL_USER}>`,
             to,
             subject,
             html: body,
-            // attachments,
         });
         console.log("Correo enviado con éxito:", info.response);
     } catch (error) {
