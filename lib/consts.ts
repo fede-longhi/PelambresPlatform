@@ -6,6 +6,17 @@ export const ITEMS_PER_PAGE = 6;
 
 export const MAX_FILE_ATTACHMENT_SIZE_MB = 50;
 export const MAX_FILE_ATTACHMENT_SIZE_BYTES = MAX_FILE_ATTACHMENT_SIZE_MB * 1024 * 1024;
+export const ALLOWED_MIME_TYPES = new Set([
+    'model/stl',
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'model/obj',
+    'model/3mf',
+    'image/webp',
+    'application/octet-stream',
+]);
+export const ALLOWED_EXTENSIONS = new Set(['stl', 'obj', '3mf', 'pdf', 'jpg', 'jpeg', 'png', 'webp']);
 
 export const FAIL_REASONS = [
     { value: "warping", label: "Warping" },

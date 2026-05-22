@@ -185,7 +185,7 @@ export default function Page() {
                             </p>
                         </div>
                         <div className="mt-12 sm:mt-16">
-                            <Form />
+                            <Form showBackToHomeButton={false}/>
                         </div>
                     </div>
                 </section>

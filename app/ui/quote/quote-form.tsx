@@ -1,23 +1,73 @@
 'use client';
 
-import { useRef, useEffect, useState, startTransition } from 'react';
+import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
 
 import AddIcon from '@mui/icons-material/Add';
+import { useRouter } from 'next/navigation';
 import { upload } from '@vercel/blob/client';
-import { Upload, FileText, X, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, FileText, Upload, X } from 'lucide-react';
 
 import { createQuote, QuoteFormState } from '@/app/lib/quote-actions';
-import { useActionState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { calculateFileHash, formatFileSize } from '@/lib/utils';
+import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
 
-export default function Form() {
+import { getFileData, insertFileData } from '@/app/lib/file-strorage';
+
+const INITIAL_STATE: QuoteFormState = { message: null, errors: {} };
+
+type FieldErrorsProps = {
+    id: string;
+    errors?: string[];
+};
+
+const MOCK_DATA = {
+    name: 'Juan Pérez',
+    email: 'juan.perez@example.com',
+    phone: '555-1234',
+    detail: 'Estoy interesado en imprimir un modelo 3D de un prototipo que diseñé. El archivo STL tiene aproximadamente 50MB y me gustaría saber cuánto costaría imprimirlo en PLA con un acabado de alta calidad. Además, ¿cuánto tiempo tomaría el proceso de impresión? Gracias.',
+}
+
+function FieldErrors({ id, errors }: FieldErrorsProps) {
+    if (!errors?.length) {
+        return <div id={id} aria-live="polite" aria-atomic="true" />;
+    }
+
+    return (
+        <div id={id} aria-live="polite" aria-atomic="true">
+            {errors.map((error) => (
+                <p className="mt-2 text-xs text-red-500" key={error}>
+                    {error}
+                </p>
+            ))}
+        </div>
+    );
+}
+
+type QuoteFormProps = {
+    showBackToHomeButton?: boolean;
+};
+
+const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
+    stl: 'model/stl',
+    obj: 'model/obj',
+    '3mf': 'model/3mf',
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+};
+
+export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
+    const router = useRouter();
     const [attachments, setAttachments] = useState<Array<File>>([]);
-    const initialState: QuoteFormState = { message: null, errors: {} };
-    const [state, formAction, isPending] = useActionState(createQuote, initialState);
+    const [fileValidationErrors, setFileValidationErrors] = useState<string[]>([]);
+    const [state, formAction, isPending] = useActionState(createQuote, INITIAL_STATE);
     const [isDragging, setIsDragging] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -26,43 +76,121 @@ export default function Form() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
-    useEffect(() => {
+    const isProcessing = isPending || isUploadingFiles;
 
+    useEffect(() => {
         if (state.status === 'success') {
             toast({
                 title: 'Solicitud de cotización enviada',
-                description: "Nos pondremos en contacto a la brevedad, generalmente dentro de las 24 horas. ¡Gracias por tu solicitud!",
-                variant: "default",
+                description:
+                    'Nos pondremos en contacto a la brevedad, generalmente dentro de las 24 horas. ¡Gracias por tu solicitud!',
+                variant: 'default',
             });
 
-            // formRef.current?.reset();
             setAttachments([]);
             setIsSubmitted(true);
-        }
-        
-        else if (state.status === 'error') {
+        } else if (state.status === 'error') {
             toast({
-                title: "Error al enviar la solicitud",
-                description: "Hubo un problema al enviar tu solicitud de cotización. Por favor, intenta nuevamente más tarde.",
-                variant: "destructive", 
+                title: 'Error al enviar la solicitud',
+                description:
+                    'Hubo un problema al enviar tu solicitud de cotización. Por favor, intenta nuevamente más tarde.',
+                variant: 'destructive',
             });
             setIsSubmitted(true);
         }
     }, [state, toast]);
 
+    const getFileExtension = (fileName: string) => {
+        const lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex < 0) return '';
+        return fileName.slice(lastDotIndex + 1).toLowerCase();
+    };
+
+    const getResolvedMimeType = (file: File): string => {
+        if (file.type && file.type.trim().length > 0) {
+            return file.type;
+        }
+
+        const extension = getFileExtension(file.name);
+        return MIME_TYPE_BY_EXTENSION[extension] || 'application/octet-stream';
+    };
+
+    const getUploadErrorMessage = (error: unknown) => {
+        const fallback = 'Hubo un problema al subir tus archivos. Intenta nuevamente.';
+        if (!(error instanceof Error)) return fallback;
+
+        const errorText = error.message.toLowerCase();
+        if (errorText.includes('size') || errorText.includes('too large') || errorText.includes('maximum')) {
+            return `Uno o más archivos superan el tamaño máximo permitido (${formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)}).`;
+        }
+
+        if (
+            errorText.includes('content type') ||
+            errorText.includes('mime') ||
+            errorText.includes('unsupported') ||
+            errorText.includes('not allowed')
+        ) {
+            return 'Uno o más archivos no tienen un tipo soportado. Revisa los formatos permitidos.';
+        }
+
+        return fallback;
+    };
+
+    const validateIncomingFiles = (files: FileList | null): { validFiles: File[]; errors: string[] } => {
+        if (!files) return { validFiles: [], errors: [] };
+
+        const validFiles: File[] = [];
+        const errors: string[] = [];
+
+        Array.from(files).forEach((file) => {
+            if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
+                errors.push(
+                    `${file.name}: supera el tamaño máximo de ${formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} (${formatFileSize(file.size)}).`
+                );
+                return;
+            }
+
+            const extension = getFileExtension(file.name);
+            const isMimeAllowed = ALLOWED_MIME_TYPES.has(file.type);
+            const canValidateByExtension = file.type === '' || file.type === 'application/octet-stream';
+            const isExtensionAllowed = ALLOWED_EXTENSIONS.has(extension);
+
+            if (!isMimeAllowed && !(canValidateByExtension && isExtensionAllowed)) {
+                errors.push(`${file.name}: tipo de archivo no soportado.`);
+                return;
+            }
+
+            validFiles.push(file);
+        });
+
+        return { validFiles, errors };
+    };
+
     const addFiles = (files: FileList | null) => {
-        if (files) {    
-            const newFiles = Array.from(files);
-            setAttachments(prevAttachments => [...prevAttachments, ...newFiles]);
+        const { validFiles, errors } = validateIncomingFiles(files);
+
+        if (errors.length > 0) {
+            setFileValidationErrors(errors);
+            toast({
+                title: 'Algunos archivos no se pudieron agregar',
+                description: errors[0],
+                variant: 'destructive',
+            });
+        } else {
+            setFileValidationErrors([]);
+        }
+
+        if (validFiles.length > 0) {
+            setAttachments((prevAttachments) => [...prevAttachments, ...validFiles]);
         }
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         addFiles(event.target.files);
         if (event.target.files) {
-            event.target.value = ''; 
+            event.target.value = '';
         }
-    }
+    };
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -81,8 +209,18 @@ export default function Form() {
     };
 
     const removeFile = (index: number) => {
-        setAttachments(attachments.filter((_, i) => (i!=index)));
-    }
+        setAttachments(attachments.filter((_, i) => i !== index));
+    };
+
+    const refresh = () => {
+        setAttachments([]);
+        setFileValidationErrors([]);
+        setIsSubmitted(false);
+    };
+
+    const goToHome = () => {
+        router.push('/');
+    };
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -90,33 +228,71 @@ export default function Form() {
 
         setIsUploadingFiles(true);
         setUploadProgress(0);
+
+        const hashesList = await Promise.all(
+            attachments.map(async (file) => ({
+                file,
+                hash: await calculateFileHash(file),
+            }))
+        );
+
+        attachments.forEach((file, index) => {
+            console.log(`Archivo: "${file.name}", type: ${file.type}`);
+        });
+
+        console.log('Calculated hashes for attachments:', hashesList);
+        const resp = await getFileData(hashesList.map(item => item.hash));    
+        console.log('Respuesta de verificación de archivos existentes:', resp);
+
         
         try {
             const totalBytes = attachments.reduce((acc, file) => acc + file.size, 0);
             const loadedBytesPerFile: Record<string, number> = {};
             const uploadedBlobs = await Promise.all(
-                attachments.map(async (file) => {
-                    const blob = upload(file.name, file, {
+                hashesList.filter((attachment) => !resp[attachment.hash]?.exists).map(async (attachment) => {
+                    const blob = upload(attachment.file.name, attachment.file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
                         onUploadProgress: (progressEvent) => {
-                            loadedBytesPerFile[file.name] = progressEvent.loaded;
+                            loadedBytesPerFile[attachment.file.name] = progressEvent.loaded;
                             
                             const totalLoaded = Object.values(loadedBytesPerFile).reduce((acc, val) => acc + val, 0);
-                            
+
                             const percentage = Math.round((totalLoaded / totalBytes) * 100);
                             setUploadProgress(percentage);
-                        }
+                        },
                     });
                     return blob;
                 })
             );
+
+            await insertFileData(
+                hashesList.filter(item => !resp[item.hash]?.exists).map(item => ({
+                    filename: item.file.name,
+                    hash: item.hash,
+                    type: getResolvedMimeType(item.file),
+                    size: item.file.size,
+                    url: uploadedBlobs.find(blob => blob.pathname === item.file.name)?.downloadUrl,
+                }))
+            );
+
+            const blobList = uploadedBlobs.map((blob) => ({
+                        pathname: blob.pathname,
+                        downloadUrl: blob.downloadUrl,
+                    }))
+                    .concat(...hashesList.filter(item => resp[item.hash]?.exists).map(item => ({
+                        pathname: item.file.name,
+                        downloadUrl: resp[item.hash]?.existingFile?.path || '',
+                    })));
             formData.append('filesCount', String(attachments.length));
-            formData.append('attachments', JSON.stringify(uploadedBlobs.map(blob => (
-                { pathname: blob.pathname, downloadUrl: blob.downloadUrl }
-            ))));
+            formData.append(
+                'attachments',
+                JSON.stringify(
+                    blobList
+                )
+            );
             setIsUploadingFiles(false);
-            
+
             startTransition(() => {
                 formAction(formData);
             });
@@ -125,7 +301,7 @@ export default function Form() {
             console.log(error);
             toast({
                 title: 'Error subiendo archivos',
-                description: 'Hubo un problema de conexión al subir tus archivos.',
+                description: getUploadErrorMessage(error),
                 variant: 'destructive'
             });
         } finally {
@@ -133,16 +309,14 @@ export default function Form() {
         }
     };
 
-    const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
     if (isSubmitted) {
-        return <SubmissionSuccessMessage />;
+        return (
+            <SubmissionSuccessMessage
+                showBackToHomeButton={showBackToHomeButton}
+                onBackToHome={goToHome}
+                onNewRequest={refresh}
+            />
+        );
     }
     
     return (
@@ -163,20 +337,13 @@ export default function Form() {
                         type="text"
                         name="name"
                         className="py-3 px-4 bg-white text-lg"
-                        defaultValue={(state.payload?.get("name") || "") as string}
+                        defaultValue={(state.payload?.get('name') || MOCK_DATA.name) as string}
                         placeholder="Ingresa tu nombre completo"
                         aria-describedby="name-error"
+                        disabled={isProcessing}
                     />
-                    <div id="name-error" aria-live="polite" aria-atomic="true">
-                        {state.errors?.name &&
-                        state.errors.name.map((error: string) => (
-                            <p className="mt-2 text-xs text-red-500" key={error}>
-                            {error}
-                            </p>
-                        ))}
-                    </div>
+                    <FieldErrors id="name-error" errors={state.errors?.name} />
                 </div>
-                
                 <div>
                     <Label htmlFor="email">Correo Electrónico</Label>
                     <Input
@@ -184,18 +351,12 @@ export default function Form() {
                         type="email"
                         name="email"
                         className="bg-white"
-                        defaultValue={(state.payload?.get("email") || "") as string}
+                        defaultValue={(state.payload?.get('email') || MOCK_DATA.email) as string}
                         placeholder="Ingresa tu email"
                         aria-describedby="email-error"
+                        disabled={isProcessing}
                     />
-                    <div id="email-error" aria-live="polite" aria-atomic="true">
-                        {state.errors?.email &&
-                        state.errors.email.map((error: string) => (
-                            <p className="mt-2 text-xs text-red-500" key={error}>
-                            {error}
-                            </p>
-                        ))}
-                    </div>
+                    <FieldErrors id="email-error" errors={state.errors?.email} />
                 </div>
             </div>
             <div>
@@ -205,18 +366,12 @@ export default function Form() {
                     type="text"
                     name="phone"
                     className="bg-white"
-                    defaultValue={(state.payload?.get("phone") || "") as string}
+                    defaultValue={(state.payload?.get('phone') || MOCK_DATA.phone) as string}
                     placeholder="Teléfono"
                     aria-describedby="phone-error"
+                    disabled={isProcessing}
                 />
-                <div id="phone-error" aria-live="polite" aria-atomic="true">
-                    {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                        <p className="mt-2 text-xs text-red-500" key={error}>
-                        {error}
-                        </p>
-                    ))}
-                </div>
+                <FieldErrors id="phone-error" errors={state.errors?.phone} />
             </div>
             <div>
                 <Label htmlFor="detail">Detalles del Proyecto</Label>
@@ -225,39 +380,49 @@ export default function Form() {
                     className="bg-white"
                     name="detail"
                     rows={4}
-                    defaultValue={(state.payload?.get("detail") || "") as string}
+                    defaultValue={(state.payload?.get('detail') || MOCK_DATA.detail) as string}
                     aria-describedby="detail-error"
+                    disabled={isProcessing}
                 />
-                <div id="detail-error" aria-live="polite" aria-atomic="true">
-                    {state.errors?.detail &&
-                    state.errors.detail.map((error: string) => (
-                        <p className="mt-2 text-xs text-red-500" key={error}>
-                        {error}
-                        </p>
-                    ))}
-                </div>
+                <FieldErrors id="detail-error" errors={state.errors?.detail} />
             </div>
             <div>
                 <Label htmlFor="file-upload">Adjuntar Archivos</Label>
-                
+
                 <input 
-                id="file-upload"
-                type='file' 
-                name='file-upload'
-                multiple
-                className='sr-only'
-                ref={fileInputRef}
-                onChange={handleFileChange}
+                    id="file-upload"
+                    type='file' 
+                    name='file-upload'
+                    multiple
+                    accept=".stl,.obj,.3mf,.pdf,.jpg,.jpeg,.png,.webp"
+                    className='sr-only'
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    disabled={isProcessing} // 🔒 Bloqueamos el input oculto
                 />
+
+                {fileValidationErrors.length > 0 && (
+                    <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600" aria-live="polite">
+                        <p className="font-medium">Revisa los archivos adjuntos:</p>
+                        <ul className="mt-1 list-disc pl-5">
+                            {fileValidationErrors.map((error) => (
+                                <li key={error}>{error}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
                 
                 {attachments.length === 0 && (
                     <div
-                        className={`mt-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer
-                            ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300 dark:border-gray-700 hover:border-primary/50'}`}
+                        className={`mt-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors
+                            ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300 dark:border-gray-700 hover:border-primary/50'}
+                            ${isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
+                        `}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
-                        onClick={() => fileInputRef.current?.click()}
+                        // Solo permitimos el clic si no está procesando
+                        onClick={() => !isProcessing && fileInputRef.current?.click()}
                     >
                         <Upload className='w-8 h-8 text-muted-foreground' />
                         <div className="space-y-1 text-center mt-2">
@@ -265,7 +430,7 @@ export default function Form() {
                                 Arrastra y suelta aquí, o <span className='text-primary font-semibold'>haz click para buscar</span>
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                STL, OBJ, y más. Hasta 10MB por archivo.
+                                STL, OBJ, 3MF, PDF, JPG, PNG y WEBP. Máximo {formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} por archivo.
                             </p>
                         </div>
                     </div>
@@ -275,7 +440,7 @@ export default function Form() {
                     {attachments.map((attachment, i) => (
                         <li 
                             key={i} 
-                            className="flex items-center justify-between p-3 border rounded-md bg-white shadow-sm"
+                            className={`flex items-center justify-between p-3 border rounded-md bg-white shadow-sm transition-opacity ${isProcessing ? 'opacity-60' : ''}`}
                         >
                             <div className='flex items-center space-x-3'>
                                 <FileText className="w-5 h-5 text-primary"/>
@@ -291,8 +456,9 @@ export default function Form() {
                                 type="button" 
                                 onClick={() => removeFile(i)}
                                 className="h-8 w-8 p-0"
+                                disabled={isProcessing} // 🔒 Evitamos que borre el archivo mientras se sube
                             >
-                                <X className="w-4 h-4 text-red-500" />
+                                <X className={`w-4 h-4 ${isProcessing ? 'text-gray-400' : 'text-red-500'}`} />
                                 <span className="sr-only">Eliminar archivo</span>
                             </Button>
                         </li>
@@ -304,6 +470,7 @@ export default function Form() {
                             variant="outline"
                             className="w-full mt-4"
                             onClick={() => fileInputRef.current?.click()}
+                            disabled={isProcessing} // 🔒 Evitamos que agregue más
                         >
                             <AddIcon className="mr-2 h-4 w-4" /> Agregar otro archivo
                         </Button>
@@ -324,22 +491,31 @@ export default function Form() {
                     </div>
                 </div>
             )}
-            
+
             <div className="sm:col-span-2 text-center">
-                {isUploadingFiles}
                 <Button
                     type="submit"
                     disabled={isPending || isUploadingFiles}
                     className="h-12 w-full bg-primary text-primary-foreground sm:w-auto rounded-full text-base font-medium px-8 py-4">
-                        {isUploadingFiles ? 'Subiendo archivos...' : isPending ? 'Enviando Cotización...' : 'Enviar Solicitud'}
+                    {isUploadingFiles ? 'Subiendo archivos...' : isPending ? 'Enviando Cotización...' : 'Enviar Solicitud'}
                 </Button>
             </div>
         </form>
-    )
+    );
 }
 
+type SubmissionSuccessMessageProps = {
+    showBackToHomeButton: boolean;
+    onBackToHome: () => void;
+    onNewRequest: () => void;
+};
 
-const SubmissionSuccessMessage = () => (
+
+const SubmissionSuccessMessage = ({
+    showBackToHomeButton,
+    onBackToHome,
+    onNewRequest,
+}: SubmissionSuccessMessageProps) => (
     <div className="flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-xl text-center">
         <CheckCircle className="w-16 h-16 text-primary mb-6" />
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -355,18 +531,20 @@ const SubmissionSuccessMessage = () => (
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+            {showBackToHomeButton && (
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={onBackToHome}
+                >
+                    Volver al inicio
+                </Button>
+            )}
             <Button
                 type="button"
-                variant="outline"
                 className="w-full"
-                onClick={() => (window.location.href = '/')}
-            >
-                Volver al inicio
-            </Button>
-            <Button
-                type="button"
-                className="w-full"
-                onClick={() => window.location.reload()}
+                onClick={onNewRequest}
             >
                 Nueva solicitud
             </Button>
