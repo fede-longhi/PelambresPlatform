@@ -13,8 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { formatFileSize } from '@/lib/utils';
+import { calculateFileHash, formatFileSize } from '@/lib/utils';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
+
+import { getFileData, insertFileData } from '@/app/lib/file-strorage';
 
 const INITIAL_STATE: QuoteFormState = { message: null, errors: {} };
 
@@ -22,6 +24,13 @@ type FieldErrorsProps = {
     id: string;
     errors?: string[];
 };
+
+const MOCK_DATA = {
+    name: 'Juan Pérez',
+    email: 'juan.perez@example.com',
+    phone: '555-1234',
+    detail: 'Estoy interesado en imprimir un modelo 3D de un prototipo que diseñé. El archivo STL tiene aproximadamente 50MB y me gustaría saber cuánto costaría imprimirlo en PLA con un acabado de alta calidad. Además, ¿cuánto tiempo tomaría el proceso de impresión? Gracias.',
+}
 
 function FieldErrors({ id, errors }: FieldErrorsProps) {
     if (!errors?.length) {
@@ -41,6 +50,17 @@ function FieldErrors({ id, errors }: FieldErrorsProps) {
 
 type QuoteFormProps = {
     showBackToHomeButton?: boolean;
+};
+
+const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
+    stl: 'model/stl',
+    obj: 'model/obj',
+    '3mf': 'model/3mf',
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
 };
 
 export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
@@ -84,6 +104,15 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
         const lastDotIndex = fileName.lastIndexOf('.');
         if (lastDotIndex < 0) return '';
         return fileName.slice(lastDotIndex + 1).toLowerCase();
+    };
+
+    const getResolvedMimeType = (file: File): string => {
+        if (file.type && file.type.trim().length > 0) {
+            return file.type;
+        }
+
+        const extension = getFileExtension(file.name);
+        return MIME_TYPE_BY_EXTENSION[extension] || 'application/octet-stream';
     };
 
     const getUploadErrorMessage = (error: unknown) => {
@@ -199,17 +228,33 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
 
         setIsUploadingFiles(true);
         setUploadProgress(0);
+
+        const hashesList = await Promise.all(
+            attachments.map(async (file) => ({
+                file,
+                hash: await calculateFileHash(file),
+            }))
+        );
+
+        attachments.forEach((file, index) => {
+            console.log(`Archivo: "${file.name}", type: ${file.type}`);
+        });
+
+        console.log('Calculated hashes for attachments:', hashesList);
+        const resp = await getFileData(hashesList.map(item => item.hash));    
+        console.log('Respuesta de verificación de archivos existentes:', resp);
+
         
         try {
             const totalBytes = attachments.reduce((acc, file) => acc + file.size, 0);
             const loadedBytesPerFile: Record<string, number> = {};
             const uploadedBlobs = await Promise.all(
-                attachments.map(async (file) => {
-                    const blob = upload(file.name, file, {
+                hashesList.filter((attachment) => !resp[attachment.hash]?.exists).map(async (attachment) => {
+                    const blob = upload(attachment.file.name, attachment.file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
                         onUploadProgress: (progressEvent) => {
-                            loadedBytesPerFile[file.name] = progressEvent.loaded;
+                            loadedBytesPerFile[attachment.file.name] = progressEvent.loaded;
                             
                             const totalLoaded = Object.values(loadedBytesPerFile).reduce((acc, val) => acc + val, 0);
 
@@ -220,14 +265,30 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                     return blob;
                 })
             );
+
+            await insertFileData(
+                hashesList.filter(item => !resp[item.hash]?.exists).map(item => ({
+                    filename: item.file.name,
+                    hash: item.hash,
+                    type: getResolvedMimeType(item.file),
+                    size: item.file.size,
+                    url: uploadedBlobs.find(blob => blob.pathname === item.file.name)?.downloadUrl,
+                }))
+            );
+
+            const blobList = uploadedBlobs.map((blob) => ({
+                        pathname: blob.pathname,
+                        downloadUrl: blob.downloadUrl,
+                    }))
+                    .concat(...hashesList.filter(item => resp[item.hash]?.exists).map(item => ({
+                        pathname: item.file.name,
+                        downloadUrl: resp[item.hash]?.existingFile?.path || '',
+                    })));
             formData.append('filesCount', String(attachments.length));
             formData.append(
                 'attachments',
                 JSON.stringify(
-                    uploadedBlobs.map((blob) => ({
-                        pathname: blob.pathname,
-                        downloadUrl: blob.downloadUrl,
-                    }))
+                    blobList
                 )
             );
             setIsUploadingFiles(false);
@@ -276,7 +337,7 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                         type="text"
                         name="name"
                         className="py-3 px-4 bg-white text-lg"
-                        defaultValue={(state.payload?.get('name') || '') as string}
+                        defaultValue={(state.payload?.get('name') || MOCK_DATA.name) as string}
                         placeholder="Ingresa tu nombre completo"
                         aria-describedby="name-error"
                         disabled={isProcessing}
@@ -290,7 +351,7 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                         type="email"
                         name="email"
                         className="bg-white"
-                        defaultValue={(state.payload?.get('email') || '') as string}
+                        defaultValue={(state.payload?.get('email') || MOCK_DATA.email) as string}
                         placeholder="Ingresa tu email"
                         aria-describedby="email-error"
                         disabled={isProcessing}
@@ -305,7 +366,7 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                     type="text"
                     name="phone"
                     className="bg-white"
-                    defaultValue={(state.payload?.get('phone') || '') as string}
+                    defaultValue={(state.payload?.get('phone') || MOCK_DATA.phone) as string}
                     placeholder="Teléfono"
                     aria-describedby="phone-error"
                     disabled={isProcessing}
@@ -319,7 +380,7 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                     className="bg-white"
                     name="detail"
                     rows={4}
-                    defaultValue={(state.payload?.get('detail') || '') as string}
+                    defaultValue={(state.payload?.get('detail') || MOCK_DATA.detail) as string}
                     aria-describedby="detail-error"
                     disabled={isProcessing}
                 />
