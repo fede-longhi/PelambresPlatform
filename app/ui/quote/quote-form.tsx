@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { calculateFileHash, formatFileSize } from '@/lib/utils';
-import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
+import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MIME_TYPE_BY_EXTENSION, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
 
 import { getFileData, insertFileData } from '@/app/lib/file-strorage';
 
@@ -25,11 +25,18 @@ type FieldErrorsProps = {
     errors?: string[];
 };
 
+// const MOCK_DATA = {
+//     name: 'Juan Pérez',
+//     email: 'juan.perez@example.com',
+//     phone: '555-1234',
+//     detail: 'Estoy interesado en imprimir un modelo 3D de un prototipo que diseñé. El archivo STL tiene aproximadamente 50MB y me gustaría saber cuánto costaría imprimirlo en PLA con un acabado de alta calidad. Además, ¿cuánto tiempo tomaría el proceso de impresión? Gracias.',
+// }
+
 const MOCK_DATA = {
-    name: 'Juan Pérez',
-    email: 'juan.perez@example.com',
-    phone: '555-1234',
-    detail: 'Estoy interesado en imprimir un modelo 3D de un prototipo que diseñé. El archivo STL tiene aproximadamente 50MB y me gustaría saber cuánto costaría imprimirlo en PLA con un acabado de alta calidad. Además, ¿cuánto tiempo tomaría el proceso de impresión? Gracias.',
+    name: '',
+    email: '',
+    phone: '',
+    detail: '',
 }
 
 function FieldErrors({ id, errors }: FieldErrorsProps) {
@@ -50,17 +57,6 @@ function FieldErrors({ id, errors }: FieldErrorsProps) {
 
 type QuoteFormProps = {
     showBackToHomeButton?: boolean;
-};
-
-const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
-    stl: 'model/stl',
-    obj: 'model/obj',
-    '3mf': 'model/3mf',
-    pdf: 'application/pdf',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    webp: 'image/webp',
 };
 
 export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
@@ -246,51 +242,62 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
 
         
         try {
-            const totalBytes = attachments.reduce((acc, file) => acc + file.size, 0);
+            const filesToUpload = hashesList.filter(item => !resp[item.hash]?.exists);
+            const existingFiles = hashesList.filter(item => resp[item.hash]?.exists);
+
+            const totalBytesToUpload = filesToUpload.reduce((acc, item) => acc + item.file.size, 0);
             const loadedBytesPerFile: Record<string, number> = {};
+            
+            if (totalBytesToUpload === 0) {
+                setUploadProgress(100);
+            }
+
             const uploadedBlobs = await Promise.all(
-                hashesList.filter((attachment) => !resp[attachment.hash]?.exists).map(async (attachment) => {
-                    const blob = upload(attachment.file.name, attachment.file, {
+                filesToUpload.map(async (attachment) => {
+                    const blob = await upload(attachment.file.name, attachment.file, {
                         access: 'public',
                         handleUploadUrl: '/api/upload',
                         onUploadProgress: (progressEvent) => {
-                            loadedBytesPerFile[attachment.file.name] = progressEvent.loaded;
+                            loadedBytesPerFile[attachment.hash] = progressEvent.loaded;
                             
                             const totalLoaded = Object.values(loadedBytesPerFile).reduce((acc, val) => acc + val, 0);
-
-                            const percentage = Math.round((totalLoaded / totalBytes) * 100);
-                            setUploadProgress(percentage);
+                            
+                            if (totalBytesToUpload > 0) {
+                                const percentage = Math.round((totalLoaded / totalBytesToUpload) * 100);
+                                setUploadProgress(percentage);
+                            }
                         },
                     });
-                    return blob;
+                    return { ...blob, originalHash: attachment.hash };
                 })
             );
 
-            await insertFileData(
-                hashesList.filter(item => !resp[item.hash]?.exists).map(item => ({
-                    filename: item.file.name,
-                    hash: item.hash,
-                    type: getResolvedMimeType(item.file),
-                    size: item.file.size,
-                    url: uploadedBlobs.find(blob => blob.pathname === item.file.name)?.downloadUrl,
-                }))
-            );
-
-            const blobList = uploadedBlobs.map((blob) => ({
-                        pathname: blob.pathname,
-                        downloadUrl: blob.downloadUrl,
+            if (filesToUpload.length > 0) {
+                await insertFileData(
+                    filesToUpload.map(item => ({
+                        filename: item.file.name,
+                        hash: item.hash,
+                        type: getResolvedMimeType(item.file),
+                        size: item.file.size,
+                        url: uploadedBlobs.find(blob => blob.originalHash === item.hash)?.downloadUrl,
                     }))
-                    .concat(...hashesList.filter(item => resp[item.hash]?.exists).map(item => ({
-                        pathname: item.file.name,
-                        downloadUrl: resp[item.hash]?.existingFile?.path || '',
-                    })));
+                );
+            }
+
+            const blobList = [
+                ...uploadedBlobs.map((blob) => ({
+                    pathname: blob.pathname,
+                    downloadUrl: blob.downloadUrl,
+                })),
+                ...existingFiles.map((item) => ({
+                    pathname: item.file.name,
+                    downloadUrl: resp[item.hash]?.existingFile?.path || '',
+                }))
+            ];
+
             formData.append('filesCount', String(attachments.length));
-            formData.append(
-                'attachments',
-                JSON.stringify(
-                    blobList
-                )
-            );
+            formData.append('attachments', JSON.stringify(blobList));
+            
             setIsUploadingFiles(false);
 
             startTransition(() => {
