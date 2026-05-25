@@ -16,7 +16,19 @@ export const ALLOWED_MIME_TYPES = new Set([
     'image/webp',
     'application/octet-stream',
 ]);
+
 export const ALLOWED_EXTENSIONS = new Set(['stl', 'obj', '3mf', 'pdf', 'jpg', 'jpeg', 'png', 'webp']);
+
+export const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
+    stl: 'model/stl',
+    obj: 'model/obj',
+    '3mf': 'model/3mf',
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+};
 
 export const FAIL_REASONS = [
     { value: "warping", label: "Warping" },

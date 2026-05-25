@@ -4,19 +4,9 @@ import { put, PutBlobResult } from "@vercel/blob";
 import { FileData } from "../../types/definitions";
 import { calculateFileHash } from "@/lib/utils";
 import postgres from 'postgres';
+import { MIME_TYPE_BY_EXTENSION } from "@/lib/consts";
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
-
-const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
-    stl: 'model/stl',
-    obj: 'model/obj',
-    '3mf': 'model/3mf',
-    pdf: 'application/pdf',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    webp: 'image/webp',
-};
 
 function getFileExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');
