@@ -1,10 +1,10 @@
 'use client';
 
-import SimpleCalculator from "@/components/simple-calculator/simple-calculator";
+import ItemPriceCalculator from "@/components/calculator/ItemPriceCalculator";
 
 export default function Page(){
     const defaultMaterialCost = 20000;
-    const defaultPrintTimeValue = 500;
+    const defaultMachineCostPerHour = 500;
     const defaultMarkup = 200;
 
     return(
@@ -14,9 +14,9 @@ export default function Page(){
                 <p className="text-center text-gray-500 mb-8">
                     Calcula un precio estimado para tus impresiones 3D.
                 </p>
-                <SimpleCalculator
+                <ItemPriceCalculator
                     defaultMaterialCost={defaultMaterialCost}
-                    defaultPrintTimeValue={defaultPrintTimeValue}
+                    defaultMachineCostPerHour={defaultMachineCostPerHour}
                     defaultMarkup={defaultMarkup}
                 />
             </div>

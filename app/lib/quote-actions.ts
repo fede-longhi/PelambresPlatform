@@ -101,7 +101,8 @@ export async function createQuote(
 
 async function sendQuoteEmail(quote: QuoteTable, attachments: { pathname: string; downloadUrl: string }[]) {
     try {
-        const to = "pelambres3d@gmail.com";
+        const to = "contacto@pelambres.com.ar";
+        const cc = "pelambres3d@gmail.com";
         const subject = `NEW QUOTE REQUEST - ${quote.name}`;
         const body = `
             <div style="font-family: Arial, sans-serif; color: #222;">
@@ -151,6 +152,7 @@ async function sendQuoteEmail(quote: QuoteTable, attachments: { pathname: string
 
         const info = await transporter.sendMail({
             from: `"Pelambres 3D" <${process.env.GOOGLE_MAIL_USER}>`,
+            cc,
             to,
             subject,
             html: body,
