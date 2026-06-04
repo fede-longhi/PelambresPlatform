@@ -28,15 +28,12 @@ export function QuoteEditor(props: QuoteEditorProps) {
     const handleApplyCalculation = (totalCost: number) => {
         if (activeCalcItemId) {
             updateItem(activeCalcItemId, 'price', totalCost);
-            // Si tu calculadora también devuelve nombre/descripción, podrías inyectarlo acá:
-            // updateItem(activeCalcItemId, 'description', `Impresión 3D - ${totalCost} hs`);
         }
-        setActiveCalcItemId(null); // Cerramos el modal
+        setActiveCalcItemId(null);
     };
 
     return (
-        <div className="w-full h-full xl:w-[450px] bg-white border-r border-slate-200 p-6 flex flex-col gap-8 overflow-y-auto shadow-xl z-10">
-            {/* Meta Data */}
+        <div className="w-full xl:w-[450px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-200 p-6 pb-28 xl:pb-6 flex flex-col gap-8 shadow-xl z-10">
             <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
                     <FileText className="text-primary" /> Crear Cotización
