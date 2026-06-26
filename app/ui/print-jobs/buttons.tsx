@@ -1,6 +1,6 @@
 "use client"
 
-import { deletePrintJob, finishPrintJob, startPrintJob, failPrintJob, FailPrintJobFormState } from "@/app/lib/print-job-actions";
+import { deletePrintJob, finishPrintJob, startPrintJob, failPrintJob, FailPrintJobFormState } from "@/lib/actions/print-job-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

@@ -1,4 +1,4 @@
-import { fetchCustomerOrders } from "@/app/lib/order-data";
+import { fetchCustomerOrders } from "@/lib/data/order-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import OrderStatusField from "./status-field";

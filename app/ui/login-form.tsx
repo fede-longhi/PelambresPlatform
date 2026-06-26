@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { useActionState } from 'react';
-import { authenticate } from '@/app/lib/actions';
+import { authenticate } from '@/lib/actions/auth-actions';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 

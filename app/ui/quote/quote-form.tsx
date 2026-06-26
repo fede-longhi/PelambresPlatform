@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { upload } from '@vercel/blob/client';
 import { AlertTriangle, CheckCircle, Clock, FileText, Upload, X } from 'lucide-react';
 
-import { createQuote, QuoteFormState } from '@/app/lib/quote-actions';
+import { createQuote, QuoteFormState } from '@/lib/actions/quote-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateFileHash, formatFileSize } from '@/lib/utils';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MIME_TYPE_BY_EXTENSION, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
 
-import { getFileData, insertFileData } from '@/app/lib/file-storage';
+import { getFileData, insertFileData } from '@/lib/actions/file-storage';
 
 const INITIAL_STATE: QuoteFormState = { message: null, errors: {} };
 

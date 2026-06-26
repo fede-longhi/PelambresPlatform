@@ -3,7 +3,7 @@
 import { Customer } from '@/types/definitions';
 import { Button } from '@/components/ui/button';
 import { useActionState, useEffect, useState } from 'react';
-import { CustomerFormState, updateCustomer} from '@/app/lib/customer-actions';
+import { CustomerFormState, updateCustomer} from '@/lib/actions/customer-actions';
 import { Building2, CircleX, User } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';

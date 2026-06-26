@@ -1,4 +1,4 @@
-import { PrintJobModelFile } from "../../types/definitions";
+import { PrintJobModelFile } from "@/types/definitions";
 import sql from '@/lib/db';
 
 export async function fetchPrintJobModels(printJobId: string){

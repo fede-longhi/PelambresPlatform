@@ -1,4 +1,4 @@
-import { fetchFilteredPrinters } from "@/app/lib/printer-data";
+import { fetchFilteredPrinters } from "@/lib/data/printer-data";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 export default async function PrintersTable({

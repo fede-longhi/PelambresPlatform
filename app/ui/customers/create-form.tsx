@@ -1,6 +1,6 @@
 'use client';
 
-import { createCustomer, CustomerFormState } from '@/app/lib/customer-actions';
+import { createCustomer, CustomerFormState } from '@/lib/actions/customer-actions';
 import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

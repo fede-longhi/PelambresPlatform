@@ -1,4 +1,4 @@
-import { fetchOrderById } from "@/app/lib/order-data";
+import { fetchOrderById } from "@/lib/data/order-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import OrderEditForm from "@/app/ui/orders/edit-form";
 

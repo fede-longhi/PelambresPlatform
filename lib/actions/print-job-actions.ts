@@ -4,9 +4,9 @@ import { z } from 'zod';
 import sql from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { PrintJob } from '../../types/definitions';
+import { PrintJob } from '@/types/definitions';
 import { FAIL_REASONS, GCODE_FOLDER, MODELS_FOLDER } from '@/lib/consts';
-import { insertFormFiles, insertSingleFormFile } from './file-storage';
+import { insertFormFiles, insertSingleFormFile } from '@/lib/actions/file-storage';
 
 const FormSchema = z.object({
     id: z.string().optional(),

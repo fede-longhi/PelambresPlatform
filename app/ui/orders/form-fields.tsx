@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { OrderFormState } from "@/app/lib/order-actions";
+import { OrderFormState } from "@/lib/actions/order-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp"
@@ -11,7 +11,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useDebouncedCallback } from 'use-debounce';
-import { fetchFilteredCustomers } from "@/app/lib/customer-data";
+import { fetchFilteredCustomers } from "@/lib/data/customer-data";
 import { Spinner } from "@/components/ui/spinner";
 import { OrderStatuses } from "@/types/order-definitions";
 import CustomerForm from "../customers/create-form";

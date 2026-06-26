@@ -1,7 +1,7 @@
 'use server';
 
 import { put, PutBlobResult } from "@vercel/blob";
-import { FileData } from "../../types/definitions";
+import { FileData } from "@/types/definitions";
 import { calculateFileHash } from "@/lib/utils";
 import { MIME_TYPE_BY_EXTENSION } from "@/lib/consts";
 import sql from '@/lib/db';

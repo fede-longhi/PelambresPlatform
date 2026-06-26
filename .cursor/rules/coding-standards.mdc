@@ -14,7 +14,6 @@ Next.js 15 App Router, TypeScript (`strict`), Tailwind CSS, shadcn/ui (new-york)
 | Routes | `app/(admin)`, `app/(public)`, `app/(customer)` |
 | **Reads** (SELECT) | `lib/data/<domain>-data.ts` |
 | **Writes** (mutations) | `lib/actions/<domain>-actions.ts` |
-| Legacy server code | `app/lib/*-data.ts`, `app/lib/*-actions.ts` (migrate to `lib/` when touched) |
 | Shared UI | `app/ui/`, shadcn primitives in `components/ui/` |
 | Types | `types/definitions.ts` and domain files |
 | Constants | `lib/consts/` |

@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect } from "react";
-import { ConfigurationVariableFormState, createConfigurationVariableFromForm } from "@/app/lib/configuration-actions";
+import { ConfigurationVariableFormState, createConfigurationVariableFromForm } from "@/lib/actions/configuration-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

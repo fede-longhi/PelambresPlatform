@@ -1,4 +1,4 @@
-import { getOrderSalesValueFromMonth, getEstimatedOrderSalesValueFromMonth } from "@/app/lib/order-data";
+import { getOrderSalesValueFromMonth, getEstimatedOrderSalesValueFromMonth } from "@/lib/data/order-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, getMonthNameFromDate } from "@/lib/utils";
 

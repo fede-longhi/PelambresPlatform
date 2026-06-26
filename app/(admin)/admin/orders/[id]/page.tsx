@@ -1,5 +1,5 @@
-import { fetchOrderById } from "@/app/lib/order-data";
-import { fetchOrderPrintJobs } from "@/app/lib/print-job-data";
+import { fetchOrderById } from "@/lib/data/order-data";
+import { fetchOrderPrintJobs } from "@/lib/data/print-job-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import OrderDetailCard from "@/app/ui/orders/card-detail";
 import OrderCustomerDetailCard from "@/app/ui/orders/order-customer-detail";

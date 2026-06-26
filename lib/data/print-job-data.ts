@@ -1,5 +1,5 @@
 import sql from '@/lib/db';
-import { PrintJob, PrintJobWithGcode } from '../../types/definitions';
+import { PrintJob, PrintJobWithGcode } from '@/types/definitions';
 
 export async function fetchPrintJob(id: string) {
     try {

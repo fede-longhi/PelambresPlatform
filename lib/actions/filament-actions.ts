@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
-import { Filament } from '../../types/definitions';
+import { Filament } from '@/types/definitions';
 
 const FilamentSchema = z.object({
     id: z.string().uuid(),

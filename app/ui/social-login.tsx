@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { doSocialLogin } from '@/app/lib/actions';
+import { doSocialLogin } from '@/lib/actions/auth-actions';
 import {
     ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';

@@ -1,7 +1,7 @@
 'use server';
 
 import sql from '@/lib/db';
-import { Printer } from '../../types/definitions';
+import { Printer } from '@/types/definitions';
 import { ITEMS_PER_PAGE } from '@/lib/consts';
 
 export async function fetchFilteredPrinters(query: string, currentPage: number) {

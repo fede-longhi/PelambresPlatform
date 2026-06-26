@@ -1,6 +1,6 @@
 'use client';
 
-import { createFilament, FilamentFormState } from '@/app/lib/filament-actions';
+import { createFilament, FilamentFormState } from '@/lib/actions/filament-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useActionState, useEffect } from 'react';
 

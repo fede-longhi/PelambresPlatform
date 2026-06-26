@@ -1,4 +1,4 @@
-import { fetchCustomerById } from "@/app/lib/customer-data";
+import { fetchCustomerById } from "@/lib/data/customer-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import EditForm from "@/app/ui/customers/edit-form";
 import { notFound } from "next/navigation";

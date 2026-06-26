@@ -1,4 +1,4 @@
-import { fetchPrintersPages } from "@/app/lib/printer-data";
+import { fetchPrintersPages } from "@/lib/data/printer-data";
 import Pagination from "@/components/ui/pagination";
 import Search from "@/app/ui/search";
 import { CreatePrinterButton } from "@/components/printers/buttons";

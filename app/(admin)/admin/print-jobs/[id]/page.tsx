@@ -1,10 +1,10 @@
 import { PrintJobModelFile, PrintJobWithGcode } from "@/types/definitions";
-import { fetchPrintJob } from "@/app/lib/print-job-data";
+import { fetchPrintJob } from "@/lib/data/print-job-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import { lusitana } from "@/app/ui/fonts";
 import { FinishPrintJob, StartPrintJob } from "@/app/ui/print-jobs/buttons";
 import PrintJobStatusField from "@/app/ui/print-jobs/status-field";
-import { fetchPrintJobModels } from "@/app/lib/print-job-models-data";
+import { fetchPrintJobModels } from "@/lib/data/print-job-models-data";
 import Link from "next/link";
 import { Box, Download, FileBox } from "lucide-react";
 import { secondsToTime } from "@/lib/utils";

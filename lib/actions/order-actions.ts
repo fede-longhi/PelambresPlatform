@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
-import { OrderStatus, OrderStatuses } from '../../types/order-definitions';
+import { OrderStatus, OrderStatuses } from '@/types/order-definitions';
 
 const FormSchema = z.object({
     id: z.string(),

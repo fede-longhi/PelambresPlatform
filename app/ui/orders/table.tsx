@@ -1,4 +1,4 @@
-import { fetchFilteredOrders } from "@/app/lib/order-data";
+import { fetchFilteredOrders } from "@/lib/data/order-data";
 import { formatCurrency, formatDateToLocal } from "@/lib/utils";
 import { OrderStatusEditField } from "./status-edit-field";
 import { DeleteOrder, EditOrder } from "./buttons";

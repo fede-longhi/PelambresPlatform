@@ -1,4 +1,4 @@
-import { fetchFilteredCustomers } from "@/app/lib/customer-data";
+import { fetchFilteredCustomers } from "@/lib/data/customer-data";
 import {
     Table,
     TableBody,

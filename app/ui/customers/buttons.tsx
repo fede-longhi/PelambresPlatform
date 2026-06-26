@@ -1,4 +1,4 @@
-import { deleteCustomer } from "@/app/lib/customer-actions"
+import { deleteCustomer } from "@/lib/actions/customer-actions"
 import { Button } from "@/components/ui/button";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";

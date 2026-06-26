@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createPrinter, PrinterFormState } from '@/app/lib/printer-actions';
+import { createPrinter, PrinterFormState } from '@/lib/actions/printer-actions';
 import { useToast } from '@/hooks/use-toast';
 import { useActionState, useEffect } from 'react';
 import FieldErrorDisplay from '../ui/field-error-display';
