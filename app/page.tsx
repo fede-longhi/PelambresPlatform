@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
-import Form from "@/app/ui/quote/quote-form";
+import Form from "@/app/(public)/quote-request/_components/quote-form";
 import { Package, DraftingCompass, Slice, PencilRuler } from "lucide-react"; 
 import { GoogleReviews } from '@/components/google-reviews/google-reviews';
 import MainHeader from '@/components/layout/main-header';

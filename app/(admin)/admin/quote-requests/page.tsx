@@ -1,8 +1,8 @@
-import QuotesTable from "@/app/ui/quote/table";
+import QuotesTable from "@/app/(admin)/admin/quote-requests/_components/quotes-table";
 import Pagination from '@/components/ui/pagination';
-import Search from '@/app/ui/search';
-import { lusitana } from '@/app/ui/fonts';
-import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
+import Search from '@/app/(admin)/admin/_components/search';
+import { lusitana } from '@/app/fonts';
+import { InvoicesTableSkeleton } from '@/components/shared/skeletons';
 import { Suspense } from 'react';
 import { fetchQuotesPages } from '@/lib/data/quote-data';
 import { Metadata } from 'next';

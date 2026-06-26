@@ -1,6 +1,6 @@
 import { fetchOrderById } from "@/lib/data/order-data";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import OrderEditForm from "@/app/ui/orders/edit-form";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import OrderEditForm from "@/app/(admin)/admin/orders/_components/edit-form";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

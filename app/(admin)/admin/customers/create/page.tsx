@@ -1,5 +1,5 @@
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import Form from "@/app/ui/customers/create-form";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import Form from "@/app/(admin)/admin/customers/_components/create-form";
 
 export default function Page() {    
     return (

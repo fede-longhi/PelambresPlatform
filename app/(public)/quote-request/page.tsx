@@ -1,4 +1,4 @@
-import Form from "@/app/ui/quote/quote-form"
+import Form from "@/app/(public)/quote-request/_components/quote-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import PageHeader from "@/components/layout/page-header";
 import { Upload } from "lucide-react";

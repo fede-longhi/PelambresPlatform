@@ -1,4 +1,4 @@
-import { ExternalLinkButton, Header, Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
+import { ExternalLinkButton, Header, Section, SectionContent, SectionHeader } from "@/app/(public)/print-guide/_components/section-components";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Info } from "lucide-react";
 

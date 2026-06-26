@@ -1,4 +1,4 @@
-import { lusitana } from "@/app/ui/fonts";
+import { lusitana } from "@/app/fonts";
 import { cn } from "@/lib/utils";
 
 export default function PageHeader({ className, title, textClassName }: { className?: string; title: string; textClassName?: string }){

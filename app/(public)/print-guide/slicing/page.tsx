@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
+import { Section, SectionContent, SectionHeader } from "@/app/(public)/print-guide/_components/section-components";
 import { Slice, Settings, FileCheck, Info } from 'lucide-react'; 
 import { Button } from '@/components/ui/button';
 

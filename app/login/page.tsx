@@ -1,8 +1,8 @@
-import PelambresLogo from '@/app/ui/home-logo';
-import LoginForm from '@/app/ui/login-form';
+import PelambresLogo from '@/components/shared/home-logo';
+import LoginForm from '@/app/login/_components/login-form';
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import SocialLogin from '@/app/ui/social-login';
+import SocialLogin from '@/app/login/_components/social-login';
 
 export const metadata: Metadata = {
     title: 'Login',

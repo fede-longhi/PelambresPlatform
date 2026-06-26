@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { lusitana } from '@/app/ui/fonts';
+import { lusitana } from '@/app/fonts';
 import { PlusIcon } from '@heroicons/react/24/outline';
 
 export const metadata: Metadata = {

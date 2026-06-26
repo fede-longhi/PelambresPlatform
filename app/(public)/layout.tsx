@@ -1,4 +1,4 @@
-import PublicHeader from "@/app/ui/public-header";
+import PublicHeader from "@/app/(public)/_components/public-header";
 
 export const experimental_ppr = true;
  
