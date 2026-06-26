@@ -2,33 +2,13 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import sql from '@/lib/db';
+import { fetchCourseForEdit } from '@/lib/data/course-data';
 import { EditCourseForm } from './edit-course-form';
 
 type EditCoursePageProps = {
     params: Promise<{
         id: string;
     }>;
-};
-
-export type CourseRow = {
-    id: string;
-    title: string;
-    slug: string;
-    shortDescription: string;
-    duration: string;
-    level: string;
-    isPublished: boolean;
-    learningObjective?: string;
-    learningOutcomes?: string;
-    modality?: string;
-    startDate?: string | null;
-    schedule?: string;
-    location?: string;
-    maxStudents?: number;
-    price?: number;
-    currency?: string;
-    notes?: string;
 };
 
 export default async function EditCoursePage({ params }: EditCoursePageProps) {
@@ -39,32 +19,7 @@ export default async function EditCoursePage({ params }: EditCoursePageProps) {
         notFound();
     }
 
-    const courses = await sql<CourseRow[]>`
-        SELECT 
-            id, 
-            title, 
-            slug, 
-            short_description as "shortDescription", 
-            duration, 
-            level, 
-            is_published as "isPublished",
-            learning_objective as "learningObjective",
-            learning_outcomes as "learningOutcomes",
-            -- NUEVOS CAMPOS:
-            modality,
-            start_date as "startDate",
-            schedule,
-            location,
-            max_students as "maxStudents",
-            price,
-            currency,
-            notes
-        FROM courses 
-        WHERE id = ${courseId}
-        LIMIT 1
-    `;
-
-    const course = courses[0];
+    const course = await fetchCourseForEdit(courseId);
 
     if (!course) {
         notFound();

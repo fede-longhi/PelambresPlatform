@@ -1,7 +1,10 @@
-import sql from '@/lib/db';
 import Link from 'next/link';
 import { CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    fetchRegistrationByConfirmationToken,
+    markRegistrationConfirmed,
+} from '@/lib/data/course-data';
 
 type ConfirmPageProps = {
     params: Promise<{ slug: string; token: string }>;
@@ -16,15 +19,7 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
     let courseTitle = "";
 
     try {
-        const registrations = await sql`
-            SELECT r.id, r.token_used, c.title as "courseTitle"
-            FROM course_registrations r
-            JOIN courses c ON r.course_id = c.id
-            WHERE r.confirmation_token = ${token}
-            LIMIT 1
-        `;
-
-        const registration = registrations[0];
+        const registration = await fetchRegistrationByConfirmationToken(token);
 
         if (!registration) {
             isSuccess = false;
@@ -34,12 +29,7 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
             courseTitle = registration.courseTitle;
             message = `Tu correo ya se encontraba verificado para el curso ${courseTitle}. ¡Ya tienes tu lugar reservado!`;
         } else {
-            await sql`
-                UPDATE course_registrations
-                SET registration_status = 'confirmed',
-                    token_used = true
-                WHERE id = ${registration.id}
-            `;
+            await markRegistrationConfirmed(registration.id);
             isSuccess = true;
             courseTitle = registration.courseTitle;
             message = `¡Espectacular! Hemos verificado tu correo con éxito. Tu lugar en la capacitación de ${courseTitle} ya está formalmente reservado.`;
@@ -84,7 +74,6 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
                 )}
 
                 <div className="pt-2 border-t border-slate-100">
-                    {/* El botón ahora apunta inteligentemente al curso usando el slug de la URL */}
                     <Link href={`/education/${slug}`}>
                         <Button variant="outline" className="w-full">
                             <ArrowLeft size={16} className="mr-2" /> Volver al curso

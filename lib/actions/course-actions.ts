@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import sql from '@/lib/db';
+import { fetchCourseSlugAndTitle } from '@/lib/data/course-data';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { sendCourseConfirmationEmail } from '@/lib/mail/mailer';
@@ -257,12 +258,11 @@ export async function registerForCourse(
     console.log(`Validated registration data: name=${name}, email=${email}, phone=${phone}`);
 
     try {
-        const courses = await sql`SELECT title, slug FROM courses WHERE id = ${courseId}`;
-        if (courses.length === 0) {
+        const course = await fetchCourseSlugAndTitle(courseId);
+        if (!course) {
             return { success: false, message: "El curso seleccionado no existe." };
         }
-        const courseTitle = courses[0].title;
-        const courseSlug = courses[0].slug;
+        const { title: courseTitle, slug: courseSlug } = course;
 
         const result = await sql`
             INSERT INTO course_registrations 

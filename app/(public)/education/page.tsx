@@ -1,23 +1,12 @@
 import Link from 'next/link';
 import { BookOpen, Clock, Target, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import sql from '@/lib/db';
+import { fetchPublishedCourses } from '@/lib/data/course-data';
 
 export const revalidate = 60;
 
 export default async function EducationCatalogPage() {
-    const publishedCourses = await sql`
-        SELECT 
-            id, 
-            title, 
-            slug, 
-            short_description as "shortDescription", 
-            duration, 
-            level 
-        FROM courses 
-        WHERE is_published = true AND deleted_at IS NULL
-        ORDER BY created_at DESC
-    `;
+    const publishedCourses = await fetchPublishedCourses();
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans">

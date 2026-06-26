@@ -2,24 +2,11 @@ import Link from 'next/link';
 import { Plus, Pencil, Trash2, Eye, EyeOff, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import sql from '@/lib/db';
+import { fetchAdminCourses } from '@/lib/data/course-data';
 import { DeleteCourseButton } from './delete-course-button';
 
 export default async function AdminCoursesPage() {
-    const courses = await sql`
-        SELECT 
-            c.id, 
-            c.title, 
-            c.slug, 
-            c.duration, 
-            c.is_published as "isPublished",
-            COUNT(r.id)::int as registrations
-        FROM courses c
-        LEFT JOIN course_registrations r ON c.id = r.course_id
-        WHERE c.deleted_at IS NULL
-        GROUP BY c.id
-        ORDER BY c.created_at DESC
-    `
+    const courses = await fetchAdminCourses();
 
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">

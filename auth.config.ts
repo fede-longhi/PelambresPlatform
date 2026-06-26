@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
-import { AUTHORIZED_USERS } from './app/lib/user-definitions';
+import { AUTHORIZED_USERS } from '@/lib/auth/authorized-users';
 
 export const authConfig = {
     pages: {

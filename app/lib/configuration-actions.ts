@@ -5,9 +5,7 @@ import { z } from 'zod';
 import { ConfigurationVariable } from "../../types/definitions";
 import { revalidatePath } from 'next/cache';
 
-import postgres from 'postgres';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+import sql from '@/lib/db';
 
 const CreateConfigurationVariable = z.object({
     key: z.string().min(1, "El campo 'key' es obligatorio."),

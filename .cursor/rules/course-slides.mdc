@@ -1,0 +1,35 @@
+---
+description: Generate and update Reveal.js slide decks for PelambresPlatform courses
+globs: **/course-slides/**
+alwaysApply: false
+---
+
+# Course Slides (Reveal.js)
+
+Self-contained HTML decks served at `/course-slides/{slug}/`. Output: `public/course-slides/{slug}/index.html`.
+
+## Workflow
+
+1. Resolve course by slug, title, or `/admin/courses/{id}`.
+2. Load data via `sql` from `@/lib/db` (fields in `app/(public)/education/[slug]/page.tsx`).
+3. Start from `.cursor/skills/course-slides/reveal-template.html`.
+4. Replace `{{PLACEHOLDERS}}` and inject `<section>` blocks inside `<div class="slides">`.
+
+## Content rules
+
+- **12–20 slides**, Spanish (es-AR), built from DB fields only.
+- Structure: title → agenda → short description → learning objective → one slide per outcome → logistics → notes (if any) → closing.
+- Parse outcomes: `learningOutcomes.split('\n').filter(line => line.trim())`.
+- Labels: `COURSE_LEVELS`, `COURSE_MODALITIES` from `@/lib/consts/course-consts`.
+- Stay faithful to outcome text; do not invent topics. If thin, add facilitation slides (ejercicio, discusión), not fabricated technical detail.
+
+## HTML rules
+
+- Reveal.js via CDN only — no npm, no build step.
+- Branding: `#0f172a` background, `#2563eb` accents, logo `/pelambres_logo.svg`.
+- One `<section>` per slide. Optional `<aside class="notes">` for speaker notes.
+- On regenerate, preserve content inside `<!-- MANUAL:START -->` … `<!-- MANUAL:END -->` blocks.
+
+## Verify
+
+- Path slug matches DB `slug`; every outcome has a slide; no empty `<section>` elements.

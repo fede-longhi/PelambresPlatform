@@ -1,0 +1,44 @@
+---
+description: All UI must be responsive for desktop and mobile
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Responsive UI
+
+Every UI component and page must work on **desktop browsers** and **mobile phones**. Design mobile-first, then enhance for larger screens.
+
+## Requirements
+
+- No horizontal overflow on narrow viewports (~320px+).
+- Text, buttons, and inputs remain readable and tappable on mobile (min ~44px touch targets for interactive elements).
+- Layouts must adapt — never rely on a fixed desktop-only width.
+- Images and media scale with `max-w-full`, `object-cover`, or equivalent.
+- Tables and wide content need a mobile strategy (stacked cards, horizontal scroll, or `hidden md:table` + mobile alternative).
+
+## Tailwind patterns
+
+Use responsive prefixes (`sm:`, `md:`, `lg:`). Match existing project conventions:
+
+```tsx
+// Layout — stack on mobile, columns on desktop
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+// Spacing & typography — scale up on larger screens
+<div className="p-4 md:p-10 max-w-5xl mx-auto">
+<h1 className="text-3xl md:text-5xl">
+
+// Show/hide by breakpoint when layouts differ
+<table className="hidden md:table">...</table>
+<div className="md:hidden">...</div>
+
+// Flex — wrap or stack on small screens
+<div className="flex flex-col sm:flex-row gap-4">
+```
+
+## Checklist before finishing UI work
+
+- [ ] Renders without broken layout at ~375px width (phone)
+- [ ] Renders correctly at ~1280px width (desktop)
+- [ ] No clipped or overlapping content at either size
+- [ ] Forms and actions usable without zooming on mobile

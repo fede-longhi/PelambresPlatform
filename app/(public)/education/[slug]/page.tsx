@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import sql from '@/lib/db';
+import { fetchPublishedCourseBySlug } from '@/lib/data/course-data';
 import { CheckCircle, Calendar, MapPin, Clock, Users, Banknote, Info } from 'lucide-react';
 import { CourseRegistrationForm } from '@/components/education/course-registration-form'; 
 import { COURSE_MODALITIES, CURRENCIES, COURSE_LEVELS } from '@/lib/consts/course-consts';
@@ -16,29 +16,7 @@ export default async function PublicCoursePage({ params }: CoursePageProps) {
         notFound();
     }
 
-    const courses = await sql`
-        SELECT 
-            id, 
-            title, 
-            short_description as "shortDescription", 
-            duration, 
-            level,
-            learning_objective as "learningObjective",
-            learning_outcomes as "learningOutcomes",
-            modality,
-            start_date as "startDate",
-            schedule,
-            location,
-            max_students as "maxStudents",
-            price,
-            currency,
-            notes
-        FROM courses 
-        WHERE slug = ${slug} AND is_published = true AND deleted_at IS NULL
-        LIMIT 1
-    `;
-
-    const course = courses[0];
+    const course = await fetchPublishedCourseBySlug(slug);
 
     if (!course) {
         notFound();

@@ -1,7 +1,5 @@
 import { Order, OrdersSummary, OrderTable } from "../../types/definitions";
-import postgres from 'postgres';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+import sql from '@/lib/db';
 
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredOrders(
