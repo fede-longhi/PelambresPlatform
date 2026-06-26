@@ -1,0 +1,99 @@
+---
+description: PelambresPlatform coding standards and conventions
+alwaysApply: true
+---
+
+# Coding Standards
+
+Next.js 15 App Router, TypeScript (`strict`), Tailwind CSS, shadcn/ui (new-york). Hosted on Vercel with Neon Postgres.
+
+## Project layout
+
+| Area | Location |
+|------|----------|
+| Routes | `app/(admin)`, `app/(public)`, `app/(customer)` |
+| Server actions (new) | `lib/actions/` |
+| Server actions (legacy) | `app/lib/*-actions.ts` |
+| Data fetching | `app/lib/*-data.ts` or inline in Server Components |
+| Shared UI | `app/ui/`, shadcn primitives in `components/ui/` |
+| Types | `types/definitions.ts` and domain files |
+| Constants | `lib/consts/` |
+| DB client | `lib/db.ts` — prefer this over creating new `postgres()` instances |
+
+New features go in `lib/` when possible. Match the conventions of the file you are editing.
+New components should go in `components/`
+
+## Components
+
+- **Server Components by default.** Add `'use client'` only for hooks, browser APIs, or interactivity.
+- **Pages** are async Server Components; fetch data in the page, pass props to child components.
+- **Forms**: `useActionState` + server action; export a `*FormState` type with `errors`, `message`, `success`.
+- **UI**: shadcn components from `@/components/ui/*`, icons from `lucide-react`, `cn()` from `@/lib/utils`.
+- **Naming**: kebab-case files (`broadcast-email-form.tsx`), PascalCase exported components.
+
+## Variable naming
+
+Prefer **full, descriptive names** — readability over brevity.
+
+```typescript
+// ✅ GOOD
+const courseTitle = courses[0].title;
+const validatedFields = CourseSchema.safeParse(data);
+const selectedRegistrants = registrants.filter(r => r.isActive);
+
+// ❌ AVOID (when a clearer name is available)
+const t = courses[0].title;
+const vf = CourseSchema.safeParse(data);
+const sel = registrants.filter(r => r.isActive);
+```
+
+**Exceptions are fine** when the meaning is obvious from context:
+
+- Loop indices: `index`, `i` in short loops
+- Universal shorthand: `id`, `url`, `error`
+- Destructuring from well-known shapes: `{ params }`, `{ success }`
+- Callback params in trivial one-liners: `.map(r => r.email)`
+
+When in doubt, use the full name.
+
+## Server actions & validation
+
+```typescript
+'use server';
+
+import { z } from 'zod';
+import sql from '@/lib/db';
+import { revalidatePath } from 'next/cache';
+
+const Schema = z.object({
+  title: z.string().min(3, { message: 'El título debe tener al menos 3 caracteres.' }),
+});
+
+export type FormState = {
+  errors?: { title?: string[] };
+  message?: string | null;
+  success?: boolean;
+};
+```
+
+- Validate with Zod `safeParse`; return field errors, never throw for validation failures.
+- User-facing messages in **Spanish** (es-AR for public content).
+- Call `revalidatePath` after mutations; use `redirect` when navigating away after success.
+
+## Database
+
+- Tagged template queries via `sql` from `@/lib/db`.
+- DB columns are `snake_case`; alias to `camelCase` in SELECT: `start_date as "startDate"`.
+- Filter soft-deletes: `deleted_at IS NULL` where applicable.
+- Type results inline or with generics: `sql<Registrant[]>\`...\``.
+
+## Next.js patterns
+
+```typescript
+type PageProps = { params: Promise<{ id: string }> };
+
+export default async function Page({ params }: PageProps) {
+  const { id } = await params;
+  // ...
+}
+```
