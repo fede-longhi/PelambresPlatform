@@ -1,11 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import postgres from 'postgres';
+import sql from '@/lib/db';
 import nodemailer from 'nodemailer';
 import { QuoteTable } from '../../types/definitions';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 const FormSchema = z.object({
     id: z.string(),

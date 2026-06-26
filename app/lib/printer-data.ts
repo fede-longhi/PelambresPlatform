@@ -1,10 +1,8 @@
 'use server';
 
-import postgres from 'postgres';
+import sql from '@/lib/db';
 import { Printer } from '../../types/definitions';
 import { ITEMS_PER_PAGE } from '@/lib/consts';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function fetchFilteredPrinters(query: string, currentPage: number) {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;

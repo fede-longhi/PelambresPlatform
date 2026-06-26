@@ -12,21 +12,20 @@ Next.js 15 App Router, TypeScript (`strict`), Tailwind CSS, shadcn/ui (new-york)
 | Area | Location |
 |------|----------|
 | Routes | `app/(admin)`, `app/(public)`, `app/(customer)` |
-| Server actions (new) | `lib/actions/` |
-| Server actions (legacy) | `app/lib/*-actions.ts` |
-| Data fetching | `app/lib/*-data.ts` or inline in Server Components |
+| **Reads** (SELECT) | `lib/data/<domain>-data.ts` |
+| **Writes** (mutations) | `lib/actions/<domain>-actions.ts` |
+| Legacy server code | `app/lib/*-data.ts`, `app/lib/*-actions.ts` (migrate to `lib/` when touched) |
 | Shared UI | `app/ui/`, shadcn primitives in `components/ui/` |
 | Types | `types/definitions.ts` and domain files |
 | Constants | `lib/consts/` |
-| DB client | `lib/db.ts` — prefer this over creating new `postgres()` instances |
+| DB client | `lib/db.ts` — **only** place that creates `postgres()` |
 
-New features go in `lib/` when possible. Match the conventions of the file you are editing.
-New components should go in `components/`
+Follow the read/write split in `lib-read-write.mdc`. New features use `lib/data/` + `lib/actions/`. New components go in `components/`.
 
 ## Components
 
 - **Server Components by default.** Add `'use client'` only for hooks, browser APIs, or interactivity.
-- **Pages** are async Server Components; fetch data in the page, pass props to child components.
+- **Pages** are async Server Components; fetch data via `lib/data/*`, pass props to child components.
 - **Forms**: `useActionState` + server action; export a `*FormState` type with `errors`, `message`, `success`.
 - **UI**: shadcn components from `@/components/ui/*`, icons from `lucide-react`, `cn()` from `@/lib/utils`.
 - **Naming**: kebab-case files (`broadcast-email-form.tsx`), PascalCase exported components.
@@ -82,7 +81,8 @@ export type FormState = {
 
 ## Database
 
-- Tagged template queries via `sql` from `@/lib/db`.
+- Reads live in `lib/data/`; writes in `lib/actions/`. Pages do not call `sql` directly.
+- Tagged template queries via `sql` from `@/lib/db` — never instantiate `postgres()` elsewhere.
 - DB columns are `snake_case`; alias to `camelCase` in SELECT: `start_date as "startDate"`.
 - Filter soft-deletes: `deleted_at IS NULL` where applicable.
 - Type results inline or with generics: `sql<Registrant[]>\`...\``.

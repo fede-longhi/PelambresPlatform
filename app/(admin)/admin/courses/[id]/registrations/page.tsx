@@ -1,4 +1,7 @@
-import sql from '@/lib/db';
+import {
+    fetchCourseTitle,
+    fetchCourseRegistrations,
+} from '@/lib/data/course-data';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Edit, CheckCircle2, XCircle, Clock } from 'lucide-react';
@@ -11,18 +14,6 @@ import {
 
 type PageProps = {
     params: Promise<{ id: string }>;
-};
-
-type RegistrationRow = {
-    id: string;
-    name: string;
-    email: string;
-    phone: string | null;
-    created_at: Date;
-    registration_status: string;
-    payment_status: string;
-    payment_method: string | null;
-    attended: boolean;
 };
 
 function getRegistrationBadge(status: string) {
@@ -48,22 +39,10 @@ export default async function CourseRegistrationsPage({ params }: PageProps) {
     const resolvedParams = await params;
     const courseId = resolvedParams.id;
 
-    // 1. Buscamos la info del curso
-    const courses = await sql`SELECT title FROM courses WHERE id = ${courseId}`;
-    if (courses.length === 0) notFound();
-    const courseTitle = courses[0].title;
+    const courseTitle = await fetchCourseTitle(courseId);
+    if (!courseTitle) notFound();
 
-    // 2. Buscamos todas las inscripciones ordenadas por fecha (las más nuevas primero)
-    const registrations = await sql<RegistrationRow[]>`
-        SELECT 
-            id, full_name as name, email_address as email, phone_number as phone, created_at, 
-            registration_status, payment_status, payment_method, attended
-        FROM course_registrations 
-        WHERE course_id = ${courseId}
-        ORDER BY created_at DESC
-    `;
-
-    // 3. Calculamos un par de métricas rápidas para el resumen
+    const registrations = await fetchCourseRegistrations(courseId);
     const totalRegistrations = registrations.length;
     const totalPaid = registrations.filter(r => r.payment_status === 'paid').length;
     const totalConfirmed = registrations.filter(r => r.registration_status === 'confirmed').length;

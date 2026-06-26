@@ -1,0 +1,48 @@
+---
+description: Prefer reusable components; ask when reuse is unclear
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Reusable Components
+
+Extract UI into reusable components whenever it could plausibly appear **more than once** in the app — same page, sibling routes, admin vs public, or future features.
+
+## When to extract
+
+Extract (or reuse an existing component) if the UI:
+
+- Repeats the same structure, layout, or interaction elsewhere
+- Represents a generic pattern (card, list row, form field group, empty state, page header)
+- Could serve multiple domains with different props (title, children, `onSubmit`, etc.)
+
+Keep inline or colocated **only** when the UI is truly one-off and tightly bound to a single route with no realistic second use.
+
+## When in doubt — ask
+
+If reuse is unclear, **ask the user** before choosing:
+
+- Extract to `components/` (shared)
+- Colocate next to the route (e.g. `app/(admin)/admin/courses/[id]/broadcast-email/`)
+- Extend an existing component instead of creating a new one
+
+Briefly state the trade-off: e.g. “This looks like a generic `PageHeader` — extract to `components/layout/` or keep local?”
+
+## Before creating something new
+
+1. Search `components/` and `app/ui/` for similar UI.
+2. Prefer composing shadcn primitives (`@/components/ui/*`) over duplicating markup.
+3. Name and place by scope:
+
+| Scope | Location | Example |
+|-------|----------|---------|
+| Generic primitive | `components/ui/` | `field-error-display.tsx` |
+| Shared layout | `components/layout/` | `page-header.tsx` |
+| Domain-shared | `components/{domain}/` | `education/course-registration-form.tsx` |
+| Route-specific | Next to the page | `broadcast-email-form.tsx` |
+
+## Component design
+
+- Accept data and callbacks via **props**; avoid hard-coding route or entity IDs inside shared components.
+- Keep components focused — one clear responsibility; compose smaller pieces rather than large monoliths.
+- Do not over-abstract: a single use with no likely second use does not need extraction.

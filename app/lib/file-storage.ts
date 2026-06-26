@@ -3,10 +3,8 @@
 import { put, PutBlobResult } from "@vercel/blob";
 import { FileData } from "../../types/definitions";
 import { calculateFileHash } from "@/lib/utils";
-import postgres from 'postgres';
 import { MIME_TYPE_BY_EXTENSION } from "@/lib/consts";
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+import sql from '@/lib/db';
 
 function getFileExtension(fileName: string): string {
     const lastDotIndex = fileName.lastIndexOf('.');

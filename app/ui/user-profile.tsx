@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { AUTHORIZED_USERS } from '../lib/user-definitions';
+import { AUTHORIZED_USERS } from '@/lib/auth/authorized-users';
 
 export default async function UserProfile() {
     const session = await auth();

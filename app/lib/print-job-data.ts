@@ -1,7 +1,5 @@
-import postgres from 'postgres';
+import sql from '@/lib/db';
 import { PrintJob, PrintJobWithGcode } from '../../types/definitions';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function fetchPrintJob(id: string) {
     try {

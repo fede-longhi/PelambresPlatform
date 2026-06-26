@@ -1,9 +1,7 @@
 'use server';
 
-import postgres from 'postgres';
+import sql from '@/lib/db';
 import { Customer } from '../../types/definitions';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 const ITEMS_PER_PAGE = 6;
 

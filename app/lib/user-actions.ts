@@ -1,10 +1,8 @@
 'use server';
 
 import type { User } from '@/types/definitions';
-import postgres from 'postgres';
+import sql from '@/lib/db';
 import bcrypt from 'bcryptjs';
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
 export async function createUser(user: User) {
     console.log(user);

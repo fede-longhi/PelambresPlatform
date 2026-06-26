@@ -1,0 +1,86 @@
+---
+description: Server data layer — reads in lib/data, writes in lib/actions, single DB client
+alwaysApply: true
+---
+
+# Read / Write Convention
+
+Server-side database access follows a strict split:
+
+| Operation | Location | Example |
+|-----------|----------|---------|
+| **Reads** (SELECT) | `lib/data/<domain>-data.ts` | `lib/data/course-data.ts` |
+| **Writes** (INSERT/UPDATE/DELETE) | `lib/actions/<domain>-actions.ts` | `lib/actions/course-actions.ts` |
+| **DB client** | `lib/db.ts` only | `import sql from '@/lib/db'` |
+
+## Rules
+
+1. **Pages and Server Components never query the DB directly.** Call functions from `lib/data/*`.
+2. **Mutations go in server actions** (`'use server'`) under `lib/actions/`, not in pages or data files.
+3. **Never create a new `postgres()` instance.** Always import the shared client from `@/lib/db`.
+4. **Export typed helpers** from data files (`fetchX`, `fetchXById`, etc.) with domain types colocated or imported from `types/`.
+5. **Legacy `app/lib/*-data.ts` and `app/lib/*-actions.ts`** still exist for older domains — new code goes in `lib/data/` and `lib/actions/`. When touching legacy files, prefer migrating them.
+
+## Examples
+
+```typescript
+// ✅ Page — reads via data layer
+import { fetchAdminCourses } from '@/lib/data/course-data';
+
+export default async function Page() {
+  const courses = await fetchAdminCourses();
+  // ...
+}
+```
+
+```typescript
+// ✅ lib/data/course-data.ts — read queries only
+import sql from '@/lib/db';
+
+export async function fetchAdminCourses() {
+  return sql`SELECT ... FROM courses WHERE deleted_at IS NULL`;
+}
+```
+
+```typescript
+// ✅ lib/actions/course-actions.ts — mutations only
+'use server';
+
+import sql from '@/lib/db';
+import { revalidatePath } from 'next/cache';
+
+export async function deleteCourse(id: string) {
+  await sql`UPDATE courses SET deleted_at = NOW() WHERE id = ${id}`;
+  revalidatePath('/admin/courses');
+}
+```
+
+```typescript
+// ❌ BAD — SQL inline in a page
+import sql from '@/lib/db';
+
+export default async function Page() {
+  const rows = await sql`SELECT * FROM courses`;
+}
+```
+
+```typescript
+// ❌ BAD — duplicate DB client
+import postgres from 'postgres';
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+```
+
+## Adding a new domain
+
+```
+lib/
+  data/
+    order-data.ts      ← fetchOrders, fetchOrderById, …
+  actions/
+    order-actions.ts   ← createOrder, updateOrder, …
+  db.ts
+```
+
+- Data file: export types + read functions; wrap queries in try/catch with clear error messages.
+- Actions file: Zod validation, `*FormState` types, `revalidatePath` / `redirect` after success.
+- Auth allowlist and similar config: `lib/auth/`, not `app/lib/`.

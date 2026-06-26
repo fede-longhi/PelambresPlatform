@@ -4,7 +4,7 @@ import { ArrowLeft, Pencil, Users, Calendar, Eye, EyeOff, BookOpen, BarChart3, C
 import { courseSlidesExist, getCourseSlidesUrl } from '@/lib/slides/paths';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import sql from '@/lib/db';
+import { fetchAdminCourseById } from '@/lib/data/course-data';
 
 type CourseDetailPageProps = {
     params: Promise<{
@@ -20,28 +20,7 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
         notFound();
     }
 
-    // 1. ACTUALIZADO: Traemos learning_objective y learning_outcomes
-    const courses = await sql`
-        SELECT 
-            c.id, 
-            c.title, 
-            c.slug, 
-            c.short_description as "shortDescription", 
-            c.duration, 
-            c.level, 
-            c.is_published as "isPublished",
-            c.created_at as "createdAt",
-            c.learning_objective as "learningObjective", -- NUEVO
-            c.learning_outcomes as "learningOutcomes",   -- NUEVO
-            COUNT(r.id)::int as registrations
-        FROM courses c
-        LEFT JOIN course_registrations r ON c.id = r.course_id
-        WHERE c.id = ${courseId} AND c.deleted_at IS NULL
-        GROUP BY c.id
-        LIMIT 1
-    `;
-
-    const course = courses[0];
+    const course = await fetchAdminCourseById(courseId);
 
     if (!course) {
         notFound();
