@@ -7,6 +7,30 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '200mb',
     },
   },
+  async redirects() {
+    return [
+      {
+        source: '/admin/quotes',
+        destination: '/admin/quote-requests',
+        permanent: true,
+      },
+      {
+        source: '/admin/quotes/:path*',
+        destination: '/admin/quote-requests/:path*',
+        permanent: true,
+      },
+      {
+        source: '/admin/prints',
+        destination: '/admin/print-jobs',
+        permanent: true,
+      },
+      {
+        source: '/admin/prints/:path*',
+        destination: '/admin/print-jobs/:path*',
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

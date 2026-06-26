@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
 import Search from '@/app/ui/search';
 import OrdersTable from '@/app/ui/orders/table';
-import Pagination from '@/app/ui/invoices/pagination';
+import Pagination from '@/components/ui/pagination';
 import { fetchOrdersPages } from '@/app/lib/order-data';
 import { PlusIcon } from 'lucide-react';
 

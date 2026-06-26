@@ -1,5 +1,5 @@
 import QuotesTable from "@/app/ui/quote/table";
-import Pagination from '@/app/ui/invoices/pagination';
+import Pagination from '@/components/ui/pagination';
 import Search from '@/app/ui/search';
 import { lusitana } from '@/app/ui/fonts';
 import { InvoicesTableSkeleton } from '@/app/ui/skeletons';

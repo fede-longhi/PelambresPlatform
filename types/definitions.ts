@@ -268,3 +268,18 @@ export type Sender = {
     phone?: string;
     url?: string;
 }
+
+export type CourseRegistrant = {
+    id: string;
+    course_id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    created_at: Date;
+    registration_status: 'pending' | 'confirmed' | 'cancelled';
+    payment_status: 'pending' | 'partial' | 'paid' | 'refunded';
+    payment_method?: 'transfer' | 'mercadopago' | 'cash' | 'other' | null;
+    payment_reference?: string | null;
+    admin_notes?: string | null;
+    attended: boolean;
+};

@@ -7,10 +7,10 @@ export default function Page() {
         <main>
             <Breadcrumbs
             breadcrumbs={[
-              { label: 'Prints', href: '/admin/prints' },
+              { label: 'Print Jobs', href: '/admin/print-jobs' },
               {
-                label: 'Create Print',
-                href: '/admin/prints/create',
+                label: 'Create Print Job',
+                href: '/admin/print-jobs/create',
                 active: true,
               },
             ]}

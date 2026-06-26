@@ -20,7 +20,7 @@ export default async function QuotesTable({
                     {quotes?.map((quote) => (
                         <div
                                 key={quote.id}
-                                className="mb-2 w-fpull rounded-md bg-white p-4"
+                                className="mb-2 w-full rounded-md bg-white p-4"
                         >
                             <div className="flex items-center justify-between border-b pb-4">
                                 <div>
@@ -62,7 +62,7 @@ export default async function QuotesTable({
                                 className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                             >
                                 <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                                    <Link  href={`/admin/quotes/${quote.id}`}>
+                                    <Link  href={`/admin/quote-requests/${quote.id}`}>
                                         <div className="flex items-center gap-3">
                                             { 
                                                 quote.first_name || quote.last_name ?

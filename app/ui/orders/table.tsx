@@ -1,6 +1,5 @@
 import { fetchFilteredOrders } from "@/app/lib/order-data";
 import { formatCurrency, formatDateToLocal } from "@/lib/utils";
-import { UpdateInvoice, DeleteInvoice } from "../invoices/buttons";
 import { OrderStatusEditField } from "./status-edit-field";
 import { DeleteOrder, EditOrder } from "./buttons";
 import Link from "next/link";
@@ -46,8 +45,8 @@ export default async function OrdersTable({
                             <p>{formatDateToLocal(order.created_date)}</p>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <UpdateInvoice id={order.id} />
-                            <DeleteInvoice id={order.id} />
+                            <EditOrder id={order.id} />
+                            <DeleteOrder id={order.id} />
                         </div>
                         </div>
                     </div>
