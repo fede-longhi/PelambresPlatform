@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{COURSE_TITLE}} — Pelambres 3D</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+  <style>
+    :root {
+      --pelambres-dark: #0f172a;
+      --pelambres-blue: #2563eb;
+      --pelambres-muted: #64748b;
+    }
+    .reveal h1, .reveal h2, .reveal h3 {
+      color: var(--pelambres-dark);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 {
+      font-size: 1.6em;
+      border-bottom: 3px solid var(--pelambres-blue);
+      padding-bottom: 0.3em;
+      display: inline-block;
+    }
+    .reveal .subtitle {
+      color: #94a3b8;
+      font-size: 0.9em;
+      margin-top: 1rem;
+    }
+    .reveal ul { text-align: left; }
+    .reveal li { margin-bottom: 0.6em; line-height: 1.4; }
+    .reveal section[data-background-color="#0f172a"] h1,
+    .reveal section[data-background-color="#0f172a"] .subtitle {
+      color: #f8fafc;
+    }
+    .reveal .footer {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.45em;
+      color: var(--pelambres-muted);
+      z-index: 20;
+    }
+    .reveal .badge {
+      display: inline-block;
+      background: var(--pelambres-blue);
+      color: white;
+      padding: 0.25em 0.75em;
+      border-radius: 999px;
+      font-size: 0.55em;
+      margin: 0 0.25em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!-- AGENT: inject <section> slides here -->
+      {{SLIDES}}
+    </div>
+  </div>
+  <div class="footer">Pelambres 3D · {{COURSE_SLUG}}</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      width: 1280,
+      height: 720,
+      margin: 0.08,
+    });
+  </script>
+</body>
+</html>

@@ -15,7 +15,7 @@ export async function getAllConfiguration() {
         return data;
     }catch (error) {
         console.error(error);
-        throw new Error('Failed to fetch confiugurations.');
+        throw new Error('Failed to fetch configurations.');
     }
 }
 
@@ -42,7 +42,7 @@ export async function getConfigurationGroupedByCategory() {
         return grouped; 
     }catch (error) {
         console.error(error);
-        throw new Error('Failed to fetch confiugurations.');
+        throw new Error('Failed to fetch configurations.');
     }
 }
 
@@ -57,6 +57,6 @@ export async function getConfiguration(key: string) {
         return configuration[0];
     } catch (error) {
         console.error(error);
-        throw new Error('Failed to fetch confiugurations.');
+        throw new Error('Failed to fetch configurations.');
     }
 }

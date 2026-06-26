@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { calculateFileHash, formatFileSize } from '@/lib/utils';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MIME_TYPE_BY_EXTENSION, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
 
-import { getFileData, insertFileData } from '@/app/lib/file-strorage';
+import { getFileData, insertFileData } from '@/app/lib/file-storage';
 
 const INITIAL_STATE: QuoteFormState = { message: null, errors: {} };
 

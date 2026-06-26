@@ -1,7 +1,7 @@
 import { fetchCustomersPages } from "@/app/lib/customer-data";
 import CustomersTable from "@/app/ui/customers/table";
 import { lusitana } from "@/app/ui/fonts";
-import Pagination from "@/app/ui/invoices/pagination";
+import Pagination from "@/components/ui/pagination";
 import Search from "@/app/ui/search";
 import { CustomersTableSkeleton } from "@/app/ui/skeletons";
 import { PlusIcon } from "@heroicons/react/24/outline";

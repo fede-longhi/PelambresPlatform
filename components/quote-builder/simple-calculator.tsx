@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import AddIcon from '@mui/icons-material/Add';
-import QuoteBuilder from './quote-builder';
+import LegacyQuoteBuilder from './LegacyQuoteBuilder';
 import { BudgetItem } from '@/types/definitions';
 
 export default function SimpleCalculator() {
@@ -263,11 +263,11 @@ export default function SimpleCalculator() {
 
                 <div id="budget-panel" className="flex-1 bg-white p-8 rounded-2xl shadow-lg">
                     <h2 className="text-3xl font-bold text-center text-primary mb-6">Presupuesto</h2>
-                    <QuoteBuilder
+                    <LegacyQuoteBuilder
                         items={budgetItems}
                         onRemoveItem={handleRemoveItem}
                         onClearBudget={() => setBudgetItems([])}>
-                    </QuoteBuilder>
+                    </LegacyQuoteBuilder>
                 </div>
             </div>
         </div>

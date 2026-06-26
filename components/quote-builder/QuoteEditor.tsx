@@ -126,20 +126,6 @@ export function QuoteEditor(props: QuoteEditorProps) {
                 onApply={handleApplyCalculation} 
             />
 
-            {/* <Dialog open={activeCalcItemId !== null} onOpenChange={(open) => !open && setActiveCalcItemId(null)}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle>Calculadora de Costos 3D</DialogTitle>
-                    </DialogHeader>
-                    
-                    <SimpleCalculator 
-                        // onApply={(result) => handleApplyCalculation(result.totalCost)} 
-                        // onCancel={() => setActiveCalcItemId(null)}
-                    />
-                    
-                </DialogContent>
-            </Dialog> */}
-
             {/* Impuestos y Descuentos */}
             <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">

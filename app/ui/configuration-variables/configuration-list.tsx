@@ -1,6 +1,6 @@
 import { ConfigurationVariable } from "@/types/definitions";
 import { cn } from "@/lib/utils";
-import ConfigurationTable from "./confiuguration-table";
+import ConfigurationTable from "./configuration-table";
 
 export default function ConfigurationList(
     {configurationVariables, className}:
