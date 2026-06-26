@@ -1,7 +1,7 @@
 'use server';
 
 import sql from '@/lib/db';
-import { ConfigurationVariable } from '../../types/definitions';
+import { ConfigurationVariable } from '@/types/definitions';
 
 export async function getAllConfiguration() {
     try {

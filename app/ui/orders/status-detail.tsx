@@ -1,4 +1,4 @@
-import { fetchLastOrderDetail, fetchNewestOrder, fetchOrderDetailByTrackingCode } from "@/app/lib/order-data";
+import { fetchLastOrderDetail, fetchNewestOrder, fetchOrderDetailByTrackingCode } from "@/lib/data/order-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import OrderStatusField from "./status-field";
 import { formatDate } from "date-fns";

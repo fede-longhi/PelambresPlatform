@@ -1,7 +1,7 @@
 'use server';
 
 import sql from '@/lib/db';
-import { Customer } from '../../types/definitions';
+import { Customer } from '@/types/definitions';
 
 const ITEMS_PER_PAGE = 6;
 

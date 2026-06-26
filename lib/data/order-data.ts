@@ -1,4 +1,4 @@
-import { Order, OrdersSummary, OrderTable } from "../../types/definitions";
+import { Order, OrdersSummary, OrderTable } from "@/types/definitions";
 import sql from '@/lib/db';
 
 const ITEMS_PER_PAGE = 6;

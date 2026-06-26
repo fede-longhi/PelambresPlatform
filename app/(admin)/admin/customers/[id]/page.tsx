@@ -1,4 +1,4 @@
-import { fetchCustomerById } from "@/app/lib/customer-data";
+import { fetchCustomerById } from "@/lib/data/customer-data";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import CustomerDetailCard from "@/app/ui/customers/detail-card";
 import CustomerLastOrders from "@/app/ui/orders/customer-last-orders";

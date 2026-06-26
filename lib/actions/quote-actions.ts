@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import sql from '@/lib/db';
 import nodemailer from 'nodemailer';
-import { QuoteTable } from '../../types/definitions';
+import { QuoteTable } from '@/types/definitions';
 
 const FormSchema = z.object({
     id: z.string(),

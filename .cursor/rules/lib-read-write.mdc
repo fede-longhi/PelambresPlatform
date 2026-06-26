@@ -19,7 +19,7 @@ Server-side database access follows a strict split:
 2. **Mutations go in server actions** (`'use server'`) under `lib/actions/`, not in pages or data files.
 3. **Never create a new `postgres()` instance.** Always import the shared client from `@/lib/db`.
 4. **Export typed helpers** from data files (`fetchX`, `fetchXById`, etc.) with domain types colocated or imported from `types/`.
-5. **Legacy `app/lib/*-data.ts` and `app/lib/*-actions.ts`** still exist for older domains — new code goes in `lib/data/` and `lib/actions/`. When touching legacy files, prefer migrating them.
+5. **New server code** goes in `lib/data/` and `lib/actions/` only — `app/lib/` no longer exists.
 
 ## Examples
 

@@ -4,7 +4,7 @@ import { formatDateTimeToLocal } from "@/lib/utils";
 import { EditValueButton } from "./buttons";
 import { ActionButton } from "@/components/ui/action-button";
 import { Trash } from "lucide-react";
-import { deleteConfiguration } from "@/app/lib/configuration-actions";
+import { deleteConfiguration } from "@/lib/actions/configuration-actions";
 
 export default function ConfigurationTable({configurations, className} : {configurations: ConfigurationVariable[], className?: string}) {
     return (

@@ -1,4 +1,4 @@
-import { fetchFilteredQuotes } from "@/app/lib/quote-data";
+import { fetchFilteredQuotes } from "@/lib/data/quote-data";
 import { formatDateToLocal } from '@/lib/utils';
 import Link from "next/link";
 

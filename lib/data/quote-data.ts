@@ -1,4 +1,4 @@
-import { QuoteTable } from "../../types/definitions";
+import { QuoteTable } from "@/types/definitions";
 import sql from '@/lib/db';
 
 const ITEMS_PER_PAGE = 6;

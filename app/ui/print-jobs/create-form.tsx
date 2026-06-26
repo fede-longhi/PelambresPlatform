@@ -1,7 +1,7 @@
 'use client';
 
 import { GCodeInfo } from "@/types/definitions";
-import { createPrintJob, PrintJobFormState } from "@/app/lib/print-job-actions";
+import { createPrintJob, PrintJobFormState } from "@/lib/actions/print-job-actions";
 import { Button } from "@/components/ui/button";
 import FileDropZone from "@/components/ui/drop-files";
 import FieldErrorDisplay from "@/components/ui/field-error-display";

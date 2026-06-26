@@ -1,4 +1,4 @@
-import { fetchCustomersPages } from "@/app/lib/customer-data";
+import { fetchCustomersPages } from "@/lib/data/customer-data";
 import CustomersTable from "@/app/ui/customers/table";
 import { lusitana } from "@/app/ui/fonts";
 import Pagination from "@/components/ui/pagination";

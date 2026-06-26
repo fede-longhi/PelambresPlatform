@@ -1,4 +1,4 @@
-import { getConfiguration } from "@/app/lib/configuration-data";
+import { getConfiguration } from "@/lib/data/configuration-data";
 import SimpleCalculator from "@/components/quote-builder/simple-calculator";
 import PageHeader from "@/components/ui/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"

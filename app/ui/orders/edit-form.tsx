@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Order } from "@/types/definitions";
-import { OrderFormState, updateOrder } from "@/app/lib/order-actions";
+import { OrderFormState, updateOrder } from "@/lib/actions/order-actions";
 import { dateLongStringToString, getOrderCustomerName } from "@/lib/utils";
 import { CustomerSelectField, StatusField, TrackingCodeInput } from "./form-fields";
 
