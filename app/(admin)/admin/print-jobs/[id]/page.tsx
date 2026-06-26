@@ -1,15 +1,15 @@
 import { PrintJobModelFile, PrintJobWithGcode } from "@/types/definitions";
 import { fetchPrintJob } from "@/lib/data/print-job-data";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import { lusitana } from "@/app/ui/fonts";
-import { FinishPrintJob, StartPrintJob } from "@/app/ui/print-jobs/buttons";
-import PrintJobStatusField from "@/app/ui/print-jobs/status-field";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import { lusitana } from "@/app/fonts";
+import { FinishPrintJob, StartPrintJob } from "@/app/(admin)/admin/print-jobs/_components/buttons";
+import PrintJobStatusField from "@/app/(admin)/admin/print-jobs/_components/status-field";
 import { fetchPrintJobModels } from "@/lib/data/print-job-models-data";
 import Link from "next/link";
 import { Box, Download, FileBox } from "lucide-react";
 import { secondsToTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {STLViewer} from "@/app/ui/models/model-viewer";
+import {STLViewer} from "@/app/(admin)/admin/print-jobs/_components/model-viewer";
 
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {

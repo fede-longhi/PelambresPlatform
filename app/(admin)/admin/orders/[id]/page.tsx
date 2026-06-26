@@ -1,10 +1,10 @@
 import { fetchOrderById } from "@/lib/data/order-data";
 import { fetchOrderPrintJobs } from "@/lib/data/print-job-data";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import OrderDetailCard from "@/app/ui/orders/card-detail";
-import OrderCustomerDetailCard from "@/app/ui/orders/order-customer-detail";
-import OrderPrintJobsDetail from "@/app/ui/orders/print-jobs-detail";
-import { CardSkeleton } from "@/app/ui/skeletons";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import OrderDetailCard from "@/app/(admin)/admin/orders/_components/card-detail";
+import OrderCustomerDetailCard from "@/app/(admin)/admin/orders/_components/order-customer-detail";
+import OrderPrintJobsDetail from "@/app/(admin)/admin/orders/_components/print-jobs-detail";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { Suspense } from "react";
 
 

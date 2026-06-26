@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { lusitana } from '@/app/ui/fonts';
+import { lusitana } from '@/app/fonts';
 import { Suspense } from 'react';
-import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
-import Search from '@/app/ui/search';
-import OrdersTable from '@/app/ui/orders/table';
+import { InvoicesTableSkeleton } from '@/components/shared/skeletons';
+import Search from '@/app/(admin)/admin/_components/search';
+import OrdersTable from '@/app/(admin)/admin/orders/_components/orders-table';
 import Pagination from '@/components/ui/pagination';
 import { fetchOrdersPages } from '@/lib/data/order-data';
 import { PlusIcon } from 'lucide-react';

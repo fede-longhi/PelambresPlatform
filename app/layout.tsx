@@ -1,5 +1,5 @@
-import '@/app/ui/global.css';
-import { inter } from '@/app/ui/fonts';
+import '@/app/globals.css';
+import { inter } from '@/app/fonts';
 import { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';

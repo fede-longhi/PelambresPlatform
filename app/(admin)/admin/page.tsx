@@ -1,5 +1,5 @@
-import Dashboard from "@/app/ui/admin/dashboard";
-import { CreateOrder } from "@/app/ui/orders/buttons";
+import Dashboard from "@/app/(admin)/admin/_components/dashboard";
+import { CreateOrder } from "@/app/(admin)/admin/orders/_components/buttons";
 import PageHeader from "@/components/ui/page-header";
 import { Metadata } from "next";
 

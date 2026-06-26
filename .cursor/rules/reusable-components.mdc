@@ -18,28 +18,37 @@ Extract (or reuse an existing component) if the UI:
 
 Keep inline or colocated **only** when the UI is truly one-off and tightly bound to a single route with no realistic second use.
 
+## Components (Next.js colocation)
+
+- **Route-local UI** → `app/<segment>/_components/` (private folder, not routed).
+- **Route group shell** → e.g. `app/(admin)/admin/_components/sidenav.tsx`.
+- **Single-page UI** → colocate next to `page.tsx` (e.g. `broadcast-email-form.tsx`).
+- **Cross-route shared** → root `components/` (`ui/`, `shared/`, or domain folder like `orders/`).
+- **shadcn primitives only** in `components/ui/` — no business logic.
+
 ## When in doubt — ask
 
 If reuse is unclear, **ask the user** before choosing:
 
-- Extract to `components/` (shared)
-- Colocate next to the route (e.g. `app/(admin)/admin/courses/[id]/broadcast-email/`)
+- Colocate under the route's `_components/`
+- Put in root `components/` (shared across route groups)
 - Extend an existing component instead of creating a new one
-
-Briefly state the trade-off: e.g. “This looks like a generic `PageHeader` — extract to `components/layout/` or keep local?”
 
 ## Before creating something new
 
-1. Search `components/` and `app/ui/` for similar UI.
+1. Search the route's `_components/` folder and `components/` for similar UI.
 2. Prefer composing shadcn primitives (`@/components/ui/*`) over duplicating markup.
 3. Name and place by scope:
 
 | Scope | Location | Example |
 |-------|----------|---------|
-| Generic primitive | `components/ui/` | `field-error-display.tsx` |
-| Shared layout | `components/layout/` | `page-header.tsx` |
-| Domain-shared | `components/{domain}/` | `education/course-registration-form.tsx` |
-| Route-specific | Next to the page | `broadcast-email-form.tsx` |
+| Design system | `components/ui/` | `button.tsx` |
+| Cross-route shared | `components/shared/` or `components/{domain}/` | `components/orders/status-detail.tsx` |
+| Route group shell | `app/(admin)/admin/_components/` | `sidenav.tsx` |
+| Domain CRUD | `app/(admin)/admin/orders/_components/` | `orders-table.tsx` |
+| Single route | Next to `page.tsx` | `edit-course-form.tsx` |
+| Site layout | `components/layout/` | `main-header.tsx` |
+| Public feature | `components/education/` or colocate under route | `course-registration-form.tsx` |
 
 ## Component design
 

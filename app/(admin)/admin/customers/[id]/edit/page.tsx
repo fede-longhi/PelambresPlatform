@@ -1,6 +1,6 @@
 import { fetchCustomerById } from "@/lib/data/customer-data";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import EditForm from "@/app/ui/customers/edit-form";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import EditForm from "@/app/(admin)/admin/customers/_components/edit-form";
 import { notFound } from "next/navigation";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {

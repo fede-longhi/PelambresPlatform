@@ -1,4 +1,4 @@
-import { Header, Section, SectionContent, SectionHeader } from "@/app/ui/print-guide/components";
+import { Header, Section, SectionContent, SectionHeader } from "@/app/(public)/print-guide/_components/section-components";
 import { Info } from "@mui/icons-material";
 
 export default function Page() {

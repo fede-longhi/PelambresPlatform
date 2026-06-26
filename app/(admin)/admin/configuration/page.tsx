@@ -1,6 +1,6 @@
 import { getConfigurationGroupedByCategory } from "@/lib/data/configuration-data";
-import { CreateConfigurationButton } from "@/app/ui/configuration-variables/buttons";
-import ConfigurationList from "@/app/ui/configuration-variables/configuration-list";
+import { CreateConfigurationButton } from "@/app/(admin)/admin/configuration/_components/buttons";
+import ConfigurationList from "@/app/(admin)/admin/configuration/_components/configuration-list";
 import PageHeader from "@/components/ui/page-header";
 
 

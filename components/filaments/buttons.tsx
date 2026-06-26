@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { DialogButton } from "../ui/dialog-button";
+import { DialogButton } from "@/components/ui/dialog-button";
 
 export function CreateFilamentButton () {
     const [open, setOpen] = useState(false);

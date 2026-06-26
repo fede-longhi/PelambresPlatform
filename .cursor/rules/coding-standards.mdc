@@ -14,12 +14,14 @@ Next.js 15 App Router, TypeScript (`strict`), Tailwind CSS, shadcn/ui (new-york)
 | Routes | `app/(admin)`, `app/(public)`, `app/(customer)` |
 | **Reads** (SELECT) | `lib/data/<domain>-data.ts` |
 | **Writes** (mutations) | `lib/actions/<domain>-actions.ts` |
-| Shared UI | `app/ui/`, shadcn primitives in `components/ui/` |
+| Routes + colocated UI | `app/(admin)/`, `app/(public)/`, `_components/` per route segment |
+| Cross-route shared UI | `components/ui/`, `components/shared/`, `components/{domain}/` |
+| App assets | `app/globals.css`, `app/fonts.ts` |
 | Types | `types/definitions.ts` and domain files |
 | Constants | `lib/consts/` |
 | DB client | `lib/db.ts` — **only** place that creates `postgres()` |
 
-Follow the read/write split in `lib-read-write.mdc`. New features use `lib/data/` + `lib/actions/`. New components go in `components/`.
+Follow the read/write split in `lib-read-write.mdc`. Colocate route UI in `app/.../_components/` (see `reusable-components.mdc`).
 
 ## Components
 

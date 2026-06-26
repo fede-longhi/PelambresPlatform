@@ -1,11 +1,11 @@
 import { fetchCustomerById } from "@/lib/data/customer-data";
-import Breadcrumbs from "@/app/ui/breadcrumbs";
-import CustomerDetailCard from "@/app/ui/customers/detail-card";
-import CustomerLastOrders from "@/app/ui/orders/customer-last-orders";
-import { CardSkeleton } from "@/app/ui/skeletons";
+import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
+import CustomerDetailCard from "@/app/(admin)/admin/customers/_components/detail-card";
+import CustomerLastOrders from "@/app/(admin)/admin/orders/_components/customer-last-orders";
+import { CardSkeleton } from "@/components/shared/skeletons";
 import { getCustomerName } from "@/lib/utils";
 import { Suspense } from "react";
-import CustomerTypeField from "@/app/ui/customers/type-field";
+import CustomerTypeField from "@/app/(admin)/admin/customers/_components/type-field";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;

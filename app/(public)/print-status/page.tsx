@@ -1,6 +1,6 @@
-import TrackingCodeSearch from "@/app/ui/orders/code-search";
-import { OrderStatusDetailByCode } from "@/app/ui/orders/status-detail";
-import { StatusDetailSkeleton } from "@/app/ui/skeletons";
+import TrackingCodeSearch from "@/components/orders/code-search";
+import { OrderStatusDetailByCode } from "@/components/orders/status-detail";
+import { StatusDetailSkeleton } from "@/components/shared/skeletons";
 import PageHeader from "@/components/layout/page-header";
 import { Metadata } from "next";
 import { Suspense } from "react";

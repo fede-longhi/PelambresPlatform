@@ -1,6 +1,6 @@
 import React from 'react';
 import { Info } from 'lucide-react';
-import { Section, SectionContent, SectionHeader } from '@/app/ui/print-guide/components';
+import { Section, SectionContent, SectionHeader } from '@/app/(public)/print-guide/_components/section-components';
 
 export default function Page() {
 

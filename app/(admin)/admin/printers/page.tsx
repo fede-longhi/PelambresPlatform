@@ -1,8 +1,8 @@
 import { fetchPrintersPages } from "@/lib/data/printer-data";
 import Pagination from "@/components/ui/pagination";
-import Search from "@/app/ui/search";
-import { CreatePrinterButton } from "@/components/printers/buttons";
-import PrintersTable from "@/components/printers/table";
+import Search from "@/app/(admin)/admin/_components/search";
+import { CreatePrinterButton } from "@/app/(admin)/admin/printers/_components/buttons";
+import PrintersTable from "@/app/(admin)/admin/printers/_components/printers-table";
 import PageHeader from "@/components/ui/page-header";
 import { Metadata } from "next";
 import { Suspense } from "react";
