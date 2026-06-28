@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Introducción a la Impresion 3d — Pelambres 3D</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+  <style>
+    :root {
+      --pelambres-dark: #0f172a;
+      --pelambres-blue: #2563eb;
+      --pelambres-muted: #64748b;
+    }
+    .reveal h1, .reveal h2, .reveal h3 {
+      color: var(--pelambres-dark);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 {
+      font-size: 1.6em;
+      border-bottom: 3px solid var(--pelambres-blue);
+      padding-bottom: 0.3em;
+      display: inline-block;
+    }
+    .reveal .subtitle {
+      color: #94a3b8;
+      font-size: 0.9em;
+      margin-top: 1rem;
+    }
+    .reveal ul { text-align: left; }
+    .reveal li { margin-bottom: 0.6em; line-height: 1.4; }
+    .reveal section[data-background-color="#0f172a"] h1,
+    .reveal section[data-background-color="#0f172a"] .subtitle {
+      color: #f8fafc;
+    }
+    .reveal .footer {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.45em;
+      color: var(--pelambres-muted);
+      z-index: 20;
+    }
+    .reveal .badge {
+      display: inline-block;
+      background: var(--pelambres-blue);
+      color: white;
+      padding: 0.25em 0.75em;
+      border-radius: 999px;
+      font-size: 0.55em;
+      margin: 0 0.25em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- 1. Title -->
+      <section data-background-color="#0f172a">
+        <img src="/pelambres_logo.svg" alt="Pelambres 3D" style="height:48px;margin-bottom:1.5rem">
+        <h1>Introducción a la Impresion 3d</h1>
+        <p class="subtitle">
+          <span class="badge">Virtual Asincrónica</span>
+          <span class="badge">Nivel Principiante</span>
+        </p>
+        <aside class="notes">Bienvenida. Presentá el curso como una primera aproximación al mundo de la impresión 3D, pensada para quienes recién arrancan.</aside>
+      </section>
+
+      <!-- 2. Agenda -->
+      <section>
+        <h2>Agenda</h2>
+        <ul>
+          <li>Presentación y objetivos del curso</li>
+          <li>Fundamentos de la impresión 3D</li>
+          <li>Tipos de impresoras y materiales</li>
+          <li>Laminado: del modelo al G-code</li>
+          <li>Acabado de piezas impresas</li>
+          <li>Costo de la impresión</li>
+        </ul>
+        <aside class="notes">Recorré la agenda para que el alumno sepa qué va a ver en la hora de contenido.</aside>
+      </section>
+
+      <!-- 3. ¿De qué se trata? -->
+      <section>
+        <h2>¿De qué se trata?</h2>
+        <p style="text-align:left;font-size:0.85em;line-height:1.6;max-width:900px;margin:0 auto">
+          Curso introductorio para empezar con la impresión 3d. Está pensado para quienes quieren entender
+          de qué se trata esta tecnología, qué equipamiento y materiales existen, y cuáles son los pasos
+          básicos desde el diseño hasta una pieza terminada.
+        </p>
+        <aside class="notes">Expandí brevemente la descripción corta del curso. No asumas conocimiento previo.</aside>
+      </section>
+
+      <!-- 4. Objetivo de aprendizaje -->
+      <section>
+        <h2>Objetivo de aprendizaje</h2>
+        <p style="text-align:left;font-size:0.85em;line-height:1.6;max-width:900px;margin:0 auto">
+          En este curso aprenderás los conceptos básicos de la impresión 3d y todo lo que necesitas para arrancar.
+        </p>
+        <aside class="notes">Enfatizá que el objetivo es salir con una base sólida para empezar a imprimir con criterio.</aside>
+      </section>
+
+      <!-- 5. Outcome: Introducción a la impresión 3d -->
+      <section>
+        <h2>Introducción a la impresión 3d</h2>
+        <ul>
+          <li>Qué es la impresión 3D y para qué se usa en la práctica</li>
+          <li>Alternativa a métodos tradicionales para prototipos y series chicas</li>
+          <li>Proceso general: modelo digital → laminado → impresión → acabado</li>
+          <li>Vocabulario básico para seguir el resto del curso</li>
+        </ul>
+        <aside class="notes">Conectá con ejemplos concretos: repuestos, prototipos, piezas personalizadas.</aside>
+      </section>
+
+      <!-- 6. Outcome: Tipos de impresoras -->
+      <section>
+        <h2>Tipos de impresoras</h2>
+        <ul>
+          <li>FDM (filamento): la más accesible para empezar</li>
+          <li>SLA / resina: mayor detalle, otro flujo de trabajo</li>
+          <li>Componentes clave: extrusor, cama, control y firmware</li>
+          <li>Elegir según uso: prototipo, funcional, estético o educativo</li>
+        </ul>
+        <aside class="notes">Mostrá fotos o videos cortos de cada tipo si tenés material a mano.</aside>
+      </section>
+
+      <!-- 7. Outcome: Tipos de materiales -->
+      <section>
+        <h2>Tipos de materiales</h2>
+        <ul>
+          <li>Filamentos comunes: PLA, PETG, ABS y para qué sirve cada uno</li>
+          <li>Resinas según aplicación (estándar, flexible, resistente)</li>
+          <li>Propiedades a considerar: resistencia, flexibilidad, temperatura</li>
+          <li>Compatibilidad material ↔ tecnología de impresión</li>
+        </ul>
+        <aside class="notes">Traé muestras de filamentos o piezas impresas en distintos materiales si es posible.</aside>
+      </section>
+
+      <!-- 8. Outcome: Laminado -->
+      <section>
+        <h2>Laminado</h2>
+        <ul>
+          <li>Qué es un slicer y por qué es indispensable</li>
+          <li>Parámetros básicos: altura de capa, relleno, velocidad y soportes</li>
+          <li>Generación del G-code listo para la impresora</li>
+          <li>Revisión previa a imprimir: tiempo, material y posibles riesgos</li>
+        </ul>
+        <aside class="notes">Si podés, mostrá un slicer en pantalla con una pieza simple cargada.</aside>
+      </section>
+
+      <!-- 9. Outcome: Acabado -->
+      <section>
+        <h2>Acabado</h2>
+        <ul>
+          <li>Remover soportes y limpiar la pieza impresa</li>
+          <li>Lijado, pintado y otros acabados superficiales</li>
+          <li>Postprocesado en resina: lavado y curado UV</li>
+          <li>Cómo mejorar apariencia y funcionalidad del resultado final</li>
+        </ul>
+        <aside class="notes">Mostrá el antes y después de un acabado básico para que se vea el impacto.</aside>
+      </section>
+
+      <!-- 10. Outcome: Costo de la impresión -->
+      <section>
+        <h2>Costo de la impresión</h2>
+        <ul>
+          <li>Componentes del costo: material, energía, tiempo y desgaste del equipo</li>
+          <li>Estimación básica del costo de una pieza impresa</li>
+          <li>Factores que encarecen: soportes, tiempo largo, material especial</li>
+          <li>Relación entre costo real y valor para el usuario final</li>
+        </ul>
+        <aside class="notes">Podés vincular con la calculadora de costos de Pelambres si querés profundizar después.</aside>
+      </section>
+
+      <!-- 11. Ejercicio práctico (facilitation slide) -->
+      <section>
+        <h2>Ejercicio práctico</h2>
+        <ul>
+          <li>Elegí una pieza simple que te gustaría imprimir</li>
+          <li>Identificá qué tipo de impresora y material usarías</li>
+          <li>Listá los pasos: modelo → laminado → impresión → acabado</li>
+          <li>Estimá de forma aproximada cuánto costaría producirla</li>
+        </ul>
+        <aside class="notes">Dejá 5–10 minutos para que el alumno aplique lo visto. Compartí conclusiones en grupo si es sincrónico.</aside>
+      </section>
+
+      <!-- 12. Logística -->
+      <section>
+        <h2>Logística</h2>
+        <ul>
+          <li><strong>Duración:</strong> 1 hora</li>
+          <li><strong>Modalidad:</strong> Virtual Asincrónica</li>
+          <li><strong>Inicio:</strong> 30 de junio de 2026</li>
+        </ul>
+        <aside class="notes">Confirmá cómo acceden al material asincrónico y si hay canal de consultas.</aside>
+      </section>
+
+      <!-- 13. Cierre -->
+      <section data-background-color="#0f172a">
+        <h2 style="color:#f8fafc;border-bottom-color:#2563eb">Cierre</h2>
+        <ul style="color:#e2e8f0">
+          <li>Conceptos básicos de impresión 3D y flujo de trabajo completo</li>
+          <li>Impresoras, materiales, laminado, acabado y costos</li>
+          <li>Base para empezar a imprimir con criterio</li>
+          <li><strong>Pelambres 3D</strong> — pelambres3d@gmail.com · pelambres.com.ar</li>
+        </ul>
+        <aside class="notes">Recapitulá los puntos clave y agradecé la participación. Invitá a seguir con cursos o herramientas de la plataforma.</aside>
+      </section>
+
+    </div>
+  </div>
+  <div class="footer">Pelambres 3D · introduccion-a-la-impresion-3d</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      width: 1280,
+      height: 720,
+      margin: 0.08,
+    });
+  </script>
+</body>
+</html>
