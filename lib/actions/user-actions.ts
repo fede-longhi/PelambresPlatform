@@ -363,14 +363,13 @@ export async function adminResetPassword(userId: string): Promise<UserFormState>
 }
 
 export async function softDeleteUser(
-  userId: string,
-  _prevState: UserFormState,
-  _formData: FormData
-): Promise<UserFormState> {
+  userId: string
+) {
   const currentAdminId = await requireAdminSessionUserId();
 
   if (userId === currentAdminId) {
-    return { message: 'No podés eliminar tu propio usuario.', success: false };
+    console.error('You cannot delete your own user.');
+    return;
   }
 
   try {
@@ -381,12 +380,12 @@ export async function softDeleteUser(
         AND deleted_at IS NULL
     `;
 
-    revalidatePath('/admin/users');
-    redirect('/admin/users');
   } catch (error) {
     console.error(error);
-    return { message: 'Hubo un error al eliminar el usuario.', success: false };
+  } finally {
+    revalidatePath('/admin/users');
   }
+
 }
 
 export async function changeOwnPassword(
