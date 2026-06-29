@@ -1,4 +1,4 @@
-import { BookUser, Calculator, FileBox, FileInput, Hammer, House, LifeBuoy, Printer, Settings, Book } from 'lucide-react';
+import { BookUser, Calculator, FileBox, FileInput, Hammer, House, LifeBuoy, Printer, Settings, Book, Users } from 'lucide-react';
 
 export const NAV_LINKS = [
     { 
@@ -45,6 +45,11 @@ export const NAV_LINKS = [
         name: 'Courses',
         href: '/admin/courses',
         icon: Book,
+    },
+    {
+        name: 'Users',
+        href: '/admin/users',
+        icon: Users,
     },
     {
         name: 'Configuration',

@@ -4,7 +4,13 @@
     "build": "next build",
     "dev": "next dev --turbopack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:migrate:main": "tsx scripts/migrate.ts --target=main",
+    "db:migrate:dev": "tsx scripts/migrate.ts --target=dev",
+    "db:migrate:status": "tsx scripts/migrate.ts --status",
+    "db:migrate:status:main": "tsx scripts/migrate.ts --status --target=main",
+    "db:migrate:status:dev": "tsx scripts/migrate.ts --status --target=dev"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -88,7 +94,9 @@
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "15.1.7"
+    "eslint-config-next": "15.1.7",
+    "tsx": "^4.22.4"
   }
 }

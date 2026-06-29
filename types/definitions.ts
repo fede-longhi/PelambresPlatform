@@ -4,14 +4,7 @@
 
 import { OrderStatus } from "./order-definitions";
 
-export type User = {
-    id: string;
-    name: string;
-    email: string;
-    password: string;
-    image_url: string;
-    role: string;
-};
+export type { User, UserListItem, UserRole, SessionUser } from './user-definitions';
 
 export type Invoice = {
     id: string;

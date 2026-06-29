@@ -285,6 +285,38 @@ export function CustomersTableSkeleton() {
   );
 }
 
+export function UsersTableSkeleton() {
+  return (
+    <div className="mt-6 flow-root">
+      <div className="inline-block min-w-full align-middle">
+        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+          <table className="min-w-full text-gray-900">
+            <thead className="rounded-lg text-left text-sm font-normal">
+              <tr>
+                <th scope="col" className="px-4 py-5 font-medium sm:pl-6">Nombre</th>
+                <th scope="col" className="px-3 py-5 font-medium">Usuario</th>
+                <th scope="col" className="px-3 py-5 font-medium">Email</th>
+                <th scope="col" className="px-3 py-5 font-medium">Rol</th>
+                <th scope="col" className="px-3 py-5 font-medium">Estado</th>
+                <th scope="col" className="relative pb-4 pl-3 pr-6 pt-2 sm:pr-6">
+                  <span className="sr-only">Edit</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              <DynamicTableRowSkeleton columns={6} />
+              <DynamicTableRowSkeleton columns={6} />
+              <DynamicTableRowSkeleton columns={6} />
+              <DynamicTableRowSkeleton columns={6} />
+              <DynamicTableRowSkeleton columns={6} />
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function StatusDetailSkeleton () {
   return(
     <CardSkeleton />

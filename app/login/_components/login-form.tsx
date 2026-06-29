@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+  const passwordWasSet = searchParams.get('passwordSet') === '1';
   const [errorMessage, formAction, isPending] = useActionState(
     authenticate,
     undefined,
@@ -26,6 +27,11 @@ export default function LoginForm() {
         <h1 className={`${lusitana.className} mb-3 text-2xl`}>
           Please log in to continue.
         </h1>
+        {passwordWasSet && (
+          <p className="mb-3 text-sm text-green-700">
+            Contraseña establecida. Ingresá con tu nueva contraseña.
+          </p>
+        )}
         <div className="w-full">
           <div>
             <label
