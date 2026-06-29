@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 
 export const authConfig = {
     pages: {
@@ -71,11 +72,13 @@ export const authConfig = {
             return token;
         },
         async session({ session, token }) {
+            const { id, role, isActive, mustChangePassword } = token as JWT;
+
             if (session.user) {
-                session.user.id = token.id;
-                session.user.role = token.role;
-                session.user.isActive = token.isActive;
-                session.user.mustChangePassword = token.mustChangePassword;
+                session.user.id = id;
+                session.user.role = role;
+                session.user.isActive = isActive;
+                session.user.mustChangePassword = mustChangePassword;
             }
 
             return session;
