@@ -362,7 +362,11 @@ export async function adminResetPassword(userId: string): Promise<UserFormState>
   }
 }
 
-export async function softDeleteUser(userId: string) {
+export async function softDeleteUser(
+  userId: string,
+  _prevState: UserFormState,
+  _formData: FormData
+): Promise<UserFormState> {
   const currentAdminId = await requireAdminSessionUserId();
 
   if (userId === currentAdminId) {
