@@ -7,10 +7,12 @@ import sql from '@/lib/db';
 import { auth } from '@/auth';
 import { canAccessAdmin } from '@/lib/auth/permissions';
 import {
-  fetchUserByEmail,
   fetchUserById,
+  fetchUserByEmail,
+  fetchUserByEmailAndRole,
   requireAdminSessionUserId,
 } from '@/lib/data/user-data';
+import { createCustomerRecord } from '@/lib/actions/customer-actions';
 import {
   generateTemporaryPassword,
   hashPassword,
@@ -68,6 +70,14 @@ const SetInitialPasswordSchema = z
     path: ['confirmPassword'],
   });
 
+export type UserFormValues = {
+  username: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  isActive?: 'true' | 'false';
+};
+
 export type UserFormState = {
   errors?: {
     username?: string[];
@@ -75,6 +85,11 @@ export type UserFormState = {
     email?: string[];
     role?: string[];
     isActive?: string[];
+    customerId?: string[];
+    customerPhone?: string[];
+    customerFirstName?: string[];
+    customerLastName?: string[];
+    customerName?: string[];
     currentPassword?: string[];
     newPassword?: string[];
     confirmPassword?: string[];
@@ -82,6 +97,7 @@ export type UserFormState = {
   message?: string | null;
   success?: boolean;
   payload?: FormData;
+  formValues?: UserFormValues;
   redirect?: boolean;
   user?: UserListItem;
   tempPassword?: string | null;
@@ -127,6 +143,131 @@ async function assertAdminAccess() {
   return sessionUser.id;
 }
 
+function extractUserFormValues(formData: FormData): UserFormValues {
+  const roleValue = String(formData.get('role') ?? 'admin');
+
+  return {
+    username: String(formData.get('username') ?? ''),
+    name: String(formData.get('name') ?? ''),
+    email: String(formData.get('email') ?? ''),
+    role: roleValue === 'customer' ? 'customer' : 'admin',
+    isActive: formData.get('is-active') === 'false' ? 'false' : 'true',
+  };
+}
+
+async function resolveCustomerIdForEmail(
+  email: string,
+  role: UserRole
+): Promise<string | null> {
+  if (role !== 'customer') {
+    return null;
+  }
+
+  const rows = await sql<{ id: string }[]>`
+    SELECT id
+    FROM customers
+    WHERE lower(trim(email)) = lower(trim(${email}))
+    LIMIT 1
+  `;
+
+  return rows[0]?.id ?? null;
+}
+
+async function resolveCustomerIdForUser(
+  role: UserRole,
+  email: string,
+  formData: FormData,
+  existingCustomerId?: string | null
+): Promise<{ customerId: string | null; errors?: UserFormState['errors']; message?: string }> {
+  if (role !== 'customer') {
+    return { customerId: null };
+  }
+
+  const linkMode = String(formData.get('customer-link-mode') ?? 'existing');
+  const explicitCustomerId = String(formData.get('customerId') ?? '').trim();
+
+  if (linkMode === 'existing' && explicitCustomerId) {
+    const rows = await sql<{ id: string }[]>`
+      SELECT id FROM customers WHERE id = ${explicitCustomerId} LIMIT 1
+    `;
+
+    if (!rows[0]) {
+      return {
+        customerId: null,
+        message: 'El cliente seleccionado no existe.',
+        errors: { customerId: ['Seleccioná un cliente válido.'] },
+      };
+    }
+
+    return { customerId: explicitCustomerId };
+  }
+
+  if (linkMode === 'existing') {
+    const matchedCustomerId = await resolveCustomerIdForEmail(email, role);
+
+    if (matchedCustomerId) {
+      return { customerId: matchedCustomerId };
+    }
+
+    if (existingCustomerId) {
+      return { customerId: existingCustomerId };
+    }
+
+    return {
+      customerId: null,
+      message: 'Seleccioná un cliente existente o creá uno nuevo.',
+      errors: { customerId: ['Debés vincular el usuario a un cliente.'] },
+    };
+  }
+
+  const customerType = formData.get('customer-type') === 'business' ? 'business' : 'person';
+  const phone = String(formData.get('customer-phone') ?? '').trim();
+  const firstName = String(formData.get('customer-first-name') ?? '').trim();
+  const lastName = String(formData.get('customer-last-name') ?? '').trim();
+  const businessName = String(formData.get('customer-name') ?? '').trim();
+
+  const fieldErrors: UserFormState['errors'] = {};
+
+  if (customerType === 'person') {
+    if (!firstName) {
+      fieldErrors.customerFirstName = ['El nombre es obligatorio.'];
+    }
+    if (!lastName) {
+      fieldErrors.customerLastName = ['El apellido es obligatorio.'];
+    }
+  } else if (!businessName) {
+    fieldErrors.customerName = ['El nombre de la empresa es obligatorio.'];
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    return {
+      customerId: null,
+      message: 'Revisá los datos del nuevo cliente.',
+      errors: fieldErrors,
+    };
+  }
+
+  try {
+    const customer = await createCustomerRecord({
+      email,
+      phone,
+      type: customerType,
+      firstName: customerType === 'person' ? firstName : undefined,
+      lastName: customerType === 'person' ? lastName : undefined,
+      name: customerType === 'business' ? businessName : undefined,
+    });
+
+    revalidatePath('/admin/customers');
+    return { customerId: customer.id };
+  } catch (error) {
+    console.error(error);
+    return {
+      customerId: null,
+      message: 'Hubo un error al crear el cliente.',
+    };
+  }
+}
+
 export async function createUser(
   prevState: UserFormState,
   formData: FormData
@@ -144,7 +285,7 @@ export async function createUser(
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Revisá los campos marcados.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -154,15 +295,41 @@ export async function createUser(
   const tempPassword = generateTemporaryPassword();
   const hashedPassword = await hashPassword(tempPassword);
 
+  const customerResolution = await resolveCustomerIdForUser(role, email, formData);
+
+  if (customerResolution.message || customerResolution.errors) {
+    return {
+      errors: customerResolution.errors,
+      message: customerResolution.message ?? 'Revisá la vinculación con el cliente.',
+      formValues: extractUserFormValues(formData),
+      success: false,
+      redirect: prevState.redirect,
+    };
+  }
+
+  const customerId = customerResolution.customerId;
+
+  const existingUserForRole = await fetchUserByEmailAndRole(email, role);
+
+  if (existingUserForRole) {
+    return {
+      message: `Ya existe un usuario ${role === 'customer' ? 'cliente' : 'administrador'} con ese email.`,
+      formValues: extractUserFormValues(formData),
+      success: false,
+      redirect: prevState.redirect,
+    };
+  }
+
   try {
     const insertedUsers = await sql<UserListItem[]>`
-      INSERT INTO users (username, name, email, password, role, must_change_password, is_active)
+      INSERT INTO users (username, name, email, password, role, customer_id, must_change_password, is_active)
       VALUES (
         ${username},
         ${name},
         ${email},
         ${hashedPassword},
         ${role},
+        ${customerId},
         true,
         true
       )
@@ -173,6 +340,7 @@ export async function createUser(
         email,
         image_url,
         role,
+        customer_id,
         is_active,
         must_change_password,
         deleted_at
@@ -195,8 +363,8 @@ export async function createUser(
   } catch (error) {
     if (isUniqueViolation(error)) {
       return {
-        message: 'Ya existe un usuario con ese email o nombre de usuario.',
-        payload: formData,
+        message: 'Ya existe un usuario con ese nombre de usuario.',
+        formValues: extractUserFormValues(formData),
         success: false,
         redirect: prevState.redirect,
       };
@@ -205,7 +373,7 @@ export async function createUser(
     console.error(error);
     return {
       message: 'Hubo un error al crear el usuario.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -231,7 +399,7 @@ export async function updateUser(
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Revisá los campos marcados.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -239,11 +407,31 @@ export async function updateUser(
 
   const { username, name, email, role, isActive } = validatedFields.data;
   const isActiveBoolean = isActive === 'true';
+  const existingUser = await fetchUserById(id);
+
+  const customerResolution = await resolveCustomerIdForUser(
+    role,
+    email,
+    formData,
+    existingUser?.customer_id
+  );
+
+  if (customerResolution.message || customerResolution.errors) {
+    return {
+      errors: customerResolution.errors,
+      message: customerResolution.message ?? 'Revisá la vinculación con el cliente.',
+      formValues: extractUserFormValues(formData),
+      success: false,
+      redirect: prevState.redirect,
+    };
+  }
+
+  const customerId = customerResolution.customerId;
 
   if (id === currentAdminId && !isActiveBoolean) {
     return {
       message: 'No podés desactivar tu propio usuario.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -252,7 +440,7 @@ export async function updateUser(
   if (id === currentAdminId && role !== 'admin') {
     return {
       message: 'No podés cambiar tu propio rol de administrador.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -266,6 +454,7 @@ export async function updateUser(
         name = ${name},
         email = ${email},
         role = ${role},
+        customer_id = ${role === 'customer' ? customerId : null},
         is_active = ${isActiveBoolean}
       WHERE id = ${id}
         AND deleted_at IS NULL
@@ -276,6 +465,7 @@ export async function updateUser(
         email,
         image_url,
         role,
+        customer_id,
         is_active,
         must_change_password,
         deleted_at
@@ -306,8 +496,8 @@ export async function updateUser(
   } catch (error) {
     if (isUniqueViolation(error)) {
       return {
-        message: 'Ya existe un usuario con ese email o nombre de usuario.',
-        payload: formData,
+        message: 'Ya existe un usuario con ese nombre de usuario.',
+        formValues: extractUserFormValues(formData),
         success: false,
         redirect: prevState.redirect,
       };
@@ -316,7 +506,7 @@ export async function updateUser(
     console.error(error);
     return {
       message: 'Hubo un error al actualizar el usuario.',
-      payload: formData,
+      formValues: extractUserFormValues(formData),
       success: false,
       redirect: prevState.redirect,
     };
@@ -404,7 +594,7 @@ export async function changeOwnPassword(
     return { message: 'Usuario no encontrado.', success: false };
   }
 
-  const hasExistingPassword = !!user.password;
+  const hasExistingPassword = user.password !== null && user.password.length > 0;
 
   if (hasExistingPassword) {
     const validatedFields = ChangePasswordSchema.safeParse({

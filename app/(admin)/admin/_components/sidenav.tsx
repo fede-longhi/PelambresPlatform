@@ -4,6 +4,7 @@ import PelambresLogo from '@/components/shared/home-logo';
 import { PowerIcon } from '@heroicons/react/24/outline';
 import { signOut } from '@/auth';
 import UserProfile from '@/app/(admin)/admin/_components/user-profile';
+import RoleSwitchNavItem from '@/components/shared/role-switch-nav-item';
 
 export default async function SideNav() {
   return (
@@ -20,6 +21,7 @@ export default async function SideNav() {
       <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
         <NavLinks />
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
+        <RoleSwitchNavItem />
         <form
           action={async () => {
             'use server';

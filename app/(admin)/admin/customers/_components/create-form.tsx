@@ -11,12 +11,24 @@ import { Business, Person } from '@mui/icons-material';
 
 interface CustomerFormProps {
     redirect? : boolean,
+    defaultEmail?: string,
+    defaultFirstName?: string,
+    defaultLastName?: string,
+    defaultBusinessName?: string,
     onSuccess?: (customer?: Customer) => void,
     onCancel?: () => void
 }
 
 
-export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerFormProps) {
+export default function CustomerForm({
+    redirect,
+    defaultEmail,
+    defaultFirstName,
+    defaultLastName,
+    defaultBusinessName,
+    onSuccess,
+    onCancel,
+} : CustomerFormProps) {
     const initialState: CustomerFormState = { message: null, errors: {}, redirect: redirect };
     const [state, formAction, isPending] = useActionState(createCustomer, initialState);
     const [customerType, setCustomerType] = useState<"person" | "business">("person");
@@ -101,7 +113,7 @@ export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerF
                     id="name"
                     type="text"
                     name="name"
-                    defaultValue={(state.payload?.get("name") || "") as string}
+                    defaultValue={(state.payload?.get("name") || defaultBusinessName || "") as string}
                     placeholder="Ingresa el nombre completo"
                     aria-describedby="name-error"
                 />
@@ -117,7 +129,7 @@ export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerF
                     id="first-name"
                     type="text"
                     name="first-name"
-                    defaultValue={(state.payload?.get("firstName") || "") as string}
+                    defaultValue={(state.payload?.get("firstName") || defaultFirstName || "") as string}
                     placeholder="Ingresa el nombre"
                     aria-describedby="first-name-error"
                     />
@@ -134,7 +146,7 @@ export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerF
                     id="last-name"
                     type="text"
                     name="last-name"
-                    defaultValue={(state.payload?.get("lastName") || "") as string}
+                    defaultValue={(state.payload?.get("lastName") || defaultLastName || "") as string}
                     placeholder="Ingresa el apellido"
                     aria-describedby="last-name-error"
                     />
@@ -151,7 +163,7 @@ export default function CustomerForm({redirect, onSuccess, onCancel} : CustomerF
                     id="email"
                     type="email"
                     name="email"
-                    defaultValue={(state.payload?.get("email") || "") as string}
+                    defaultValue={(state.payload?.get("email") || defaultEmail || "") as string}
                     placeholder="Ingresa el email"
                     aria-describedby="email-error"
                 />

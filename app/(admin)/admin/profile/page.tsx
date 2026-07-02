@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import ChangePasswordForm from '@/app/(admin)/admin/profile/_components/change-password-form';
-import { fetchUserByEmail } from '@/lib/data/user-data';
+import { fetchUserById } from '@/lib/data/user-data';
 import { lusitana } from '@/app/fonts';
 
 export default async function Page() {
@@ -12,7 +12,7 @@ export default async function Page() {
     redirect('/login');
   }
 
-  const user = await fetchUserByEmail(session.user.email);
+  const user = await fetchUserById(session.user.id);
 
   return (
     <main className="w-full max-w-2xl">

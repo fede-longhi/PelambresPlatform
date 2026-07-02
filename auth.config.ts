@@ -1,5 +1,9 @@
 import type { NextAuthConfig } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import {
+  getPortalPathForRole,
+  shouldRedirectLoggedInUserFromAuthEntry,
+} from '@/lib/auth/public-routes';
 
 export const authConfig = {
     pages: {
@@ -34,10 +38,16 @@ export const authConfig = {
                 }
 
                 if (isOnAdmin && auth.user.role !== 'admin') {
+                    if (auth.user.role === 'customer') {
+                        return Response.redirect(new URL('/customer', request.nextUrl));
+                    }
                     return false;
                 }
 
                 if (isOnCustomer && auth.user.role !== 'customer') {
+                    if (auth.user.role === 'admin') {
+                        return Response.redirect(new URL('/admin', request.nextUrl));
+                    }
                     return false;
                 }
 
@@ -46,11 +56,14 @@ export const authConfig = {
 
             if (
                 isLoggedIn &&
-                auth.user.role === 'admin' &&
                 auth.user.isActive !== false &&
                 !auth.user.mustChangePassword
             ) {
-                return Response.redirect(new URL('/admin', request.nextUrl));
+                if (shouldRedirectLoggedInUserFromAuthEntry(pathname)) {
+                    return Response.redirect(
+                        new URL(getPortalPathForRole(auth.user.role), request.nextUrl)
+                    );
+                }
             }
 
             return true;

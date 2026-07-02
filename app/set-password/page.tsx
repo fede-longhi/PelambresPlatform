@@ -16,7 +16,7 @@ export default async function SetPasswordPage() {
   }
 
   if (!session.user.mustChangePassword) {
-    redirect('/admin');
+    redirect(session.user.role === 'customer' ? '/customer' : '/admin');
   }
 
   return (

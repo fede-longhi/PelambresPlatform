@@ -2,22 +2,45 @@
 
 import { useActionState } from 'react';
 import { doSocialLogin } from '@/lib/actions/auth-actions';
-import {
-    ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import GoogleIcon from '@mui/icons-material/Google';
+import { useSearchParams } from 'next/navigation';
+
+function resolveGoogleRedirectTo(callbackUrl: string | null): string {
+  if (callbackUrl && callbackUrl.startsWith('/')) {
+    return callbackUrl;
+  }
+
+  return '/customer';
+}
 
 export default function SocialLogin() {
-  const [errorMessage, formAction, isPending] = useActionState(
-    doSocialLogin,
-    undefined,
-  );
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl');
+  const redirectTo = resolveGoogleRedirectTo(callbackUrl);
+  const [errorMessage, formAction, isPending] = useActionState(doSocialLogin, undefined);
 
   return (
-    <form action={formAction} className="flex justify-center items-center">
-        <button className="bg-blue-500 text-white p-2 rounded-md m-1" type="submit" name="action" value="google" aria-disabled={isPending}>
-            <GoogleIcon className="mr-2"/>Sign in with google
+    <div className="w-full space-y-2">
+      <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Portal de cliente
+      </p>
+      <form action={formAction} className="flex flex-col items-center justify-center">
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+        <button
+          className="flex w-full items-center justify-center rounded-md bg-blue-500 p-2 text-white"
+          type="submit"
+          name="action"
+          value="google"
+          aria-disabled={isPending}
+        >
+          <GoogleIcon className="mr-2" />
+          Ingresar con Google
         </button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Pedidos, cursos y tu perfil de cliente. Si también tenés acceso de administrador, vas a
+          poder elegir el perfil después.
+        </p>
         <div className="flex h-8 items-end space-x-1">
           {errorMessage && (
             <>
@@ -26,9 +49,7 @@ export default function SocialLogin() {
             </>
           )}
         </div>
-    </form>
+      </form>
+    </div>
   );
 }
-
-
-

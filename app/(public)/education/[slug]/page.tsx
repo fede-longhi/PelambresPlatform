@@ -1,8 +1,12 @@
 import { notFound } from 'next/navigation';
-import { fetchPublishedCourseBySlug } from '@/lib/data/course-data';
+import { fetchExistingCourseRegistration, fetchPublishedCourseBySlug } from '@/lib/data/course-data';
 import { CheckCircle, Calendar, MapPin, Clock, Users, Banknote, Info } from 'lucide-react';
-import { CourseRegistrationForm } from '@/components/education/course-registration-form'; 
+import {
+    CourseRegistrationForm,
+    type CourseRegistrationSession,
+} from '@/components/education/course-registration-form';
 import { COURSE_MODALITIES, CURRENCIES, COURSE_LEVELS } from '@/lib/consts/course-consts';
+import { auth } from '@/auth';
 
 type CoursePageProps = {
     params: Promise<{ slug: string }>;
@@ -20,6 +24,27 @@ export default async function PublicCoursePage({ params }: CoursePageProps) {
 
     if (!course) {
         notFound();
+    }
+
+    const session = await auth();
+    const sessionUser = session?.user;
+    let registrationSession: CourseRegistrationSession | undefined;
+
+    if (sessionUser?.email && sessionUser.isActive !== false) {
+        const existingRegistration = await fetchExistingCourseRegistration(course.id, {
+            email: sessionUser.email,
+            userId: sessionUser.id,
+        });
+
+        registrationSession = {
+            name: sessionUser.name ?? '',
+            email: sessionUser.email,
+            existingRegistration: existingRegistration
+                ? { status: existingRegistration.registrationStatus }
+                : undefined,
+            coursesHref:
+                sessionUser.role === 'customer' ? `/customer/courses/${slug}` : undefined,
+        };
     }
 
     // 2. Procesamos y formateamos los datos para la UI
@@ -161,7 +186,10 @@ export default async function PublicCoursePage({ params }: CoursePageProps) {
                             )}
                             
                             {/* Tu componente cliente que maneja la inscripción */}
-                            <CourseRegistrationForm courseId={course.id} />
+                            <CourseRegistrationForm
+                                courseId={course.id}
+                                sessionUser={registrationSession}
+                            />
                         </div>
 
                     </div>

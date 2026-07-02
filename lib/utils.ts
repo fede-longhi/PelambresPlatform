@@ -148,6 +148,25 @@ export function getCustomerName(customer: Customer) {
     return customer.type === 'person' ? customer.last_name + ", " + customer.first_name : customer.name;
 }
 
+export function splitPersonName(fullName: string) {
+    const trimmedName = fullName.trim();
+
+    if (!trimmedName) {
+        return { firstName: '', lastName: '' };
+    }
+
+    const nameParts = trimmedName.split(/\s+/);
+
+    if (nameParts.length === 1) {
+        return { firstName: nameParts[0], lastName: '' };
+    }
+
+    return {
+        firstName: nameParts.slice(0, -1).join(' '),
+        lastName: nameParts[nameParts.length - 1],
+    };
+}
+
 export function getOrderCustomerName(order: OrderTable) {
     return order.customer_type === 'person' ? order.last_name + ", " + order.first_name : order.name;
 }

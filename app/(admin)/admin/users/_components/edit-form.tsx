@@ -1,21 +1,25 @@
 'use client';
 
 import { updateUser, type UserFormState } from '@/lib/actions/user-actions';
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import FieldErrorDisplay from '@/components/ui/field-error-display';
 import ResetPasswordButton from './reset-password-button';
+import CustomerLinkSection from './customer-link-section';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import type { UserListItem, UserRole } from '@/types/user-definitions';
+import type { CustomerField } from '@/components/shared/customer-select-field';
 
 export default function EditUserForm({
   user,
+  linkedCustomer,
   redirect,
 }: {
   user: UserListItem;
+  linkedCustomer?: CustomerField;
   redirect?: boolean;
 }) {
   const initialState: UserFormState = {
@@ -27,6 +31,27 @@ export default function EditUserForm({
   const updateUserWithId = updateUser.bind(null, user.id);
   const [state, formAction, isPending] = useActionState(updateUserWithId, initialState);
   const { toast } = useToast();
+  const [role, setRole] = useState<UserRole>(user.role);
+  const [email, setEmail] = useState(user.email);
+  const [name, setName] = useState(user.name);
+  const [username, setUsername] = useState(user.username);
+  const [isActive, setIsActive] = useState<'true' | 'false'>(
+    user.is_active ? 'true' : 'false'
+  );
+
+  useEffect(() => {
+    if (!state.formValues) {
+      return;
+    }
+
+    setRole(state.formValues.role);
+    setEmail(state.formValues.email);
+    setName(state.formValues.name);
+    setUsername(state.formValues.username);
+    if (state.formValues.isActive) {
+      setIsActive(state.formValues.isActive);
+    }
+  }, [state.formValues]);
 
   useEffect(() => {
     if (state.message === 'success') {
@@ -38,13 +63,11 @@ export default function EditUserForm({
     }
   }, [state.message, toast]);
 
-  const isActiveValue =
-    (state.payload?.get('is-active') as string) ??
-    (user.is_active ? 'true' : 'false');
-
   return (
     <div className="w-full max-w-lg space-y-6">
-      <form action={formAction} className="space-y-4 rounded-md bg-gray-50 p-6">
+      <form action={formAction} noValidate className="space-y-4 rounded-md bg-gray-50 p-6">
+        <input type="hidden" name="role" value={role} />
+
         {!state.success && state.message && (
           <p className="text-sm text-red-500">{state.message}</p>
         )}
@@ -54,7 +77,8 @@ export default function EditUserForm({
           <Input
             id="username"
             name="username"
-            defaultValue={(state.payload?.get('username') as string) ?? user.username}
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
             aria-describedby="username-error"
           />
           <FieldErrorDisplay id="username-error" errors={state.errors?.username} />
@@ -65,7 +89,8 @@ export default function EditUserForm({
           <Input
             id="name"
             name="name"
-            defaultValue={(state.payload?.get('name') as string) ?? user.name}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
             aria-describedby="name-error"
           />
           <FieldErrorDisplay id="name-error" errors={state.errors?.name} />
@@ -77,7 +102,8 @@ export default function EditUserForm({
             id="email"
             name="email"
             type="email"
-            defaultValue={(state.payload?.get('email') as string) ?? user.email}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             aria-describedby="email-error"
           />
           <FieldErrorDisplay id="email-error" errors={state.errors?.email} />
@@ -87,8 +113,8 @@ export default function EditUserForm({
           <Label htmlFor="role">Rol</Label>
           <select
             id="role"
-            name="role"
-            defaultValue={(state.payload?.get('role') as UserRole) ?? user.role}
+            value={role}
+            onChange={(event) => setRole(event.target.value as UserRole)}
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
           >
             <option value="admin">Administrador</option>
@@ -96,6 +122,21 @@ export default function EditUserForm({
           </select>
           <FieldErrorDisplay id="role-error" errors={state.errors?.role} />
         </div>
+
+        {role === 'customer' && (
+          <CustomerLinkSection
+            userEmail={email}
+            userName={name}
+            defaultCustomer={linkedCustomer}
+            errors={{
+              customerId: state.errors?.customerId,
+              customerPhone: state.errors?.customerPhone,
+              customerFirstName: state.errors?.customerFirstName,
+              customerLastName: state.errors?.customerLastName,
+              customerName: state.errors?.customerName,
+            }}
+          />
+        )}
 
         <fieldset>
           <legend className="mb-2 block text-sm font-medium">Estado</legend>
@@ -105,7 +146,8 @@ export default function EditUserForm({
                 type="radio"
                 name="is-active"
                 value="true"
-                defaultChecked={isActiveValue === 'true'}
+                checked={isActive === 'true'}
+                onChange={() => setIsActive('true')}
               />
               Activo
             </label>
@@ -114,7 +156,8 @@ export default function EditUserForm({
                 type="radio"
                 name="is-active"
                 value="false"
-                defaultChecked={isActiveValue === 'false'}
+                checked={isActive === 'false'}
+                onChange={() => setIsActive('false')}
               />
               Inactivo
             </label>

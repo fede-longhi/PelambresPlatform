@@ -1,18 +1,34 @@
 'use client';
 
 import { createUser, type UserFormState } from '@/lib/actions/user-actions';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import FieldErrorDisplay from '@/components/ui/field-error-display';
 import TempPasswordDisplay from './temp-password-display';
+import CustomerLinkSection from './customer-link-section';
 import Link from 'next/link';
 import type { UserRole } from '@/types/user-definitions';
 
 export default function CreateUserForm() {
   const initialState: UserFormState = { message: null, errors: {}, success: false };
   const [state, formAction, isPending] = useActionState(createUser, initialState);
+  const [role, setRole] = useState<UserRole>('admin');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    if (!state.formValues) {
+      return;
+    }
+
+    setRole(state.formValues.role);
+    setEmail(state.formValues.email);
+    setName(state.formValues.name);
+    setUsername(state.formValues.username);
+  }, [state.formValues]);
 
   if (state.success && state.tempPassword) {
     return (
@@ -35,7 +51,9 @@ export default function CreateUserForm() {
   }
 
   return (
-    <form action={formAction} className="w-full max-w-lg space-y-4 rounded-md bg-gray-50 p-6">
+    <form action={formAction} noValidate className="w-full max-w-lg space-y-4 rounded-md bg-gray-50 p-6">
+      <input type="hidden" name="role" value={role} />
+
       {!state.success && state.message && (
         <p className="text-sm text-red-500">{state.message}</p>
       )}
@@ -45,7 +63,8 @@ export default function CreateUserForm() {
         <Input
           id="username"
           name="username"
-          defaultValue={(state.payload?.get('username') as string) ?? ''}
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
           placeholder="ej. federico"
           aria-describedby="username-error"
         />
@@ -57,7 +76,8 @@ export default function CreateUserForm() {
         <Input
           id="name"
           name="name"
-          defaultValue={(state.payload?.get('name') as string) ?? ''}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
           placeholder="Nombre y apellido"
           aria-describedby="name-error"
         />
@@ -70,7 +90,8 @@ export default function CreateUserForm() {
           id="email"
           name="email"
           type="email"
-          defaultValue={(state.payload?.get('email') as string) ?? ''}
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
           placeholder="usuario@ejemplo.com"
           aria-describedby="email-error"
         />
@@ -81,8 +102,8 @@ export default function CreateUserForm() {
         <Label htmlFor="role">Rol</Label>
         <select
           id="role"
-          name="role"
-          defaultValue={(state.payload?.get('role') as UserRole) ?? 'admin'}
+          value={role}
+          onChange={(event) => setRole(event.target.value as UserRole)}
           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
         >
           <option value="admin">Administrador</option>
@@ -90,6 +111,20 @@ export default function CreateUserForm() {
         </select>
         <FieldErrorDisplay id="role-error" errors={state.errors?.role} />
       </div>
+
+      {role === 'customer' && (
+        <CustomerLinkSection
+          userEmail={email}
+          userName={name}
+          errors={{
+            customerId: state.errors?.customerId,
+            customerPhone: state.errors?.customerPhone,
+            customerFirstName: state.errors?.customerFirstName,
+            customerLastName: state.errors?.customerLastName,
+            customerName: state.errors?.customerName,
+          }}
+        />
+      )}
 
       <p className="text-xs text-muted-foreground">
         Se generará una contraseña temporal que deberás compartir con el usuario de forma segura.
