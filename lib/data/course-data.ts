@@ -68,6 +68,10 @@ export type PublishedCourseCatalogItem = {
     shortDescription: string;
     duration: string;
     level: string;
+    modality: string;
+    startDate: string | null;
+    price: number | null;
+    currency: string;
 };
 
 export type PublishedCourse = {
@@ -86,6 +90,7 @@ export type PublishedCourse = {
     price: number | null;
     currency: string;
     notes: string | null;
+    activeRegistrations: number;
 };
 
 export type CourseSlugAndTitle = {
@@ -256,7 +261,11 @@ export async function fetchPublishedCourses(): Promise<PublishedCourseCatalogIte
                 slug, 
                 short_description as "shortDescription", 
                 duration, 
-                level 
+                level,
+                modality,
+                start_date as "startDate",
+                price,
+                currency
             FROM courses 
             WHERE is_published = true AND deleted_at IS NULL
             ORDER BY created_at DESC
@@ -271,23 +280,29 @@ export async function fetchPublishedCourseBySlug(slug: string): Promise<Publishe
     try {
         const courses = await sql<PublishedCourse[]>`
             SELECT 
-                id, 
-                title, 
-                short_description as "shortDescription", 
-                duration, 
-                level,
-                learning_objective as "learningObjective",
-                learning_outcomes as "learningOutcomes",
-                modality,
-                start_date as "startDate",
-                schedule,
-                location,
-                max_students as "maxStudents",
-                price,
-                currency,
-                notes
-            FROM courses 
-            WHERE slug = ${slug} AND is_published = true AND deleted_at IS NULL
+                c.id, 
+                c.title, 
+                c.short_description as "shortDescription", 
+                c.duration, 
+                c.level,
+                c.learning_objective as "learningObjective",
+                c.learning_outcomes as "learningOutcomes",
+                c.modality,
+                c.start_date as "startDate",
+                c.schedule,
+                c.location,
+                c.max_students as "maxStudents",
+                c.price,
+                c.currency,
+                c.notes,
+                (
+                    SELECT COUNT(*)::int
+                    FROM course_registrations r
+                    WHERE r.course_id = c.id
+                      AND r.registration_status IN ('pending', 'confirmed')
+                ) as "activeRegistrations"
+            FROM courses c
+            WHERE c.slug = ${slug} AND c.is_published = true AND c.deleted_at IS NULL
             LIMIT 1
         `;
         return courses[0] ?? null;

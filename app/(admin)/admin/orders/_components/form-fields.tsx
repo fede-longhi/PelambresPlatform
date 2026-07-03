@@ -3,7 +3,7 @@ import { OrderFormState } from "@/lib/actions/order-actions";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
-import { CustomerSelectField } from '@/components/shared/customer-select-field';
+import CustomerSelectField from '@/components/shared/customer-select-field';
 import type { CustomerField } from '@/components/shared/customer-select-field';
 import { OrderStatuses } from "@/types/order-definitions";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
