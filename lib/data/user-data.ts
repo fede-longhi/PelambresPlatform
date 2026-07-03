@@ -142,6 +142,22 @@ export async function fetchUserById(id: string): Promise<UserListItem | undefine
   }
 }
 
+export async function fetchUserHasPassword(id: string): Promise<boolean> {
+  try {
+    const rows = await sql<{ hasPassword: boolean }[]>`
+      SELECT (password IS NOT NULL AND password <> '') as "hasPassword"
+      FROM users
+      WHERE id = ${id}
+        AND deleted_at IS NULL
+      LIMIT 1
+    `;
+    return rows[0]?.hasPassword ?? false;
+  } catch (error) {
+    console.error('Failed to fetch user password status:', error);
+    throw new Error('Failed to fetch user.');
+  }
+}
+
 export async function fetchFilteredUsers(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 

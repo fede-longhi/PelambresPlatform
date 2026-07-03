@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { fetchUserById } from '@/lib/data/user-data';
+import { fetchUserHasPassword } from '@/lib/data/user-data';
 import { requireCustomerPortalContext } from '@/lib/auth/customer-portal';
 import { getCustomerName } from '@/lib/utils';
 import { lusitana } from '@/app/fonts';
@@ -14,7 +14,7 @@ export default async function CustomerProfilePage() {
   }
 
   const { customer } = await requireCustomerPortalContext();
-  const user = await fetchUserById(session.user.id);
+  const hasExistingPassword = await fetchUserHasPassword(session.user.id);
 
   return (
     <main className="w-full max-w-2xl">
@@ -35,7 +35,7 @@ export default async function CustomerProfilePage() {
         </p>
       </div>
 
-      <ChangePasswordForm hasExistingPassword={!!user?.password} />
+      <ChangePasswordForm hasExistingPassword={hasExistingPassword} />
     </main>
   );
 }
