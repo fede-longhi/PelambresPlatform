@@ -8,25 +8,75 @@ import {
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { useActionState } from 'react';
-import { authenticate } from '@/lib/actions/auth-actions';
+import {
+  authenticate,
+  completeAccountSelection,
+  type AuthenticateState,
+} from '@/lib/actions/auth-actions';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import type { UserRole } from '@/types/user-definitions';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
   const passwordWasSet = searchParams.get('passwordSet') === '1';
-  const [errorMessage, formAction, isPending] = useActionState(
+  const [authState, formAction, isPending] = useActionState<AuthenticateState, FormData>(
     authenticate,
-    undefined,
+    undefined
   );
+  const [selectionState, selectionAction, isSelecting] = useActionState<
+    AuthenticateState,
+    FormData
+  >(completeAccountSelection, undefined);
+
+  const activeState = selectionState ?? authState;
+  const isSubmitting = isPending || isSelecting;
+
+  if (activeState?.status === 'role_selection') {
+    return (
+      <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
+        <h1 className={`${lusitana.className} mb-3 text-2xl`}>Elegí cómo ingresar</h1>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Tu email tiene más de un perfil. Seleccioná con cuál querés continuar.
+        </p>
+        <form action={selectionAction} className="space-y-3">
+          <input type="hidden" name="selectionToken" value={activeState.selectionToken} />
+          <input type="hidden" name="redirectTo" value={activeState.redirectTo} />
+          {activeState.roles.map((account) => (
+            <button
+              key={account.userId}
+              type="submit"
+              name="userId"
+              value={account.userId}
+              disabled={isSubmitting}
+              className="flex w-full items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3 text-left text-sm transition hover:border-primary hover:bg-primary/5"
+            >
+              <span>
+                <span className="block font-medium">
+                  {ROLE_SELECTION_LABELS[account.role as UserRole]}
+                </span>
+                <span className="text-muted-foreground">{account.name}</span>
+              </span>
+              <ArrowRightIcon className="h-5 w-5 text-gray-400" />
+            </button>
+          ))}
+        </form>
+      </div>
+    );
+  }
 
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-3 text-2xl`}>
-          Please log in to continue.
+        <h1 className={`${lusitana.className} mb-1 text-2xl`}>
+          Acceso administración
         </h1>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Email y contraseña para el panel de administración.
+        </p>
         {passwordWasSet && (
           <p className="mb-3 text-sm text-green-700">
             Contraseña establecida. Ingresá con tu nueva contraseña.
@@ -74,14 +124,19 @@ export default function LoginForm() {
           </div>
         </div>
         <input type="hidden" name="redirectTo" value={callbackUrl} />
-        <Button className="mt-4 w-full" aria-disabled={isPending}>
+        <div className="mt-2 text-right">
+          <Link href="/login/forgot-password" className="text-sm text-primary hover:underline">
+            Olvidé mi contraseña
+          </Link>
+        </div>
+        <Button className="mt-4 w-full" aria-disabled={isSubmitting}>
           Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
         <div className="flex h-8 items-end space-x-1">
-          {errorMessage && (
+          {activeState?.status === 'error' && (
             <>
               <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
-              <p className="text-sm text-red-500">{errorMessage}</p>
+              <p className="text-sm text-red-500">{activeState.message}</p>
             </>
           )}
         </div>

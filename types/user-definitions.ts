@@ -8,6 +8,7 @@ export type User = {
   password: string | null;
   image_url: string | null;
   role: UserRole;
+  customer_id: string | null;
   is_active: boolean;
   must_change_password: boolean;
   deleted_at: string | null;

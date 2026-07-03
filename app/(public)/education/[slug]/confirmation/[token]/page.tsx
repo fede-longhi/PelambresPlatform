@@ -17,6 +17,8 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
     let isSuccess = false;
     let message = "";
     let courseTitle = "";
+    let isFreeCourse = false;
+    let wasAlreadyConfirmed = false;
 
     try {
         const registration = await fetchRegistrationByConfirmationToken(token);
@@ -27,17 +29,22 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
         } else if (registration.token_used) {
             isSuccess = true;
             courseTitle = registration.courseTitle;
-            message = `Tu correo ya se encontraba verificado para el curso ${courseTitle}. ¡Ya tienes tu lugar reservado!`;
+            isFreeCourse = Number(registration.coursePrice) <= 0;
+            wasAlreadyConfirmed = true;
+            message = `Tu correo ya se encontraba verificado para el curso ${courseTitle}. ¡Ya tenés tu lugar reservado!`;
         } else {
+            isFreeCourse = Number(registration.coursePrice) <= 0;
             await markRegistrationConfirmed(registration.id);
             isSuccess = true;
             courseTitle = registration.courseTitle;
-            message = `¡Espectacular! Hemos verificado tu correo con éxito. Tu lugar en la capacitación de ${courseTitle} ya está formalmente reservado.`;
+            message = isFreeCourse
+                ? `¡Listo! Confirmamos tu inscripción a ${courseTitle}. Ya podés acceder al aula desde tu portal de cliente.`
+                : `¡Espectacular! Verificamos tu correo con éxito. Tu lugar en ${courseTitle} ya está reservado.`;
         }
     } catch (error) {
         console.error("Error validando el token de inscripción:", error);
         isSuccess = false;
-        message = "Ocurrió un error interno al intentar confirmar tu inscripción. Por favor, vuelve a intentarlo en unos minutos.";
+        message = "Ocurrió un error interno al intentar confirmar tu inscripción. Por favor, volvé a intentarlo en unos minutos.";
     }
 
     return (
@@ -65,15 +72,31 @@ export default async function ConfirmRegistrationPage({ params }: ConfirmPagePro
                     </p>
                 </div>
 
-                {isSuccess && (
+                {isSuccess && !wasAlreadyConfirmed && (
                     <div className="bg-slate-50 border border-slate-100 text-left p-4 rounded-xl text-xs text-slate-500 space-y-2 leading-relaxed">
                         <p className="font-semibold text-slate-700 text-sm mb-1">¿Qué pasa ahora?</p>
-                        <p>1. Nos pondremos en contacto contigo por email o WhatsApp para enviarte las instrucciones de pago si el curso es arancelado.</p>
-                        <p>2. Una vez registrado el pago, te daremos el acceso definitivo a los materiales o el enlace de la sala virtual.</p>
+                        {isFreeCourse ? (
+                            <>
+                                <p>1. Iniciá sesión en el portal de cliente con el mismo email de la inscripción.</p>
+                                <p>2. En <strong>Mis cursos</strong> vas a encontrar el curso y toda la información del aula.</p>
+                            </>
+                        ) : (
+                            <>
+                                <p>1. Nos pondremos en contacto por email o WhatsApp para enviarte las instrucciones de pago.</p>
+                                <p>2. Una vez confirmado el pago, vas a poder acceder al aula desde tu portal de cliente.</p>
+                            </>
+                        )}
                     </div>
                 )}
 
-                <div className="pt-2 border-t border-slate-100">
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                    {isSuccess && isFreeCourse && (
+                        <Link href="/login?callbackUrl=/customer/courses">
+                            <Button className="w-full">
+                                Ir al portal de cliente
+                            </Button>
+                        </Link>
+                    )}
                     <Link href={`/education/${slug}`}>
                         <Button variant="outline" className="w-full">
                             <ArrowLeft size={16} className="mr-2" /> Volver al curso

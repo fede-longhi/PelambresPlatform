@@ -19,6 +19,40 @@ const FormSchema = z.object({
 const CreateCustomer = FormSchema.omit({ id: true });
 const UpdateCustomer = FormSchema.omit({ id: true });
 
+const CreateCustomerRecordSchema = z.object({
+  email: z.string().email({ message: 'Debe ser un email válido.' }),
+  phone: z.string().optional(),
+  type: z.enum(['person', 'business']),
+  name: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+});
+
+export async function createCustomerRecord(input: {
+  email: string;
+  phone?: string;
+  type: 'person' | 'business';
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+}): Promise<Customer> {
+  const validatedFields = CreateCustomerRecordSchema.safeParse(input);
+
+  if (!validatedFields.success) {
+    throw new Error('Datos de cliente inválidos.');
+  }
+
+  const { name, firstName, lastName, email, phone, type } = validatedFields.data;
+
+  const insertedCustomers = await sql<Customer[]>`
+    INSERT INTO customers (name, first_name, last_name, email, phone, type)
+    VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone ?? ''}, ${type})
+    RETURNING id, name, first_name, last_name, email, phone, type
+  `;
+
+  return insertedCustomers[0];
+}
+
 export type CustomerFormState = {
     errors?: {
         name?: string[];

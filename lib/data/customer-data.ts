@@ -61,6 +61,28 @@ export async function fetchCustomersPages(query: string) {
     }  
 } 
 
+export async function fetchCustomerByEmail(email: string) {
+    try {
+        const data = await sql<Customer[]>`
+            SELECT
+                id,
+                name,
+                first_name,
+                last_name,
+                email,
+                phone,
+                type
+            FROM customers
+            WHERE lower(trim(email)) = lower(trim(${email}))
+            LIMIT 1
+        `;
+        return data[0];
+    } catch (error) {
+        console.error(error);
+        throw new Error('Failed to fetch customer by email.');
+    }
+}
+
 export async function fetchCustomerById(id: string) {
     try {
         const data = await sql<Customer[]>`

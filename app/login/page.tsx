@@ -18,10 +18,8 @@ export default function LoginPage() {
             </div>
             <Suspense>
                 <LoginForm />
-                <div className='flex justify-center items-center'>
-                    <p className='text-center'>
-                        - or -
-                    </p>
+                <div className="flex items-center justify-center">
+                    <p className="text-center text-sm text-muted-foreground">o</p>
                 </div>
                 <SocialLogin />
             </Suspense>

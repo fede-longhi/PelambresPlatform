@@ -2,11 +2,17 @@
 
 import { z } from 'zod';
 import sql from '@/lib/db';
-import { fetchCourseSlugAndTitle } from '@/lib/data/course-data';
+import {
+    fetchExistingCourseRegistration,
+    fetchCourseSlugAndTitle,
+    linkCourseRegistrationsToUser,
+} from '@/lib/data/course-data';
+import { fetchLinkedCustomerForUser } from '@/lib/data/customer-portal-data';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { sendCourseConfirmationEmail } from '@/lib/mail/mailer';
 import { COURSE_LEVELS, COURSE_MODALITIES, CURRENCIES } from '@/lib/consts/course-consts';
+import { auth } from '@/auth';
 
 const levelValues = COURSE_LEVELS.map(l => l.value) as [string, ...string[]];
 const modalityValues = COURSE_MODALITIES.map(m => m.value) as [string, ...string[]];
@@ -239,53 +245,99 @@ export async function registerForCourse(
     prevState: RegistrationFormState,
     formData: FormData
 ) {
-    console.log("Received registration form data:", formData);
-    const validatedFields = RegistrationSchema.safeParse({
-        name: formData.get('name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-    });
+    const session = await auth();
+    const sessionUser = session?.user;
 
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: "Por favor, revisa los datos ingresados.",
-            success: false,
-        };
+    let name: string;
+    let email: string;
+    let phone: string | undefined;
+    let userId: string | null = null;
+
+    if (sessionUser?.email && sessionUser.isActive !== false) {
+        name = (sessionUser.name ?? '').trim();
+        email = sessionUser.email.trim();
+        userId = sessionUser.id;
+
+        if (name.length < 3) {
+            return {
+                success: false,
+                message: 'Completá tu nombre en el perfil antes de inscribirte.',
+            };
+        }
+
+        const linkedCustomer = await fetchLinkedCustomerForUser(sessionUser.id, email);
+        phone = linkedCustomer?.phone?.trim() || undefined;
+    } else {
+        const validatedFields = RegistrationSchema.safeParse({
+            name: formData.get('name'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+        });
+
+        if (!validatedFields.success) {
+            return {
+                errors: validatedFields.error.flatten().fieldErrors,
+                message: 'Por favor, revisa los datos ingresados.',
+                success: false,
+            };
+        }
+
+        ({ name, email, phone } = validatedFields.data);
     }
 
-    const { name, email, phone } = validatedFields.data;
-    console.log(`Validated registration data: name=${name}, email=${email}, phone=${phone}`);
+    const existingRegistration = await fetchExistingCourseRegistration(courseId, {
+        email,
+        userId,
+    });
+
+    if (existingRegistration) {
+        const statusMessage =
+            existingRegistration.registrationStatus === 'confirmed'
+                ? 'Ya estás inscripto a este curso.'
+                : 'Ya tenés una inscripción pendiente. Revisá tu correo para confirmarla.';
+
+        return {
+            success: false,
+            message: statusMessage,
+        };
+    }
 
     try {
         const course = await fetchCourseSlugAndTitle(courseId);
         if (!course) {
-            return { success: false, message: "El curso seleccionado no existe." };
+            return { success: false, message: 'El curso seleccionado no existe.' };
         }
         const { title: courseTitle, slug: courseSlug } = course;
 
         const result = await sql`
             INSERT INTO course_registrations 
-                (course_id, full_name, email_address, phone_number, registration_status, payment_status)
+                (course_id, user_id, full_name, email_address, phone_number, registration_status, payment_status)
             VALUES 
-                (${courseId}, ${name}, ${email}, ${phone ?? null}, 'pending', 'pending')
+                (${courseId}, ${userId}, ${name}, ${email}, ${phone ?? null}, 'pending', 'pending')
             RETURNING confirmation_token as "token"
         `;
         
         const token = result[0].token;
 
+        if (userId) {
+            await linkCourseRegistrationsToUser(userId, email);
+        }
+
         await sendCourseConfirmationEmail(email, name, courseTitle, courseSlug, token);
+
+        revalidatePath('/customer/courses');
+        revalidatePath(`/education/${courseSlug}`);
 
         return {
             success: true,
-            message: "¡Registro recibido! Te enviamos un enlace de confirmación a tu correo electrónico. Por favor, revisa tu bandeja de entrada.",
+            message: '¡Registro recibido! Te enviamos un enlace de confirmación a tu correo electrónico. Por favor, revisá tu bandeja de entrada.',
         };
 
     } catch (error) {
-        console.error("Error en la inscripción pública:", error);
+        console.error('Error en la inscripción pública:', error);
         return {
             success: false,
-            message: "Hubo un problema al procesar tu inscripción. Inténtalo de nuevo más tarde.",
+            message: 'Hubo un problema al procesar tu inscripción. Inténtalo de nuevo más tarde.',
         };
     }
 }

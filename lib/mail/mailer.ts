@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { render } from "@react-email/render";
 import { CourseWelcomeEmail } from "./templates/course-welcome";
 import { CourseConfirmationEmail } from "./templates/course-confirmation";
+import { PasswordResetEmail } from "./templates/password-reset";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -68,4 +69,21 @@ export async function sendCourseConfirmationEmail(
         throw new Error("No se pudo enviar el correo de confirmación del curso");
     }
 
+}
+
+export async function sendPasswordResetEmail(
+  to: string,
+  userName: string,
+  roleLabel: string,
+  resetToken: string
+) {
+  const emailHtml = await render(
+    PasswordResetEmail({ userName, roleLabel, resetToken })
+  );
+
+  await sendEmail({
+    to,
+    subject: 'Restablecé tu contraseña — Pelambres 3D',
+    html: emailHtml,
+  });
 }
