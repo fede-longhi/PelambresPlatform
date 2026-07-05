@@ -423,7 +423,6 @@ export async function markRegistrationConfirmed(registrationId: string): Promise
                         WHERE lower(trim(u.email)) = lower(trim(r.email_address))
                           AND u.role = 'customer'
                           AND u.deleted_at IS NULL
-                        ORDER BY u.created_at ASC
                         LIMIT 1
                     )
                 )
