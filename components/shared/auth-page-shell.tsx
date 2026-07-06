@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import PelambresLogo from '@/components/shared/home-logo';
+import { PelambresAuthLogo } from '@/components/shared/pelambres-auth-logo';
 
 type AuthPageShellProps = {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ export function AuthPageShell({ children }: AuthPageShellProps) {
         <div className="relative mx-auto flex w-full max-w-[400px] flex-col space-y-2.5">
           <div className="flex w-full rounded-lg bg-primary p-3">
             <div className="w-32 text-white md:w-36">
-              <PelambresLogo />
+              <PelambresAuthLogo />
             </div>
           </div>
 

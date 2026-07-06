@@ -2,7 +2,7 @@ import { fetchActiveUsersByIds } from '@/lib/data/user-data';
 import { verifyAccountSelectionToken } from '@/lib/auth/account-selection';
 import { redirect } from 'next/navigation';
 import SelectRoleForm from './_components/select-role-form';
-import PelambresLogo from '@/components/shared/home-logo';
+import { PelambresAuthLogo } from '@/components/shared/pelambres-auth-logo';
 import { lusitana } from '@/app/fonts';
 
 type SelectRolePageProps = {
@@ -37,7 +37,7 @@ export default async function SelectRolePage({ searchParams }: SelectRolePagePro
       <div className="relative mx-auto flex w-full max-w-[400px] flex-col space-y-2.5 p-4 md:-mt-32">
         <div className="flex h-20 w-full items-end rounded-lg bg-primary p-3 md:h-36">
           <div className="w-32 text-white md:w-36">
-            <PelambresLogo />
+            <PelambresAuthLogo />
           </div>
         </div>
         <div className="rounded-lg bg-gray-50 px-6 pb-4 pt-8">
