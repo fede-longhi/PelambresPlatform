@@ -4,6 +4,8 @@ import {
   getPortalPathForRole,
   shouldRedirectLoggedInUserFromAuthEntry,
 } from '@/lib/auth/public-routes';
+import { fetchUserById } from '@/lib/data/user-data';
+import type { UserRole } from '@/types/user-definitions';
 
 export const authConfig = {
     pages: {
@@ -26,6 +28,10 @@ export const authConfig = {
 
             if (isOnPrivateApp) {
                 if (!isLoggedIn) {
+                    return false;
+                }
+
+                if (!auth.user.role) {
                     return false;
                 }
 
@@ -60,8 +66,14 @@ export const authConfig = {
                 !auth.user.mustChangePassword
             ) {
                 if (shouldRedirectLoggedInUserFromAuthEntry(pathname)) {
+                    const role = auth.user.role as UserRole | undefined;
+
+                    if (!role) {
+                        return true;
+                    }
+
                     return Response.redirect(
-                        new URL(getPortalPathForRole(auth.user.role), request.nextUrl)
+                        new URL(getPortalPathForRole(role), request.nextUrl)
                     );
                 }
             }
@@ -80,6 +92,14 @@ export const authConfig = {
                 token.role = user.role;
                 token.isActive = user.isActive;
                 token.mustChangePassword = user.mustChangePassword;
+            } else if (token.id && !token.role) {
+                const dbUser = await fetchUserById(String(token.id));
+
+                if (dbUser) {
+                    token.role = dbUser.role;
+                    token.isActive = dbUser.is_active;
+                    token.mustChangePassword = dbUser.must_change_password;
+                }
             }
 
             return token;
