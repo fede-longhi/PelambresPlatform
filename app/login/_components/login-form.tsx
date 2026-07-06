@@ -71,11 +71,8 @@ export default function LoginForm() {
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-1 text-2xl`}>
-          Acceso administración
-        </h1>
         <p className="mb-3 text-sm text-muted-foreground">
-          Email y contraseña para el panel de administración.
+          Ingrese su email y contraseña para acceder a su cuenta.
         </p>
         {passwordWasSet && (
           <p className="mb-3 text-sm text-green-700">
@@ -132,6 +129,12 @@ export default function LoginForm() {
         <Button className="mt-4 w-full" aria-disabled={isSubmitting}>
           Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          ¿No tenés cuenta?{' '}
+          <Link href="/register" className="font-medium text-primary hover:underline">
+            Creá tu cuenta
+          </Link>
+        </p>
         <div className="flex h-8 items-end space-x-1">
           {activeState?.status === 'error' && (
             <>

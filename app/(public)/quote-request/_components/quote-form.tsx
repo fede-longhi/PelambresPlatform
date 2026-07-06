@@ -1,11 +1,10 @@
 'use client';
 
-import { startTransition, useActionState, useEffect, useRef, useState } from 'react';
+import { startTransition, useActionState, useEffect, useState } from 'react';
 
-import AddIcon from '@mui/icons-material/Add';
 import { useRouter } from 'next/navigation';
 import { upload } from '@vercel/blob/client';
-import { AlertTriangle, CheckCircle, Clock, FileText, Upload, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 
 import { createQuote, QuoteFormState } from '@/lib/actions/quote-actions';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { calculateFileHash, formatFileSize } from '@/lib/utils';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MIME_TYPE_BY_EXTENSION, MAX_FILE_ATTACHMENT_SIZE_BYTES } from '@/lib/consts';
+import { FileAttachmentPicker } from '@/components/shared/file-attachment-picker';
 
 import { getFileData, insertFileData } from '@/lib/actions/file-storage';
 
@@ -64,12 +64,10 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
     const [attachments, setAttachments] = useState<Array<File>>([]);
     const [fileValidationErrors, setFileValidationErrors] = useState<string[]>([]);
     const [state, formAction, isPending] = useActionState(createQuote, INITIAL_STATE);
-    const [isDragging, setIsDragging] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isUploadingFiles, setIsUploadingFiles] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
     const isProcessing = isPending || isUploadingFiles;
@@ -96,18 +94,13 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
         }
     }, [state, toast]);
 
-    const getFileExtension = (fileName: string) => {
-        const lastDotIndex = fileName.lastIndexOf('.');
-        if (lastDotIndex < 0) return '';
-        return fileName.slice(lastDotIndex + 1).toLowerCase();
-    };
-
     const getResolvedMimeType = (file: File): string => {
         if (file.type && file.type.trim().length > 0) {
             return file.type;
         }
 
-        const extension = getFileExtension(file.name);
+        const lastDotIndex = file.name.lastIndexOf('.');
+        const extension = lastDotIndex < 0 ? '' : file.name.slice(lastDotIndex + 1).toLowerCase();
         return MIME_TYPE_BY_EXTENSION[extension] || 'application/octet-stream';
     };
 
@@ -130,82 +123,6 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
         }
 
         return fallback;
-    };
-
-    const validateIncomingFiles = (files: FileList | null): { validFiles: File[]; errors: string[] } => {
-        if (!files) return { validFiles: [], errors: [] };
-
-        const validFiles: File[] = [];
-        const errors: string[] = [];
-
-        Array.from(files).forEach((file) => {
-            if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
-                errors.push(
-                    `${file.name}: supera el tamaño máximo de ${formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} (${formatFileSize(file.size)}).`
-                );
-                return;
-            }
-
-            const extension = getFileExtension(file.name);
-            const isMimeAllowed = ALLOWED_MIME_TYPES.has(file.type);
-            const canValidateByExtension = file.type === '' || file.type === 'application/octet-stream';
-            const isExtensionAllowed = ALLOWED_EXTENSIONS.has(extension);
-
-            if (!isMimeAllowed && !(canValidateByExtension && isExtensionAllowed)) {
-                errors.push(`${file.name}: tipo de archivo no soportado.`);
-                return;
-            }
-
-            validFiles.push(file);
-        });
-
-        return { validFiles, errors };
-    };
-
-    const addFiles = (files: FileList | null) => {
-        const { validFiles, errors } = validateIncomingFiles(files);
-
-        if (errors.length > 0) {
-            setFileValidationErrors(errors);
-            toast({
-                title: 'Algunos archivos no se pudieron agregar',
-                description: errors[0],
-                variant: 'destructive',
-            });
-        } else {
-            setFileValidationErrors([]);
-        }
-
-        if (validFiles.length > 0) {
-            setAttachments((prevAttachments) => [...prevAttachments, ...validFiles]);
-        }
-    };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        addFiles(event.target.files);
-        if (event.target.files) {
-            event.target.value = '';
-        }
-    };
-
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        setIsDragging(false);
-        addFiles(event.dataTransfer.files);
-    };
-
-    const removeFile = (index: number) => {
-        setAttachments(attachments.filter((_, i) => i !== index));
     };
 
     const refresh = () => {
@@ -393,97 +310,28 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                 />
                 <FieldErrors id="detail-error" errors={state.errors?.detail} />
             </div>
-            <div>
-                <Label htmlFor="file-upload">Adjuntar Archivos</Label>
-
-                <input 
-                    id="file-upload"
-                    type='file' 
-                    name='file-upload'
-                    multiple
-                    accept=".stl,.obj,.3mf,.pdf,.jpg,.jpeg,.png,.webp"
-                    className='sr-only'
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    disabled={isProcessing} // 🔒 Bloqueamos el input oculto
-                />
-
-                {fileValidationErrors.length > 0 && (
-                    <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600" aria-live="polite">
-                        <p className="font-medium">Revisa los archivos adjuntos:</p>
-                        <ul className="mt-1 list-disc pl-5">
-                            {fileValidationErrors.map((error) => (
-                                <li key={error}>{error}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-                
-                {attachments.length === 0 && (
-                    <div
-                        className={`mt-1 flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors
-                            ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300 dark:border-gray-700 hover:border-primary/50'}
-                            ${isProcessing ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
-                        `}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        onDrop={handleDrop}
-                        // Solo permitimos el clic si no está procesando
-                        onClick={() => !isProcessing && fileInputRef.current?.click()}
-                    >
-                        <Upload className='w-8 h-8 text-muted-foreground' />
-                        <div className="space-y-1 text-center mt-2">
-                            <p className='text-sm font-medium'>
-                                Arrastra y suelta aquí, o <span className='text-primary font-semibold'>haz click para buscar</span>
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                STL, OBJ, 3MF, PDF, JPG, PNG y WEBP. Máximo {formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} por archivo.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                <ul className="space-y-2 mt-4">
-                    {attachments.map((attachment, i) => (
-                        <li 
-                            key={i} 
-                            className={`flex items-center justify-between p-3 border rounded-md bg-white shadow-sm transition-opacity ${isProcessing ? 'opacity-60' : ''}`}
-                        >
-                            <div className='flex items-center space-x-3'>
-                                <FileText className="w-5 h-5 text-primary"/>
-                                <div>
-                                    <p className='text-sm font-medium truncate max-w-xs'>{attachment.name}</p>
-                                    <p className='text-xs text-muted-foreground'>{formatFileSize(attachment.size)}</p>
-                                </div>
-                            </div>
-                            
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                type="button" 
-                                onClick={() => removeFile(i)}
-                                className="h-8 w-8 p-0"
-                                disabled={isProcessing} // 🔒 Evitamos que borre el archivo mientras se sube
-                            >
-                                <X className={`w-4 h-4 ${isProcessing ? 'text-gray-400' : 'text-red-500'}`} />
-                                <span className="sr-only">Eliminar archivo</span>
-                            </Button>
-                        </li>
-                    ))}
-                    
-                    {attachments.length > 0 && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full mt-4"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isProcessing} // 🔒 Evitamos que agregue más
-                        >
-                            <AddIcon className="mr-2 h-4 w-4" /> Agregar otro archivo
-                        </Button>
-                    )}
-                </ul>
-            </div>
+            <FileAttachmentPicker
+                id="file-upload"
+                label="Adjuntar Archivos"
+                files={attachments}
+                onFilesChange={setAttachments}
+                disabled={isProcessing}
+                allowedExtensions={ALLOWED_EXTENSIONS}
+                allowedMimeTypes={ALLOWED_MIME_TYPES}
+                maxSizeBytes={MAX_FILE_ATTACHMENT_SIZE_BYTES}
+                validationErrors={fileValidationErrors}
+                onValidationErrorsChange={(errors) => {
+                    setFileValidationErrors(errors);
+                    if (errors.length > 0) {
+                        toast({
+                            title: 'Algunos archivos no se pudieron agregar',
+                            description: errors[0],
+                            variant: 'destructive',
+                        });
+                    }
+                }}
+                formatHint={`STL, OBJ, 3MF, PDF, JPG, PNG y WEBP. Máximo ${formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} por archivo.`}
+            />
             {isUploadingFiles && (
                 <div className="sm:col-span-2 mt-4 max-w-md mx-auto w-full">
                     <div className="flex justify-between mb-1">

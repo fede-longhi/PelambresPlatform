@@ -1,20 +1,20 @@
 import { Suspense } from 'react';
-import { Metadata } from 'next';
-import LoginForm from '@/app/login/_components/login-form';
-import SocialLogin from '@/app/login/_components/social-login';
+import type { Metadata } from 'next';
 import { AuthPageShell } from '@/components/shared/auth-page-shell';
+import RegisterForm from './_components/register-form';
+import SocialLogin from '@/app/login/_components/social-login';
 
 export const metadata: Metadata = {
-    title: 'Login',
+  title: 'Crear cuenta',
 };
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <AuthPageShell>
       <Suspense>
-        <LoginForm />
+        <RegisterForm />
         <div className="flex items-center justify-center">
-          <p className="text-center text-sm text-muted-foreground">- o -</p>
+          <p className="text-center text-sm text-muted-foreground">o</p>
         </div>
         <SocialLogin />
       </Suspense>

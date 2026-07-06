@@ -14,7 +14,7 @@ type OAuthProfile = {
   imageUrl?: string | null;
 };
 
-async function generateUniqueUsername(email: string): Promise<string> {
+export async function generateUniqueUsername(email: string): Promise<string> {
   const localPart = email
     .split('@')[0]
     .replace(/[^a-zA-Z0-9._-]/g, '')
@@ -43,7 +43,7 @@ async function generateUniqueUsername(email: string): Promise<string> {
   throw new Error('No se pudo generar un nombre de usuario único.');
 }
 
-async function resolveOrCreateCustomerId(email: string, displayName: string): Promise<string> {
+export async function resolveOrCreateCustomerId(email: string, displayName: string): Promise<string> {
   const existingCustomer = await fetchCustomerByEmail(email);
 
   if (existingCustomer) {

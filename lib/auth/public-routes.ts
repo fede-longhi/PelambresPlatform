@@ -27,6 +27,10 @@ export function shouldRedirectLoggedInUserFromAuthEntry(pathname: string): boole
     return false;
   }
 
+  if (pathname === '/register' || pathname === '/register/') {
+    return true;
+  }
+
   if (pathname === '/login' || pathname === '/login/') {
     return true;
   }
