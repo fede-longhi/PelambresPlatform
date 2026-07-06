@@ -22,9 +22,6 @@ export default function SocialLogin() {
 
   return (
     <div className="w-full space-y-2">
-      <p className="text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Portal de cliente
-      </p>
       <form action={formAction} className="flex flex-col items-center justify-center">
         <input type="hidden" name="redirectTo" value={redirectTo} />
         <button
@@ -38,8 +35,7 @@ export default function SocialLogin() {
           Ingresar con Google
         </button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          Pedidos, cursos y tu perfil de cliente. Si también tenés acceso de administrador, vas a
-          poder elegir el perfil después.
+          Pedidos, cursos y tu perfil de cliente.
         </p>
         <div className="flex h-8 items-end space-x-1">
           {errorMessage && (

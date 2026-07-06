@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Pencil, Users, Calendar, Eye, EyeOff, BookOpen, BarChart3, CheckCircle, Presentation } from 'lucide-react';
-import { courseSlidesExist, getCourseSlidesUrl } from '@/lib/slides/paths';
+import { ArrowLeft, Pencil, Users, Calendar, Eye, EyeOff, BookOpen, BarChart3, CheckCircle, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { fetchAdminCourseById } from '@/lib/data/course-data';
+import { fetchCourseMaterialCount } from '@/lib/data/course-material-data';
 
 type CourseDetailPageProps = {
     params: Promise<{
@@ -26,13 +26,12 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
         notFound();
     }
 
+    const materialCount = await fetchCourseMaterialCount(courseId);
+
     // 2. NUEVO: Procesamos las viñetas de la misma forma que en la landing pública
     const bulletPoints = course.learningOutcomes 
         ? course.learningOutcomes.split('\n').filter((line: string) => line.trim() !== '')
         : [];
-
-    const hasSlides = courseSlidesExist(course.slug);
-    const slidesUrl = getCourseSlidesUrl(course.slug);
 
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 font-sans">
@@ -68,13 +67,11 @@ export default async function AdminCourseDetailPage({ params }: CourseDetailPage
                             <Pencil size={16} className="mr-2" /> Editar Curso
                         </Button>
                     </Link>
-                    {hasSlides && (
-                        <Link href={slidesUrl} target="_blank" className="flex-1 md:flex-none">
-                            <Button variant="outline" className="w-full border-slate-300 text-slate-700">
-                                <Presentation size={16} className="mr-2" /> Ver Diapositivas
-                            </Button>
-                        </Link>
-                    )}
+                    <Link href={`/admin/courses/${course.id}/materials`} className="flex-1 md:flex-none">
+                        <Button variant="outline" className="w-full border-slate-300 text-slate-700">
+                            <FolderOpen size={16} className="mr-2" /> Materiales ({materialCount})
+                        </Button>
+                    </Link>
                     <Link href={`/admin/courses/${course.id}/registrations`} className="flex-1 md:flex-none">
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                             <Users size={16} className="mr-2" /> Ver Alumnos

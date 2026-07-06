@@ -1,10 +1,12 @@
 import { requireCustomerPortalCourse } from '@/lib/auth/customer-portal';
 import { getCourseAccessMessage } from '@/lib/auth/course-access';
+import { fetchCourseMaterials } from '@/lib/data/course-material-data';
 import { lusitana } from '@/app/fonts';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CourseRegistrationStatusBadges } from '../_components/course-status-badges';
 import CourseClassroomContent from '../_components/course-classroom-content';
+import { CourseMaterialsSection } from '@/components/education/course-materials-section';
 import { Lock } from 'lucide-react';
 
 export default async function CustomerCourseDetailPage(props: {
@@ -12,6 +14,9 @@ export default async function CustomerCourseDetailPage(props: {
 }) {
   const { slug } = await props.params;
   const { course } = await requireCustomerPortalCourse(slug);
+  const materials = course.canAccessClassroom
+    ? await fetchCourseMaterials(course.id)
+    : [];
   const accessMessage = getCourseAccessMessage(
     {
       registrationStatus: course.registrationStatus,
@@ -39,14 +44,27 @@ export default async function CustomerCourseDetailPage(props: {
       </div>
 
       {course.canAccessClassroom ? (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Información del curso</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CourseClassroomContent course={course} />
-          </CardContent>
-        </Card>
+        <>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Información del curso</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CourseClassroomContent course={course} />
+            </CardContent>
+          </Card>
+
+          {materials.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Materiales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CourseMaterialsSection materials={materials} />
+              </CardContent>
+            </Card>
+          )}
+        </>
       ) : (
         <Card className="mt-6 border-amber-200 bg-amber-50">
           <CardHeader>
