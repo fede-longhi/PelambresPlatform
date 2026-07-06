@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { canAccessCustomer } from '@/lib/auth/permissions';
-import { canAccessCourseClassroom } from '@/lib/auth/course-access';
 import { fetchCourseMaterialById } from '@/lib/data/course-material-data';
 import { fetchCustomerCourseBySlug } from '@/lib/data/customer-course-data';
 
@@ -41,14 +40,7 @@ export async function GET(_request: Request, context: RouteContext) {
     material.courseSlug
   );
 
-  if (
-    !course ||
-    !canAccessCourseClassroom({
-      registrationStatus: course.registrationStatus,
-      paymentStatus: course.paymentStatus,
-      price: course.price,
-    })
-  ) {
+  if (!course?.canAccessClassroom) {
     return NextResponse.json({ error: 'No tenés acceso a este material.' }, { status: 403 });
   }
 
