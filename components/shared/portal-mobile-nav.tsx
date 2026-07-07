@@ -44,9 +44,6 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
   return (
     <>
       <header className="sticky top-0 z-40 flex items-center gap-2 border-b border-border/40 bg-primary px-3 py-2 md:hidden">
-        <Link href={logoHref} className="min-w-0 flex-1 overflow-hidden">
-          <PelambresSidenavLogo />
-        </Link>
         <Button
           type="button"
           variant="ghost"
@@ -58,6 +55,9 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
         >
           <Menu className="h-6 w-6" />
         </Button>
+        <Link href={logoHref} className="min-w-0 flex-1 overflow-hidden">
+          <PelambresSidenavLogo />
+        </Link>
       </header>
 
       {isOpen ? (
@@ -71,13 +71,13 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[min(100vw,20rem)] flex-col bg-background shadow-lg transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(100vw,20rem)] flex-col overflow-hidden bg-background shadow-lg transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:shadow-none',
           isOpen
             ? 'translate-x-0'
             : '-translate-x-full max-md:pointer-events-none md:translate-x-0'
         )}
       >
-        <div className="flex items-center justify-end border-b p-2 md:hidden">
+        <div className="flex shrink-0 items-center justify-end border-b p-2 md:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -89,7 +89,7 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
           </Button>
         </div>
 
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4">{children}</div>
       </aside>
     </>
   );

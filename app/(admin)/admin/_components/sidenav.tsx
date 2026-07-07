@@ -10,7 +10,7 @@ import RoleSwitchNavItem from '@/components/shared/role-switch-nav-item';
 export default async function SideNav() {
   return (
     <PortalMobileNav logoHref="/">
-      <div className="flex h-full flex-col px-3 py-4 md:px-2">
+      <div className="flex flex-col px-3 py-4 md:h-full md:px-2">
         <Link
           className="mb-2 hidden h-28 items-center rounded-md bg-primary p-3 md:flex"
           href="/"
@@ -20,7 +20,7 @@ export default async function SideNav() {
 
         <UserProfile />
 
-        <div className="flex grow flex-col space-y-2">
+        <div className="flex flex-col space-y-2 md:grow">
           <NavLinks />
           <div className="hidden grow md:block" />
           <RoleSwitchNavItem />
