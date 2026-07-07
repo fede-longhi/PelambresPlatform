@@ -17,7 +17,7 @@ export default async function CustomerSideNav() {
 
   return (
     <PortalMobileNav logoHref="/customer">
-      <div className="flex h-full flex-col px-3 py-4 md:px-2">
+      <div className="flex flex-col px-3 py-4 md:h-full md:px-2">
         <Link
           className="mb-2 hidden h-24 items-center rounded-md bg-primary p-3 md:flex"
           href="/customer"
@@ -30,7 +30,7 @@ export default async function CustomerSideNav() {
           email={session.user.email ?? ''}
         />
 
-        <div className="flex grow flex-col space-y-2">
+        <div className="flex flex-col space-y-2 md:grow">
           <CustomerNavLinks />
           <div className="hidden grow md:block" />
           <RoleSwitchNavItem />
