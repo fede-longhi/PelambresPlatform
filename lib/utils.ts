@@ -167,6 +167,24 @@ export function splitPersonName(fullName: string) {
     };
 }
 
+export function composeUserFullName(firstName: string, lastName: string): string {
+    return [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
+}
+
+export function getUserDisplayName(user: {
+    first_name?: string | null;
+    last_name?: string | null;
+    name?: string | null;
+}): string {
+    const composedName = composeUserFullName(user.first_name ?? '', user.last_name ?? '');
+
+    if (composedName) {
+        return composedName;
+    }
+
+    return (user.name ?? '').trim();
+}
+
 export function getOrderCustomerName(order: OrderTable) {
     return order.customer_type === 'person' ? order.last_name + ", " + order.first_name : order.name;
 }

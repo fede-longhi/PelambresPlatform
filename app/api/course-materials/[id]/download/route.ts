@@ -36,7 +36,6 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const course = await fetchCustomerCourseBySlug(
     sessionUser.id,
-    sessionUser.email,
     material.courseSlug
   );
 

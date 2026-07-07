@@ -57,8 +57,7 @@ function withClassroomAccess(course: CustomerCourseRow): CustomerCourseDetail {
 }
 
 export async function fetchCustomerCourses(
-  userId: string,
-  email: string
+  userId: string
 ): Promise<CustomerCourseRegistration[]> {
   try {
     const rows = await sql<Omit<CustomerCourseRegistration, 'canAccessClassroom'>[]>`
@@ -78,13 +77,7 @@ export async function fetchCustomerCourses(
         c.currency
       FROM course_registrations r
       JOIN courses c ON c.id = r.course_id
-      WHERE (
-        r.user_id = ${userId}
-        OR (
-          r.user_id IS NULL
-          AND lower(trim(r.email_address)) = lower(trim(${email}))
-        )
-      )
+      WHERE r.user_id = ${userId}
         AND c.deleted_at IS NULL
         AND r.registration_status != 'cancelled'
       ORDER BY r.created_at DESC
@@ -108,7 +101,6 @@ export async function fetchCustomerCourses(
 
 export async function fetchCustomerCourseBySlug(
   userId: string,
-  email: string,
   slug: string
 ): Promise<CustomerCourseDetail | undefined> {
   try {
@@ -135,13 +127,7 @@ export async function fetchCustomerCourseBySlug(
         c.notes
       FROM course_registrations r
       JOIN courses c ON c.id = r.course_id
-      WHERE (
-        r.user_id = ${userId}
-        OR (
-          r.user_id IS NULL
-          AND lower(trim(r.email_address)) = lower(trim(${email}))
-        )
-      )
+      WHERE r.user_id = ${userId}
         AND c.slug = ${slug}
         AND c.deleted_at IS NULL
         AND r.registration_status != 'cancelled'

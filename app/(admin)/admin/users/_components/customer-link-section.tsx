@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useDebouncedCallback } from 'use-debounce';
 import CustomerSelectField, {
   type CustomerField,
 } from '@/components/shared/customer-select-field';
@@ -31,11 +30,11 @@ export default function CustomerLinkSection({
     customerName?: string[];
   };
 }) {
-  const [linkMode, setLinkMode] = useState<CustomerLinkMode>('existing');
-  const [customerType, setCustomerType] = useState<'person' | 'business'>('person');
-  const [emailMatch, setEmailMatch] = useState<CustomerField | null>(
-    defaultCustomer?.value ? defaultCustomer : null
+  const [linkMode, setLinkMode] = useState<CustomerLinkMode>(
+    defaultCustomer?.value ? 'existing' : 'existing'
   );
+  const [customerType, setCustomerType] = useState<'person' | 'business'>('person');
+  const [suggestedCustomer, setSuggestedCustomer] = useState<CustomerField | null>(null);
   const [isLookingUpEmail, setIsLookingUpEmail] = useState(false);
 
   const nameParts = useMemo(() => splitPersonName(userName), [userName]);
@@ -52,45 +51,51 @@ export default function CustomerLinkSection({
     }
   }, [linkMode, nameParts, userName]);
 
-  const lookupCustomerByEmail = useDebouncedCallback(async (email: string) => {
-    const trimmedEmail = email.trim();
+  useEffect(() => {
+    const trimmedEmail = userEmail.trim();
 
     if (!trimmedEmail || !trimmedEmail.includes('@')) {
-      setEmailMatch(defaultCustomer?.value ? defaultCustomer : null);
+      setSuggestedCustomer(null);
       return;
     }
 
+    let cancelled = false;
     setIsLookingUpEmail(true);
 
-    try {
-      const customer = await fetchCustomerByEmail(trimmedEmail);
-
-      if (customer) {
-        setEmailMatch({
-          value: customer.id,
-          label: getCustomerName(customer),
-        });
-        setLinkMode('existing');
-      } else {
-        setEmailMatch(defaultCustomer?.value ? defaultCustomer : null);
-        if (!defaultCustomer?.value) {
-          setLinkMode('create');
+    fetchCustomerByEmail(trimmedEmail)
+      .then((customer) => {
+        if (cancelled) {
+          return;
         }
-      }
-    } finally {
-      setIsLookingUpEmail(false);
-    }
-  }, 400);
 
-  useEffect(() => {
-    lookupCustomerByEmail(userEmail);
-  }, [userEmail, lookupCustomerByEmail]);
+        if (customer) {
+          setSuggestedCustomer({
+            value: customer.id,
+            label: getCustomerName(customer),
+          });
+        } else {
+          setSuggestedCustomer(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLookingUpEmail(false);
+        }
+      });
 
-  const selectedCustomer = emailMatch ?? defaultCustomer;
+    return () => {
+      cancelled = true;
+    };
+  }, [userEmail]);
 
   return (
     <fieldset className="space-y-4 rounded-md border border-gray-200 bg-white p-4">
       <legend className="px-1 text-sm font-medium">Vinculación con cliente</legend>
+
+      <p className="text-xs text-muted-foreground">
+        Varios usuarios pueden vincularse al mismo cliente empresa. El email del usuario no tiene
+        que coincidir con el del cliente.
+      </p>
 
       <input type="hidden" name="customer-link-mode" value={linkMode} />
 
@@ -98,15 +103,17 @@ export default function CustomerLinkSection({
         <p className="text-xs text-muted-foreground">Buscando cliente por email...</p>
       )}
 
-      {!isLookingUpEmail && emailMatch && linkMode === 'existing' && (
-        <p className="text-xs text-green-700">
-          Cliente encontrado por email: <span className="font-medium">{emailMatch.label}</span>
+      {!isLookingUpEmail && suggestedCustomer && linkMode === 'existing' && (
+        <p className="text-xs text-slate-600">
+          Sugerencia: existe un cliente con el mismo email ({suggestedCustomer.label}). Podés
+          buscarlo en el selector o elegir otro cliente.
         </p>
       )}
 
-      {!isLookingUpEmail && !emailMatch && userEmail.includes('@') && linkMode === 'create' && (
+      {!isLookingUpEmail && !suggestedCustomer && userEmail.includes('@') && linkMode === 'create' && (
         <p className="text-xs text-amber-700">
-          No hay un cliente con este email. Completamos los datos del nuevo cliente con la información del usuario.
+          No hay un cliente con este email. Completamos los datos del nuevo cliente con la
+          información del usuario.
         </p>
       )}
 
@@ -134,8 +141,8 @@ export default function CustomerLinkSection({
       {linkMode === 'existing' ? (
         <div>
           <CustomerSelectField
-            key={selectedCustomer?.value ?? 'no-customer'}
-            defaultValue={selectedCustomer}
+            key={defaultCustomer?.value ?? 'no-customer'}
+            defaultValue={defaultCustomer}
             defaultEmail={userEmail}
             defaultFirstName={nameParts.firstName}
             defaultLastName={nameParts.lastName}
@@ -192,7 +199,10 @@ export default function CustomerLinkSection({
                   value={firstName}
                   onChange={(event) => setFirstName(event.target.value)}
                 />
-                <FieldErrorDisplay id="customer-first-name-error" errors={errors?.customerFirstName} />
+                <FieldErrorDisplay
+                  id="customer-first-name-error"
+                  errors={errors?.customerFirstName}
+                />
               </div>
               <div>
                 <Label htmlFor="customer-last-name">Apellido</Label>

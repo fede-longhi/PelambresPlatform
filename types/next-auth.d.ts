@@ -8,6 +8,7 @@ declare module 'next-auth' {
       role: UserRole;
       isActive: boolean;
       mustChangePassword: boolean;
+      hasPlatformAccess: boolean;
     } & DefaultSession['user'];
   }
 
@@ -15,6 +16,7 @@ declare module 'next-auth' {
     role: UserRole;
     isActive: boolean;
     mustChangePassword: boolean;
+    hasPlatformAccess: boolean;
   }
 }
 
@@ -24,5 +26,6 @@ declare module 'next-auth/jwt' {
     role: UserRole;
     isActive: boolean;
     mustChangePassword: boolean;
+    hasPlatformAccess: boolean;
   }
 }

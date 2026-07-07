@@ -108,13 +108,33 @@ export type RegistrationConfirmationRow = {
 export type CourseRegistrationSummary = {
     id: string;
     registrationStatus: string;
-    userId: string | null;
+    userId: string;
 };
 
-export type CourseRegistrationLookup = {
-    userId?: string | null;
-    email: string;
-};
+export async function fetchExistingCourseRegistrationByUserId(
+    courseId: string,
+    userId: string
+): Promise<CourseRegistrationSummary | undefined> {
+    try {
+        const rows = await sql<CourseRegistrationSummary[]>`
+            SELECT
+                id,
+                registration_status as "registrationStatus",
+                user_id as "userId"
+            FROM course_registrations
+            WHERE course_id = ${courseId}
+              AND registration_status != 'cancelled'
+              AND user_id = ${userId}
+            ORDER BY created_at DESC
+            LIMIT 1
+        `;
+
+        return rows[0];
+    } catch (error) {
+        console.error('Database error fetching course registration by user:', error);
+        throw new Error('Failed to fetch course registration.');
+    }
+}
 
 export async function fetchAdminCourses(): Promise<AdminCourseListItem[]> {
     try {
@@ -226,11 +246,25 @@ export async function fetchCourseRegistrations(courseId: string): Promise<Course
     try {
         return await sql<CourseRegistrationRow[]>`
             SELECT 
-                id, full_name as name, email_address as email, phone_number as phone, created_at, 
-                registration_status, payment_status, payment_method, attended
-            FROM course_registrations 
-            WHERE course_id = ${courseId}
-            ORDER BY created_at DESC
+                r.id,
+                COALESCE(
+                    NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+                    NULLIF(TRIM(u.name), ''),
+                    u.email
+                ) as name,
+                u.email as email,
+                COALESCE(c.phone, r.phone_number) as phone,
+                r.created_at,
+                r.registration_status,
+                r.payment_status,
+                r.payment_method,
+                r.attended
+            FROM course_registrations r
+            JOIN users u ON u.id = r.user_id
+            LEFT JOIN customers c ON c.id = u.customer_id
+            WHERE r.course_id = ${courseId}
+              AND u.deleted_at IS NULL
+            ORDER BY r.created_at DESC
         `;
     } catch (error) {
         console.error('Database error fetching registrations:', error);
@@ -241,10 +275,19 @@ export async function fetchCourseRegistrations(courseId: string): Promise<Course
 export async function fetchBroadcastRegistrants(courseId: string): Promise<BroadcastRegistrant[]> {
     try {
         return await sql<BroadcastRegistrant[]>`
-            SELECT id, full_name as name, email_address as email 
-            FROM course_registrations 
-            WHERE course_id = ${courseId}
-            ORDER BY full_name ASC
+            SELECT
+                r.id,
+                COALESCE(
+                    NULLIF(TRIM(CONCAT_WS(' ', u.first_name, u.last_name)), ''),
+                    NULLIF(TRIM(u.name), ''),
+                    u.email
+                ) as name,
+                u.email as email
+            FROM course_registrations r
+            JOIN users u ON u.id = r.user_id
+            WHERE r.course_id = ${courseId}
+              AND u.deleted_at IS NULL
+            ORDER BY name ASC
         `;
     } catch (error) {
         console.error('Database error fetching registrants:', error);
@@ -334,76 +377,6 @@ export async function fetchRegistrationByConfirmationToken(
     }
 }
 
-export async function fetchExistingCourseRegistration(
-    courseId: string,
-    lookup: CourseRegistrationLookup
-): Promise<CourseRegistrationSummary | undefined> {
-    const email = lookup.email.trim();
-    const userId = lookup.userId ?? null;
-
-    try {
-        const rows = userId
-            ? await sql<CourseRegistrationSummary[]>`
-                SELECT
-                    id,
-                    registration_status as "registrationStatus",
-                    user_id as "userId"
-                FROM course_registrations
-                WHERE course_id = ${courseId}
-                  AND registration_status != 'cancelled'
-                  AND (
-                    user_id = ${userId}
-                    OR lower(trim(email_address)) = lower(trim(${email}))
-                  )
-                ORDER BY created_at DESC
-                LIMIT 1
-            `
-            : await sql<CourseRegistrationSummary[]>`
-                SELECT
-                    id,
-                    registration_status as "registrationStatus",
-                    user_id as "userId"
-                FROM course_registrations
-                WHERE course_id = ${courseId}
-                  AND registration_status != 'cancelled'
-                  AND lower(trim(email_address)) = lower(trim(${email}))
-                ORDER BY created_at DESC
-                LIMIT 1
-            `;
-
-        return rows[0];
-    } catch (error) {
-        console.error('Database error fetching course registration:', error);
-        throw new Error('Failed to fetch course registration.');
-    }
-}
-
-/** @deprecated Use fetchExistingCourseRegistration */
-export async function fetchCourseRegistrationByEmail(
-    courseId: string,
-    email: string
-): Promise<CourseRegistrationSummary | undefined> {
-    return fetchExistingCourseRegistration(courseId, { email });
-}
-
-export async function linkCourseRegistrationsToUser(
-    userId: string,
-    email: string
-): Promise<void> {
-    try {
-        await sql`
-            UPDATE course_registrations
-            SET user_id = ${userId}
-            WHERE user_id IS NULL
-              AND lower(trim(email_address)) = lower(trim(${email}))
-              AND registration_status != 'cancelled'
-        `;
-    } catch (error) {
-        console.error('Database error linking course registrations to user:', error);
-        throw new Error('Failed to link course registrations to user.');
-    }
-}
-
 export async function markRegistrationConfirmed(registrationId: string): Promise<void> {
     try {
         await sql`
@@ -414,18 +387,7 @@ export async function markRegistrationConfirmed(registrationId: string): Promise
                 payment_status = CASE
                     WHEN COALESCE(c.price, 0) <= 0 THEN 'paid'
                     ELSE r.payment_status
-                END,
-                user_id = COALESCE(
-                    r.user_id,
-                    (
-                        SELECT u.id
-                        FROM users u
-                        WHERE lower(trim(u.email)) = lower(trim(r.email_address))
-                          AND u.role = 'customer'
-                          AND u.deleted_at IS NULL
-                        LIMIT 1
-                    )
-                )
+                END
             FROM courses c
             WHERE r.id = ${registrationId}
               AND r.course_id = c.id

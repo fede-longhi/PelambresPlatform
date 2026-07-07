@@ -9,14 +9,20 @@ import {
   generateUniqueUsername,
   resolveOrCreateCustomerId,
 } from '@/lib/actions/oauth-customer-actions';
-import { linkCourseRegistrationsToUser } from '@/lib/data/course-data';
 import { fetchUserByEmailAndRole } from '@/lib/data/user-data';
 import { hashPassword } from '@/lib/utils/password';
+import { composeUserFullName } from '@/lib/utils';
+import { userHasAuthCredentials } from '@/lib/auth/platform-access';
+import {
+  EXISTING_PLATFORM_ACCOUNT_REGISTER_MESSAGE,
+} from '@/lib/auth/enrollment-messages';
+import { resolveSafeRedirectPath } from '@/lib/auth/safe-redirect';
 import type { User } from '@/types/user-definitions';
 
 const RegisterSchema = z
   .object({
-    name: z.string().trim().min(3, { message: 'El nombre debe tener al menos 3 caracteres.' }),
+    firstName: z.string().trim().min(1, { message: 'El nombre es obligatorio.' }),
+    lastName: z.string().trim().optional().default(''),
     email: z.string().trim().email({ message: 'Ingresá un correo electrónico válido.' }),
     password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
     confirmPassword: z.string().min(1, { message: 'Confirmá la contraseña.' }),
@@ -28,7 +34,8 @@ const RegisterSchema = z
 
 export type RegisterFormState = {
   errors?: {
-    name?: string[];
+    firstName?: string[];
+    lastName?: string[];
     email?: string[];
     password?: string[];
     confirmPassword?: string[];
@@ -37,12 +44,39 @@ export type RegisterFormState = {
   success?: boolean;
 };
 
+async function signInRegisteredCustomer(
+  email: string,
+  password: string,
+  redirectTo: string
+) {
+  const signInResult = await signIn('credentials', {
+    email,
+    password,
+    role: 'customer',
+    redirectTo,
+    redirect: false,
+  });
+
+  if (signInResult?.error) {
+    return {
+      success: false as const,
+      message:
+        'La cuenta se activó, pero no pudimos iniciar sesión automáticamente. Probá ingresar manualmente.',
+    };
+  }
+
+  return { success: true as const };
+}
+
 export async function registerCustomer(
   _previousState: RegisterFormState,
   formData: FormData
 ): Promise<RegisterFormState> {
+  const redirectTo = resolveSafeRedirectPath(formData.get('redirectTo'));
+
   const validatedFields = RegisterSchema.safeParse({
-    name: formData.get('name'),
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
     email: formData.get('email'),
     password: formData.get('password'),
     confirmPassword: formData.get('confirmPassword'),
@@ -56,26 +90,76 @@ export async function registerCustomer(
     };
   }
 
-  const { name, email, password } = validatedFields.data;
+  const { firstName, lastName, email, password } = validatedFields.data;
   const normalizedEmail = email.trim().toLowerCase();
+  const fullName = composeUserFullName(firstName, lastName);
+  const hashedPassword = await hashPassword(password);
 
   const existingCustomerUser = await fetchUserByEmailAndRole(normalizedEmail, 'customer');
 
   if (existingCustomerUser) {
-    return {
-      success: false,
-      message: 'Ya existe una cuenta de cliente con ese email.',
-    };
+    if (userHasAuthCredentials(existingCustomerUser)) {
+      return {
+        success: false,
+        message: EXISTING_PLATFORM_ACCOUNT_REGISTER_MESSAGE,
+      };
+    }
+
+    try {
+      const customerId =
+        existingCustomerUser.customer_id ??
+        (await resolveOrCreateCustomerId(normalizedEmail, fullName));
+
+      await sql`
+        UPDATE users
+        SET
+          first_name = ${firstName},
+          last_name = ${lastName},
+          name = ${fullName},
+          password = ${hashedPassword},
+          customer_id = ${customerId},
+          must_change_password = false
+        WHERE id = ${existingCustomerUser.id}
+          AND deleted_at IS NULL
+      `;
+
+      const signInResult = await signInRegisteredCustomer(
+        normalizedEmail,
+        password,
+        redirectTo
+      );
+
+      if (!signInResult.success) {
+        return signInResult;
+      }
+    } catch (error) {
+      if (error instanceof AuthError) {
+        return {
+          success: false,
+          message:
+            'La cuenta se activó, pero no pudimos iniciar sesión automáticamente. Probá ingresar manualmente.',
+        };
+      }
+
+      console.error('Failed to activate provisional customer account:', error);
+      return {
+        success: false,
+        message: 'No se pudo activar la cuenta. Intentá nuevamente.',
+      };
+    }
+
+    redirect(redirectTo);
   }
 
   try {
-    const customerId = await resolveOrCreateCustomerId(normalizedEmail, name);
+    const customerId = await resolveOrCreateCustomerId(normalizedEmail, fullName);
     const username = await generateUniqueUsername(normalizedEmail);
-    const hashedPassword = await hashPassword(password);
 
     const insertedUsers = await sql<User[]>`
       INSERT INTO users (
         username,
+        first_name,
+        last_name,
         name,
         email,
         password,
@@ -87,7 +171,9 @@ export async function registerCustomer(
       )
       VALUES (
         ${username},
-        ${name},
+        ${firstName},
+        ${lastName},
+        ${fullName},
         ${normalizedEmail},
         ${hashedPassword},
         NULL,
@@ -101,29 +187,21 @@ export async function registerCustomer(
 
     const insertedUser = insertedUsers[0];
 
-    if (insertedUser) {
-      await linkCourseRegistrationsToUser(insertedUser.id, normalizedEmail);
-    }
-
-    const signInResult = await signIn('credentials', {
-      email: normalizedEmail,
+    const signInResult = await signInRegisteredCustomer(
+      normalizedEmail,
       password,
-      role: 'customer',
-      redirectTo: '/customer',
-      redirect: false,
-    });
+      redirectTo
+    );
 
-    if (signInResult?.error) {
-      return {
-        success: false,
-        message: 'La cuenta se creó, pero no pudimos iniciar sesión automáticamente. Probá ingresar manualmente.',
-      };
+    if (!signInResult.success) {
+      return signInResult;
     }
   } catch (error) {
     if (error instanceof AuthError) {
       return {
         success: false,
-        message: 'La cuenta se creó, pero no pudimos iniciar sesión automáticamente. Probá ingresar manualmente.',
+        message:
+          'La cuenta se creó, pero no pudimos iniciar sesión automáticamente. Probá ingresar manualmente.',
       };
     }
 
@@ -134,5 +212,5 @@ export async function registerCustomer(
     };
   }
 
-  redirect('/customer');
+  redirect(redirectTo);
 }

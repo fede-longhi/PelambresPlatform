@@ -2,16 +2,16 @@
 
 import sql from '@/lib/db';
 import { createCustomerRecord } from '@/lib/actions/customer-actions';
-import { linkCourseRegistrationsToUser } from '@/lib/data/course-data';
 import { fetchCustomerByEmail } from '@/lib/data/customer-data';
 import { fetchUserByEmailAndRole } from '@/lib/data/user-data';
-import { splitPersonName } from '@/lib/utils';
+import { composeUserFullName, splitPersonName } from '@/lib/utils';
 import type { User } from '@/types/user-definitions';
 
 type OAuthProfile = {
   email: string;
   name: string;
   imageUrl?: string | null;
+  googleSubjectId?: string | null;
 };
 
 export async function generateUniqueUsername(email: string): Promise<string> {
@@ -81,11 +81,34 @@ export async function syncOAuthUserImage(userId: string, imageUrl: string | null
   }
 }
 
+export async function syncGoogleSubjectId(
+  userId: string,
+  googleSubjectId: string | null | undefined
+) {
+  if (!googleSubjectId) {
+    return;
+  }
+
+  try {
+    await sql`
+      UPDATE users
+      SET google_subject_id = ${googleSubjectId}
+      WHERE id = ${userId}
+        AND deleted_at IS NULL
+    `;
+  } catch (error) {
+    console.error('Failed to sync Google subject id:', error);
+  }
+}
+
 export async function provisionCustomerUserFromOAuth(
   profile: OAuthProfile
 ): Promise<User | null> {
   const email = profile.email.trim();
   const displayName = profile.name.trim() || email.split('@')[0];
+  const { firstName, lastName } = splitPersonName(displayName);
+  const resolvedFirstName = firstName || email.split('@')[0];
+  const fullName = composeUserFullName(resolvedFirstName, lastName);
 
   const existingCustomerUser = await fetchUserByEmailAndRole(email, 'customer');
 
@@ -95,21 +118,24 @@ export async function provisionCustomerUserFromOAuth(
     }
 
     await syncOAuthUserImage(existingCustomerUser.id, profile.imageUrl);
-    await linkCourseRegistrationsToUser(existingCustomerUser.id, email);
+    await syncGoogleSubjectId(existingCustomerUser.id, profile.googleSubjectId);
     return existingCustomerUser;
   }
 
   try {
-    const customerId = await resolveOrCreateCustomerId(email, displayName);
+    const customerId = await resolveOrCreateCustomerId(email, fullName);
     const username = await generateUniqueUsername(email);
 
     const insertedUsers = await sql<User[]>`
       INSERT INTO users (
         username,
+        first_name,
+        last_name,
         name,
         email,
         password,
         image_url,
+        google_subject_id,
         role,
         customer_id,
         must_change_password,
@@ -117,10 +143,13 @@ export async function provisionCustomerUserFromOAuth(
       )
       VALUES (
         ${username},
-        ${displayName},
+        ${resolvedFirstName},
+        ${lastName},
+        ${fullName},
         ${email},
         NULL,
         ${profile.imageUrl ?? null},
+        ${profile.googleSubjectId ?? null},
         'customer',
         ${customerId},
         false,
@@ -130,10 +159,6 @@ export async function provisionCustomerUserFromOAuth(
     `;
 
     const insertedUser = insertedUsers[0] ?? null;
-
-    if (insertedUser) {
-      await linkCourseRegistrationsToUser(insertedUser.id, email);
-    }
 
     return insertedUser;
   } catch (error) {

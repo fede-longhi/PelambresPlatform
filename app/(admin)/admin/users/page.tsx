@@ -1,5 +1,6 @@
-import { fetchUsersPages } from '@/lib/data/user-data';
+import { fetchUsersPages, parseUserListFilter } from '@/lib/data/user-data';
 import UsersTable from '@/app/(admin)/admin/users/_components/users-table';
+import UsersFilter from '@/app/(admin)/admin/users/_components/users-filter';
 import { lusitana } from '@/app/fonts';
 import Pagination from '@/components/ui/pagination';
 import Search from '@/app/(admin)/admin/_components/search';
@@ -12,12 +13,14 @@ export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
     page?: string;
+    filter?: string;
   }>;
 }) {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
-  const totalPages = await fetchUsersPages(query);
+  const filter = parseUserListFilter(searchParams?.filter);
+  const totalPages = await fetchUsersPages(query, filter);
 
   return (
     <div className="w-full">
@@ -35,13 +38,14 @@ export default async function Page(props: {
           </Link>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:mt-8">
           <Search placeholder="Buscar usuarios..." />
+          <UsersFilter />
         </div>
 
         <div className="mt-4">
-          <Suspense key={query + currentPage} fallback={<UsersTableSkeleton />}>
-            <UsersTable query={query} currentPage={currentPage} />
+          <Suspense key={query + currentPage + filter} fallback={<UsersTableSkeleton />}>
+            <UsersTable query={query} currentPage={currentPage} filter={filter} />
           </Suspense>
         </div>
 

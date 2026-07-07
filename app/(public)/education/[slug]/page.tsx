@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { auth } from '@/auth';
-import { fetchExistingCourseRegistration, fetchPublishedCourseBySlug } from '@/lib/data/course-data';
+import { fetchExistingCourseRegistrationByUserId, fetchPublishedCourseBySlug } from '@/lib/data/course-data';
+import { fetchUserById } from '@/lib/data/user-data';
+import { getUserDisplayName } from '@/lib/utils';
 import {
     CourseRegistrationForm,
     type CourseRegistrationSession,
@@ -50,14 +52,20 @@ export default async function PublicCoursePage({ params }: CoursePageProps) {
     const sessionUser = session?.user;
     let registrationSession: CourseRegistrationSession | undefined;
 
-    if (sessionUser?.email && sessionUser.isActive !== false) {
-        const existingRegistration = await fetchExistingCourseRegistration(course.id, {
-            email: sessionUser.email,
-            userId: sessionUser.id,
-        });
+    if (
+        sessionUser?.id &&
+        sessionUser.email &&
+        sessionUser.isActive !== false &&
+        sessionUser.hasPlatformAccess
+    ) {
+        const dbUser = await fetchUserById(sessionUser.id);
+        const existingRegistration = await fetchExistingCourseRegistrationByUserId(
+            course.id,
+            sessionUser.id
+        );
 
         registrationSession = {
-            name: sessionUser.name ?? '',
+            name: dbUser ? getUserDisplayName(dbUser) : sessionUser.name ?? '',
             email: sessionUser.email,
             existingRegistration: existingRegistration
                 ? { status: existingRegistration.registrationStatus }

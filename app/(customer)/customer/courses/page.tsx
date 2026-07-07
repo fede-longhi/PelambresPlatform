@@ -7,8 +7,8 @@ import { COURSE_MODALITIES } from '@/lib/consts/course-consts';
 import { Button } from '@/components/ui/button';
 
 export default async function CustomerCoursesPage() {
-  const { userId, email } = await requireCustomerPortalContext();
-  const courses = await fetchCustomerCourses(userId, email);
+  const { userId } = await requireCustomerPortalContext();
+  const courses = await fetchCustomerCourses(userId);
 
   return (
     <div className="w-full max-w-4xl">

@@ -2,19 +2,29 @@
 
 import { useActionState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { AtSymbolIcon, KeyIcon, UserIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/fonts';
 import { Button } from '@/components/ui/button';
 import { registerCustomer, type RegisterFormState } from '@/lib/actions/register-actions';
 import FieldErrorDisplay from '@/components/ui/field-error-display';
+import { resolveSafeRedirectPath } from '@/lib/auth/safe-redirect';
 
 export default function RegisterForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = resolveSafeRedirectPath(searchParams.get('callbackUrl'));
+  const loginHref =
+    redirectTo === '/customer'
+      ? '/login'
+      : `/login?callbackUrl=${encodeURIComponent(redirectTo)}`;
+
   const initialState: RegisterFormState = { message: null, success: false };
   const [state, formAction, isPending] = useActionState(registerCustomer, initialState);
 
   return (
     <form action={formAction} className="space-y-3">
+      <input type="hidden" name="redirectTo" value={redirectTo} />
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
         <h1 className={`${lusitana.className} mb-1 text-2xl`}>Crear cuenta</h1>
         <p className="mb-3 text-sm text-muted-foreground">
@@ -22,23 +32,40 @@ export default function RegisterForm() {
         </p>
 
         <div className="w-full space-y-4">
-          <div>
-            <label className="mb-3 mt-2 block text-xs font-medium text-gray-900" htmlFor="name">
-              Nombre completo
-            </label>
-            <div className="relative">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-3 mt-2 block text-xs font-medium text-gray-900" htmlFor="firstName">
+                Nombre
+              </label>
+              <div className="relative">
+                <input
+                  className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+                  id="firstName"
+                  type="text"
+                  name="firstName"
+                  placeholder="Tu nombre"
+                  required
+                  disabled={isPending}
+                />
+                <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+              </div>
+              <FieldErrorDisplay id="first-name-error" errors={state.errors?.firstName} />
+            </div>
+
+            <div>
+              <label className="mb-3 mt-2 block text-xs font-medium text-gray-900" htmlFor="lastName">
+                Apellido
+              </label>
               <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-                id="name"
+                className="block w-full rounded-md border border-gray-200 py-[9px] px-3 text-sm outline-2 placeholder:text-gray-500"
+                id="lastName"
                 type="text"
-                name="name"
-                placeholder="Tu nombre"
-                required
+                name="lastName"
+                placeholder="Tu apellido"
                 disabled={isPending}
               />
-              <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+              <FieldErrorDisplay id="last-name-error" errors={state.errors?.lastName} />
             </div>
-            <FieldErrorDisplay id="name-error" errors={state.errors?.name} />
           </div>
 
           <div>
@@ -111,7 +138,7 @@ export default function RegisterForm() {
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
           ¿Ya tenés cuenta?{' '}
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link href={loginHref} className="font-medium text-primary hover:underline">
             Iniciá sesión
           </Link>
         </div>

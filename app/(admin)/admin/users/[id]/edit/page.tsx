@@ -2,7 +2,7 @@ import { fetchUserById } from '@/lib/data/user-data';
 import { fetchCustomerById } from '@/lib/data/customer-data';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import EditUserForm from '@/app/(admin)/admin/users/_components/edit-form';
-import { getCustomerName } from '@/lib/utils';
+import { getCustomerName, getUserDisplayName } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
@@ -30,7 +30,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         breadcrumbs={[
           { label: 'Usuarios', href: '/admin/users' },
           {
-            label: user.name,
+            label: getUserDisplayName(user),
             href: `/admin/users/${id}/edit`,
             active: true,
           },

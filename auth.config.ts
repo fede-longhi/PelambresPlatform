@@ -4,7 +4,7 @@ import {
   getPortalPathForRole,
   shouldRedirectLoggedInUserFromAuthEntry,
 } from '@/lib/auth/public-routes';
-import { fetchUserById } from '@/lib/data/user-data';
+import { fetchUserById, fetchUserCanAccessPlatformById } from '@/lib/data/user-data';
 import type { UserRole } from '@/types/user-definitions';
 
 export const authConfig = {
@@ -39,6 +39,10 @@ export const authConfig = {
                     return false;
                 }
 
+                if (auth.user.hasPlatformAccess === false) {
+                    return false;
+                }
+
                 if (auth.user.mustChangePassword && !isSetPasswordRoute) {
                     return Response.redirect(new URL('/set-password', request.nextUrl));
                 }
@@ -63,6 +67,7 @@ export const authConfig = {
             if (
                 isLoggedIn &&
                 auth.user.isActive !== false &&
+                auth.user.hasPlatformAccess !== false &&
                 !auth.user.mustChangePassword
             ) {
                 if (shouldRedirectLoggedInUserFromAuthEntry(pathname)) {
@@ -92,26 +97,34 @@ export const authConfig = {
                 token.role = user.role;
                 token.isActive = user.isActive;
                 token.mustChangePassword = user.mustChangePassword;
-            } else if (token.id && !token.role) {
-                const dbUser = await fetchUserById(String(token.id));
+                token.hasPlatformAccess = user.hasPlatformAccess;
+            } else if (token.id) {
+                if (!token.role) {
+                    const dbUser = await fetchUserById(String(token.id));
 
-                if (dbUser) {
-                    token.role = dbUser.role;
-                    token.isActive = dbUser.is_active;
-                    token.mustChangePassword = dbUser.must_change_password;
+                    if (dbUser) {
+                        token.role = dbUser.role;
+                        token.isActive = dbUser.is_active;
+                        token.mustChangePassword = dbUser.must_change_password;
+                    }
+                }
+
+                if (token.hasPlatformAccess === undefined) {
+                    token.hasPlatformAccess = await fetchUserCanAccessPlatformById(String(token.id));
                 }
             }
 
             return token;
         },
         async session({ session, token }) {
-            const { id, role, isActive, mustChangePassword } = token as JWT;
+            const { id, role, isActive, mustChangePassword, hasPlatformAccess } = token as JWT;
 
             if (session.user) {
                 session.user.id = id;
                 session.user.role = role;
                 session.user.isActive = isActive;
                 session.user.mustChangePassword = mustChangePassword;
+                session.user.hasPlatformAccess = hasPlatformAccess;
             }
 
             return session;
