@@ -170,6 +170,8 @@ async function resolveCustomerIdForUser(
     return { customerId: null };
   }
 
+  const email = String(formData.get('email') ?? '').trim();
+
   const linkMode = String(formData.get('customer-link-mode') ?? 'existing');
   const explicitCustomerId = String(formData.get('customerId') ?? '').trim();
 
