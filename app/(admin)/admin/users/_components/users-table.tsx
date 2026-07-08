@@ -10,21 +10,47 @@ import {
 import Link from 'next/link';
 import { DeleteUserButton, EditUserButton } from './buttons';
 import { Badge } from '@/components/ui/badge';
+import { getUserDisplayName } from '@/lib/utils';
 import type { UserRole } from '@/types/user-definitions';
+import type { UserListFilter } from '@/lib/consts/user-list-consts';
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Administrador',
   customer: 'Cliente',
 };
 
+function UserAccessBadge({
+  isActive,
+  hasPlatformAccess,
+}: {
+  isActive: boolean;
+  hasPlatformAccess: boolean;
+}) {
+  if (!isActive) {
+    return <Badge variant="secondary">Inactivo</Badge>;
+  }
+
+  if (hasPlatformAccess) {
+    return <Badge variant="default">Plataforma</Badge>;
+  }
+
+  return (
+    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-800">
+      Solo inscripción
+    </Badge>
+  );
+}
+
 export default async function UsersTable({
   query,
   currentPage,
+  filter,
 }: {
   query: string;
   currentPage: number;
+  filter: UserListFilter;
 }) {
-  const users = await fetchFilteredUsers(query, currentPage);
+  const users = await fetchFilteredUsers(query, currentPage, filter);
 
   if (users.length === 0) {
     return (
@@ -43,7 +69,7 @@ export default async function UsersTable({
             <TableHead className="px-4 py-5 font-medium">Usuario</TableHead>
             <TableHead className="px-4 py-5 font-medium">Email</TableHead>
             <TableHead className="px-4 py-5 font-medium">Rol</TableHead>
-            <TableHead className="px-4 py-5 font-medium">Estado</TableHead>
+            <TableHead className="px-4 py-5 font-medium">Acceso</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -55,16 +81,17 @@ export default async function UsersTable({
             >
               <TableCell className="whitespace-nowrap py-3 pl-6 pr-3">
                 <Link href={`/admin/users/${user.id}/edit`} className="hover:underline">
-                  {user.name}
+                  {getUserDisplayName(user)}
                 </Link>
               </TableCell>
               <TableCell className="p-3">{user.username}</TableCell>
               <TableCell className="p-3">{user.email}</TableCell>
               <TableCell className="p-3">{ROLE_LABELS[user.role]}</TableCell>
               <TableCell className="p-3">
-                <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                  {user.is_active ? 'Activo' : 'Inactivo'}
-                </Badge>
+                <UserAccessBadge
+                  isActive={user.is_active}
+                  hasPlatformAccess={user.hasPlatformAccess}
+                />
               </TableCell>
               <TableCell className="flex flex-row space-x-4">
                 <EditUserButton id={user.id} />

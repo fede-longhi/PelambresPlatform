@@ -34,7 +34,7 @@ export async function requireCustomerPortalContext(): Promise<CustomerPortalCont
     redirect('/login?callbackUrl=/customer');
   }
 
-  const customer = await fetchLinkedCustomerForUser(sessionUser.id, sessionUser.email);
+  const customer = await fetchLinkedCustomerForUser(sessionUser.id);
 
   if (!customer) {
     redirect('/customer/unlinked');
@@ -67,7 +67,7 @@ export async function requireCustomerPortalCourse(
 ): Promise<{ context: CustomerPortalContext; course: CustomerCourseDetail }> {
   const context = await requireCustomerPortalContext();
   const { fetchCustomerCourseBySlug } = await import('@/lib/data/customer-course-data');
-  const course = await fetchCustomerCourseBySlug(context.userId, context.email, slug);
+  const course = await fetchCustomerCourseBySlug(context.userId, slug);
 
   if (!course) {
     redirect('/customer/courses');

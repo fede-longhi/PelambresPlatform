@@ -6,6 +6,9 @@ import { fetchActiveUsersByEmail, fetchUserById } from '@/lib/data/user-data';
 import { createAccountSelectionToken } from '@/lib/auth/account-selection';
 import { getPortalPathForRole } from '@/lib/auth/public-routes';
 import { verifyPassword } from '@/lib/utils/password';
+import { getUserDisplayName } from '@/lib/utils';
+import { userHasAuthCredentials } from '@/lib/auth/platform-access';
+import { PROVISIONAL_ACCOUNT_LOGIN_MESSAGE } from '@/lib/auth/enrollment-messages';
 import type { UserRole } from '@/types/user-definitions';
 
 export type AuthenticateState =
@@ -57,6 +60,20 @@ export async function authenticate(
     }
 
     if (passwordMatches.length === 0) {
+      const customerUsersWithAccess = activeUsers.filter(
+        (activeUser) => activeUser.role === 'customer' && userHasAuthCredentials(activeUser)
+      );
+      const provisionalCustomer = activeUsers.find(
+        (activeUser) => activeUser.role === 'customer' && !userHasAuthCredentials(activeUser)
+      );
+
+      if (provisionalCustomer && customerUsersWithAccess.length === 0) {
+        return {
+          status: 'error',
+          message: PROVISIONAL_ACCOUNT_LOGIN_MESSAGE,
+        };
+      }
+
       return { status: 'error', message: 'Credenciales inválidas.' };
     }
 
@@ -69,7 +86,7 @@ export async function authenticate(
         ),
         roles: passwordMatches.map((matchedUser) => ({
           role: matchedUser.role,
-          name: matchedUser.name,
+          name: getUserDisplayName(matchedUser),
           userId: matchedUser.id,
         })),
         redirectTo,

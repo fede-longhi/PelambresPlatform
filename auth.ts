@@ -6,25 +6,34 @@ import GoogleProvider from 'next-auth/providers/google';
 import {
   fetchActiveUsersByEmail,
   fetchUserById,
+  fetchUserCanAccessPlatformById,
 } from '@/lib/data/user-data';
 import { verifyAccountSelectionToken } from '@/lib/auth/account-selection';
 import { verifyRoleSwitchToken } from '@/lib/auth/role-switch';
 import {
   ensureCustomerAccountForOAuth,
+  syncGoogleSubjectId,
   syncOAuthUserImage,
 } from '@/lib/actions/oauth-customer-actions';
 import { verifyPassword } from '@/lib/utils/password';
+import { getUserDisplayName } from '@/lib/utils';
+import { userCanAccessPlatform } from '@/lib/auth/platform-access';
 import type { User, UserListItem } from '@/types/user-definitions';
 
-function toAuthUser(user: User | UserListItem) {
+function toAuthUser(
+  user: User | UserListItem,
+  options?: { hasPlatformAccess?: boolean }
+) {
   return {
     id: user.id,
-    name: user.name,
+    name: getUserDisplayName(user),
     email: user.email,
     image: user.image_url,
     role: user.role,
     isActive: user.is_active,
     mustChangePassword: user.must_change_password,
+    hasPlatformAccess:
+      options?.hasPlatformAccess ?? userCanAccessPlatform(user as User),
   };
 }
 
@@ -43,6 +52,7 @@ export const {
           email: user.email,
           name: user.name ?? user.email,
           imageUrl: user.image,
+          googleSubjectId: account.providerAccountId,
         });
 
         const activeUsers = await fetchActiveUsersByEmail(user.email);
@@ -54,13 +64,18 @@ export const {
         if (activeUsers.length === 1) {
           const dbUser = activeUsers[0];
           await syncOAuthUserImage(dbUser.id, user.image);
+          await syncGoogleSubjectId(dbUser.id, account.providerAccountId);
           user.id = dbUser.id;
-          user.name = dbUser.name;
+          user.name = getUserDisplayName(dbUser);
           user.role = dbUser.role;
           user.isActive = dbUser.is_active;
           user.mustChangePassword = dbUser.must_change_password;
+          user.hasPlatformAccess = userCanAccessPlatform({
+            ...dbUser,
+            google_subject_id: account.providerAccountId,
+          });
           user.image = dbUser.image_url ?? user.image;
-          return true;
+          return user.hasPlatformAccess !== false;
         }
 
         const { createAccountSelectionToken } = await import('@/lib/auth/account-selection');
@@ -109,7 +124,13 @@ export const {
             return null;
           }
 
-          return toAuthUser(user);
+          const canAccessPlatform = await fetchUserCanAccessPlatformById(selectedUserId);
+
+          if (!canAccessPlatform) {
+            return null;
+          }
+
+          return toAuthUser(user, { hasPlatformAccess: true });
         }
 
         if (typeof selectionToken === 'string' && typeof selectedUserId === 'string') {
@@ -125,7 +146,13 @@ export const {
             return null;
           }
 
-          return toAuthUser(user);
+          const canAccessPlatform = await fetchUserCanAccessPlatformById(selectedUserId);
+
+          if (!canAccessPlatform) {
+            return null;
+          }
+
+          return toAuthUser(user, { hasPlatformAccess: true });
         }
 
         const parsedCredentials = z
@@ -153,7 +180,7 @@ export const {
 
           const passwordsMatch = await verifyPassword(password, candidate.password);
 
-          if (passwordsMatch) {
+          if (passwordsMatch && userCanAccessPlatform(candidate)) {
             return toAuthUser(candidate);
           }
         }

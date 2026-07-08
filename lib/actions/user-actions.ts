@@ -19,6 +19,7 @@ import {
   verifyPassword,
 } from '@/lib/utils/password';
 import type { UserListItem, UserRole } from '@/types/user-definitions';
+import { composeUserFullName } from '@/lib/utils';
 
 const PASSWORD_MIN_LENGTH = 6;
 
@@ -32,7 +33,8 @@ const CreateUserSchema = z.object({
     .regex(/^[a-zA-Z0-9._-]+$/, {
       message: 'El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos.',
     }),
-  name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
+  firstName: z.string().trim().min(1, { message: 'El nombre es obligatorio.' }),
+  lastName: z.string().trim().optional().default(''),
   email: z.string().email({ message: 'Debe ser un email válido.' }),
   role: UserRoleSchema,
 });
@@ -72,7 +74,8 @@ const SetInitialPasswordSchema = z
 
 export type UserFormValues = {
   username: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: UserRole;
   isActive?: 'true' | 'false';
@@ -82,6 +85,8 @@ export type UserFormState = {
   errors?: {
     username?: string[];
     name?: string[];
+    firstName?: string[];
+    lastName?: string[];
     email?: string[];
     role?: string[];
     isActive?: string[];
@@ -148,34 +153,16 @@ function extractUserFormValues(formData: FormData): UserFormValues {
 
   return {
     username: String(formData.get('username') ?? ''),
-    name: String(formData.get('name') ?? ''),
+    firstName: String(formData.get('firstName') ?? ''),
+    lastName: String(formData.get('lastName') ?? ''),
     email: String(formData.get('email') ?? ''),
     role: roleValue === 'customer' ? 'customer' : 'admin',
     isActive: formData.get('is-active') === 'false' ? 'false' : 'true',
   };
 }
 
-async function resolveCustomerIdForEmail(
-  email: string,
-  role: UserRole
-): Promise<string | null> {
-  if (role !== 'customer') {
-    return null;
-  }
-
-  const rows = await sql<{ id: string }[]>`
-    SELECT id
-    FROM customers
-    WHERE lower(trim(email)) = lower(trim(${email}))
-    LIMIT 1
-  `;
-
-  return rows[0]?.id ?? null;
-}
-
 async function resolveCustomerIdForUser(
   role: UserRole,
-  email: string,
   formData: FormData,
   existingCustomerId?: string | null
 ): Promise<{ customerId: string | null; errors?: UserFormState['errors']; message?: string }> {
@@ -183,30 +170,26 @@ async function resolveCustomerIdForUser(
     return { customerId: null };
   }
 
+  const email = String(formData.get('email') ?? '').trim();
+
   const linkMode = String(formData.get('customer-link-mode') ?? 'existing');
   const explicitCustomerId = String(formData.get('customerId') ?? '').trim();
 
-  if (linkMode === 'existing' && explicitCustomerId) {
-    const rows = await sql<{ id: string }[]>`
-      SELECT id FROM customers WHERE id = ${explicitCustomerId} LIMIT 1
-    `;
-
-    if (!rows[0]) {
-      return {
-        customerId: null,
-        message: 'El cliente seleccionado no existe.',
-        errors: { customerId: ['Seleccioná un cliente válido.'] },
-      };
-    }
-
-    return { customerId: explicitCustomerId };
-  }
-
   if (linkMode === 'existing') {
-    const matchedCustomerId = await resolveCustomerIdForEmail(email, role);
+    if (explicitCustomerId) {
+      const rows = await sql<{ id: string }[]>`
+        SELECT id FROM customers WHERE id = ${explicitCustomerId} LIMIT 1
+      `;
 
-    if (matchedCustomerId) {
-      return { customerId: matchedCustomerId };
+      if (!rows[0]) {
+        return {
+          customerId: null,
+          message: 'El cliente seleccionado no existe.',
+          errors: { customerId: ['Seleccioná un cliente válido.'] },
+        };
+      }
+
+      return { customerId: explicitCustomerId };
     }
 
     if (existingCustomerId) {
@@ -276,7 +259,8 @@ export async function createUser(
 
   const validatedFields = CreateUserSchema.safeParse({
     username: formData.get('username'),
-    name: formData.get('name'),
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
     email: formData.get('email'),
     role: formData.get('role'),
   });
@@ -291,11 +275,12 @@ export async function createUser(
     };
   }
 
-  const { username, name, email, role } = validatedFields.data;
+  const { username, firstName, lastName, email, role } = validatedFields.data;
+  const fullName = composeUserFullName(firstName, lastName);
   const tempPassword = generateTemporaryPassword();
   const hashedPassword = await hashPassword(tempPassword);
 
-  const customerResolution = await resolveCustomerIdForUser(role, email, formData);
+  const customerResolution = await resolveCustomerIdForUser(role, formData);
 
   if (customerResolution.message || customerResolution.errors) {
     return {
@@ -322,10 +307,23 @@ export async function createUser(
 
   try {
     const insertedUsers = await sql<UserListItem[]>`
-      INSERT INTO users (username, name, email, password, role, customer_id, must_change_password, is_active)
+      INSERT INTO users (
+        username,
+        first_name,
+        last_name,
+        name,
+        email,
+        password,
+        role,
+        customer_id,
+        must_change_password,
+        is_active
+      )
       VALUES (
         ${username},
-        ${name},
+        ${firstName},
+        ${lastName},
+        ${fullName},
         ${email},
         ${hashedPassword},
         ${role},
@@ -336,9 +334,12 @@ export async function createUser(
       RETURNING
         id,
         username,
+        first_name,
+        last_name,
         name,
         email,
         image_url,
+        google_subject_id,
         role,
         customer_id,
         is_active,
@@ -389,7 +390,8 @@ export async function updateUser(
 
   const validatedFields = UpdateUserSchema.safeParse({
     username: formData.get('username'),
-    name: formData.get('name'),
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
     email: formData.get('email'),
     role: formData.get('role'),
     isActive: formData.get('is-active'),
@@ -405,13 +407,13 @@ export async function updateUser(
     };
   }
 
-  const { username, name, email, role, isActive } = validatedFields.data;
+  const { username, firstName, lastName, email, role, isActive } = validatedFields.data;
+  const fullName = composeUserFullName(firstName, lastName);
   const isActiveBoolean = isActive === 'true';
   const existingUser = await fetchUserById(id);
 
   const customerResolution = await resolveCustomerIdForUser(
     role,
-    email,
     formData,
     existingUser?.customer_id
   );
@@ -451,7 +453,9 @@ export async function updateUser(
       UPDATE users
       SET
         username = ${username},
-        name = ${name},
+        first_name = ${firstName},
+        last_name = ${lastName},
+        name = ${fullName},
         email = ${email},
         role = ${role},
         customer_id = ${role === 'customer' ? customerId : null},
@@ -461,9 +465,12 @@ export async function updateUser(
       RETURNING
         id,
         username,
+        first_name,
+        last_name,
         name,
         email,
         image_url,
+        google_subject_id,
         role,
         customer_id,
         is_active,

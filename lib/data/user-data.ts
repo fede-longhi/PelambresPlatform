@@ -1,20 +1,125 @@
 import sql from '@/lib/db';
-import type { User, UserListItem } from '@/types/user-definitions';
+import type { AdminUserTableRow, User, UserListItem } from '@/types/user-definitions';
+import {
+  DEFAULT_USER_LIST_FILTER,
+  parseUserListFilter,
+  type UserListFilter,
+} from '@/lib/consts/user-list-consts';
 
+export type { UserListFilter };
+export { parseUserListFilter, DEFAULT_USER_LIST_FILTER };
 const ITEMS_PER_PAGE = 10;
 
 const USER_LIST_COLUMNS = sql`
   id,
   username,
+  first_name,
+  last_name,
   name,
   email,
   image_url,
+  google_subject_id,
   role,
   customer_id,
   is_active,
   must_change_password,
   deleted_at
 `;
+
+const USER_HAS_PLATFORM_ACCESS_SQL = sql`
+  (
+    (password IS NOT NULL AND password <> '')
+    OR google_subject_id IS NOT NULL
+  )
+`;
+
+function buildUserListFilterSql(filter: UserListFilter) {
+  switch (filter) {
+    case 'platform':
+      return sql`AND is_active = true AND ${USER_HAS_PLATFORM_ACCESS_SQL}`;
+    case 'provisional':
+      return sql`
+        AND is_active = true
+        AND NOT ${USER_HAS_PLATFORM_ACCESS_SQL}
+      `;
+    case 'inactive':
+      return sql`AND is_active = false`;
+    case 'all':
+      return sql``;
+  }
+}
+
+export async function fetchFilteredUsers(
+  query: string,
+  currentPage: number,
+  filter: UserListFilter = DEFAULT_USER_LIST_FILTER
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const filterSql = buildUserListFilterSql(filter);
+
+  try {
+    return await sql<AdminUserTableRow[]>`
+      SELECT
+        id,
+        username,
+        first_name,
+        last_name,
+        name,
+        email,
+        image_url,
+        google_subject_id,
+        role,
+        customer_id,
+        is_active,
+        must_change_password,
+        deleted_at,
+        ${USER_HAS_PLATFORM_ACCESS_SQL} as "hasPlatformAccess"
+      FROM users
+      WHERE deleted_at IS NULL
+        ${filterSql}
+        AND (
+          first_name ILIKE ${`%${query}%`}
+          OR last_name ILIKE ${`%${query}%`}
+          OR name ILIKE ${`%${query}%`}
+          OR email ILIKE ${`%${query}%`}
+          OR username ILIKE ${`%${query}%`}
+        )
+      ORDER BY first_name ASC, last_name ASC, username ASC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    throw new Error('Failed to fetch users.');
+  }
+}
+
+export async function fetchUsersPages(
+  query: string,
+  filter: UserListFilter = DEFAULT_USER_LIST_FILTER
+) {
+  const filterSql = buildUserListFilterSql(filter);
+
+  try {
+    const rows = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM users
+      WHERE deleted_at IS NULL
+        ${filterSql}
+        AND (
+          first_name ILIKE ${`%${query}%`}
+          OR last_name ILIKE ${`%${query}%`}
+          OR name ILIKE ${`%${query}%`}
+          OR email ILIKE ${`%${query}%`}
+          OR username ILIKE ${`%${query}%`}
+        )
+    `;
+
+    return Math.ceil(Number(rows[0].count) / ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error('Failed to fetch user pages:', error);
+    throw new Error('Failed to fetch user pages.');
+  }
+}
 
 export async function fetchUserByEmail(email: string): Promise<User | undefined> {
   try {
@@ -142,6 +247,29 @@ export async function fetchUserById(id: string): Promise<UserListItem | undefine
   }
 }
 
+export async function fetchUserCanAccessPlatformById(id: string): Promise<boolean> {
+  try {
+    const rows = await sql<{ canAccess: boolean }[]>`
+      SELECT (
+        is_active = true
+        AND (
+          (password IS NOT NULL AND password <> '')
+          OR google_subject_id IS NOT NULL
+        )
+      ) as "canAccess"
+      FROM users
+      WHERE id = ${id}
+        AND deleted_at IS NULL
+      LIMIT 1
+    `;
+
+    return rows[0]?.canAccess ?? false;
+  } catch (error) {
+    console.error('Failed to fetch user platform access:', error);
+    throw new Error('Failed to fetch user.');
+  }
+}
+
 export async function fetchUserHasPassword(id: string): Promise<boolean> {
   try {
     const rows = await sql<{ hasPassword: boolean }[]>`
@@ -155,48 +283,6 @@ export async function fetchUserHasPassword(id: string): Promise<boolean> {
   } catch (error) {
     console.error('Failed to fetch user password status:', error);
     throw new Error('Failed to fetch user.');
-  }
-}
-
-export async function fetchFilteredUsers(query: string, currentPage: number) {
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  try {
-    return await sql<UserListItem[]>`
-      SELECT ${USER_LIST_COLUMNS}
-      FROM users
-      WHERE deleted_at IS NULL
-        AND (
-          name ILIKE ${`%${query}%`}
-          OR email ILIKE ${`%${query}%`}
-          OR username ILIKE ${`%${query}%`}
-        )
-      ORDER BY name ASC, username ASC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
-  } catch (error) {
-    console.error('Failed to fetch users:', error);
-    throw new Error('Failed to fetch users.');
-  }
-}
-
-export async function fetchUsersPages(query: string) {
-  try {
-    const rows = await sql`
-      SELECT COUNT(*)::int AS count
-      FROM users
-      WHERE deleted_at IS NULL
-        AND (
-          name ILIKE ${`%${query}%`}
-          OR email ILIKE ${`%${query}%`}
-          OR username ILIKE ${`%${query}%`}
-        )
-    `;
-
-    return Math.ceil(Number(rows[0].count) / ITEMS_PER_PAGE);
-  } catch (error) {
-    console.error('Failed to fetch user pages:', error);
-    throw new Error('Failed to fetch user pages.');
   }
 }
 

@@ -11,10 +11,7 @@ export type CustomerPortalOrder = {
   amount: number;
 };
 
-export async function fetchCustomerIdForUser(
-  userId: string,
-  email: string
-): Promise<string | null> {
+export async function fetchCustomerIdForUser(userId: string): Promise<string | null> {
   try {
     const rows = await sql<{ customer_id: string | null }[]>`
       SELECT customer_id
@@ -24,18 +21,7 @@ export async function fetchCustomerIdForUser(
       LIMIT 1
     `;
 
-    if (rows[0]?.customer_id) {
-      return rows[0].customer_id;
-    }
-
-    const customers = await sql<{ id: string }[]>`
-      SELECT id
-      FROM customers
-      WHERE lower(trim(email)) = lower(trim(${email}))
-      LIMIT 1
-    `;
-
-    return customers[0]?.id ?? null;
+    return rows[0]?.customer_id ?? null;
   } catch (error) {
     console.error('Failed to resolve customer for user:', error);
     throw new Error('Failed to resolve customer for user.');
@@ -43,10 +29,9 @@ export async function fetchCustomerIdForUser(
 }
 
 export async function fetchLinkedCustomerForUser(
-  userId: string,
-  email: string
+  userId: string
 ): Promise<Customer | undefined> {
-  const customerId = await fetchCustomerIdForUser(userId, email);
+  const customerId = await fetchCustomerIdForUser(userId);
 
   if (!customerId) {
     return undefined;

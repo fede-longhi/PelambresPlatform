@@ -10,6 +10,7 @@ import ResetPasswordButton from './reset-password-button';
 import CustomerLinkSection from './customer-link-section';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { composeUserFullName } from '@/lib/utils';
 import type { UserListItem, UserRole } from '@/types/user-definitions';
 import type { CustomerField } from '@/components/shared/customer-select-field';
 
@@ -33,7 +34,8 @@ export default function EditUserForm({
   const { toast } = useToast();
   const [role, setRole] = useState<UserRole>(user.role);
   const [email, setEmail] = useState(user.email);
-  const [name, setName] = useState(user.name);
+  const [firstName, setFirstName] = useState(user.first_name);
+  const [lastName, setLastName] = useState(user.last_name);
   const [username, setUsername] = useState(user.username);
   const [isActive, setIsActive] = useState<'true' | 'false'>(
     user.is_active ? 'true' : 'false'
@@ -46,7 +48,8 @@ export default function EditUserForm({
 
     setRole(state.formValues.role);
     setEmail(state.formValues.email);
-    setName(state.formValues.name);
+    setFirstName(state.formValues.firstName);
+    setLastName(state.formValues.lastName);
     setUsername(state.formValues.username);
     if (state.formValues.isActive) {
       setIsActive(state.formValues.isActive);
@@ -84,16 +87,30 @@ export default function EditUserForm({
           <FieldErrorDisplay id="username-error" errors={state.errors?.username} />
         </div>
 
-        <div>
-          <Label htmlFor="name">Nombre completo</Label>
-          <Input
-            id="name"
-            name="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            aria-describedby="name-error"
-          />
-          <FieldErrorDisplay id="name-error" errors={state.errors?.name} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="firstName">Nombre</Label>
+            <Input
+              id="firstName"
+              name="firstName"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              aria-describedby="first-name-error"
+            />
+            <FieldErrorDisplay id="first-name-error" errors={state.errors?.firstName} />
+          </div>
+
+          <div>
+            <Label htmlFor="lastName">Apellido</Label>
+            <Input
+              id="lastName"
+              name="lastName"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              aria-describedby="last-name-error"
+            />
+            <FieldErrorDisplay id="last-name-error" errors={state.errors?.lastName} />
+          </div>
         </div>
 
         <div>
@@ -126,7 +143,7 @@ export default function EditUserForm({
         {role === 'customer' && (
           <CustomerLinkSection
             userEmail={email}
-            userName={name}
+            userName={composeUserFullName(firstName, lastName)}
             defaultCustomer={linkedCustomer}
             errors={{
               customerId: state.errors?.customerId,

@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,29 @@ type CourseRegistrationFormProps = {
   courseId: string;
   sessionUser?: CourseRegistrationSession;
 };
+
+function GuestAccountAccessPrompt() {
+  const pathname = usePathname();
+  const callbackUrl = encodeURIComponent(pathname);
+  const loginHref = `/login?callbackUrl=${callbackUrl}`;
+  const registerHref = `/register?callbackUrl=${callbackUrl}`;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-sm">
+      <p className="font-medium text-slate-900">¿Ya tenés cuenta en Pelambres?</p>
+      <p className="mt-2 text-slate-600">
+        <Link href={loginHref} className="font-medium text-primary hover:underline">
+          Iniciá sesión
+        </Link>{' '}
+        para inscribirte con tu usuario, o{' '}
+        <Link href={registerHref} className="font-medium text-primary hover:underline">
+          creá tu cuenta
+        </Link>
+        .
+      </p>
+    </div>
+  );
+}
 
 function RegistrationSuccess({ message }: { message: string | null | undefined }) {
   return (
@@ -93,24 +117,45 @@ export function CourseRegistrationForm({ courseId, sessionUser }: CourseRegistra
 
   return (
     <form action={formAction} className="space-y-4">
+      <GuestAccountAccessPrompt />
+
       {state.success === false && state.message && (
         <div className="rounded-md border border-red-100 bg-red-50 p-3 text-sm text-red-600">
           {state.message}
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="name">Nombre completo</Label>
-        <Input
-          id="name"
-          name="name"
-          required
-          placeholder="Ej: Juan Pérez"
-          disabled={isPending}
-        />
-        {state.errors?.name && (
-          <p className="mt-1 text-xs text-red-500">{state.errors.name[0]}</p>
-        )}
+      <p className="text-center text-xs font-medium uppercase tracking-wide text-slate-400">
+        o completá tus datos
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="firstName">Nombre</Label>
+          <Input
+            id="firstName"
+            name="firstName"
+            required
+            placeholder="Ej: Juan"
+            disabled={isPending}
+          />
+          {state.errors?.firstName && (
+            <p className="mt-1 text-xs text-red-500">{state.errors.firstName[0]}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="lastName">Apellido</Label>
+          <Input
+            id="lastName"
+            name="lastName"
+            placeholder="Ej: Pérez"
+            disabled={isPending}
+          />
+          {state.errors?.lastName && (
+            <p className="mt-1 text-xs text-red-500">{state.errors.lastName[0]}</p>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">

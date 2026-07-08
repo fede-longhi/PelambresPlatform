@@ -9,6 +9,7 @@ import FieldErrorDisplay from '@/components/ui/field-error-display';
 import TempPasswordDisplay from './temp-password-display';
 import CustomerLinkSection from './customer-link-section';
 import Link from 'next/link';
+import { composeUserFullName, getUserDisplayName } from '@/lib/utils';
 import type { UserRole } from '@/types/user-definitions';
 
 export default function CreateUserForm() {
@@ -16,7 +17,8 @@ export default function CreateUserForm() {
   const [state, formAction, isPending] = useActionState(createUser, initialState);
   const [role, setRole] = useState<UserRole>('admin');
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
 
   useEffect(() => {
@@ -26,7 +28,8 @@ export default function CreateUserForm() {
 
     setRole(state.formValues.role);
     setEmail(state.formValues.email);
-    setName(state.formValues.name);
+    setFirstName(state.formValues.firstName);
+    setLastName(state.formValues.lastName);
     setUsername(state.formValues.username);
   }, [state.formValues]);
 
@@ -35,7 +38,8 @@ export default function CreateUserForm() {
       <div className="w-full max-w-lg space-y-4 rounded-md bg-gray-50 p-6">
         <h2 className="text-lg font-medium text-green-700">Usuario creado</h2>
         <p className="text-sm text-muted-foreground">
-          {state.user?.name} ({state.user?.email}) fue creado correctamente.
+          {state.user ? getUserDisplayName(state.user) : 'Usuario'} ({state.user?.email}) fue creado
+          correctamente.
         </p>
         <TempPasswordDisplay tempPassword={state.tempPassword} />
         <div className="flex gap-2 pt-2">
@@ -71,17 +75,32 @@ export default function CreateUserForm() {
         <FieldErrorDisplay id="username-error" errors={state.errors?.username} />
       </div>
 
-      <div>
-        <Label htmlFor="name">Nombre completo</Label>
-        <Input
-          id="name"
-          name="name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Nombre y apellido"
-          aria-describedby="name-error"
-        />
-        <FieldErrorDisplay id="name-error" errors={state.errors?.name} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="firstName">Nombre</Label>
+          <Input
+            id="firstName"
+            name="firstName"
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+            placeholder="Nombre"
+            aria-describedby="first-name-error"
+          />
+          <FieldErrorDisplay id="first-name-error" errors={state.errors?.firstName} />
+        </div>
+
+        <div>
+          <Label htmlFor="lastName">Apellido</Label>
+          <Input
+            id="lastName"
+            name="lastName"
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+            placeholder="Apellido"
+            aria-describedby="last-name-error"
+          />
+          <FieldErrorDisplay id="last-name-error" errors={state.errors?.lastName} />
+        </div>
       </div>
 
       <div>
@@ -115,7 +134,7 @@ export default function CreateUserForm() {
       {role === 'customer' && (
         <CustomerLinkSection
           userEmail={email}
-          userName={name}
+          userName={composeUserFullName(firstName, lastName)}
           errors={{
             customerId: state.errors?.customerId,
             customerPhone: state.errors?.customerPhone,

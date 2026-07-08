@@ -10,10 +10,7 @@ export default async function CustomerUnlinkedPage() {
     redirect('/login?callbackUrl=/customer');
   }
 
-  const customerId = await fetchCustomerIdForUser(
-    session.user.id,
-    session.user.email ?? ''
-  );
+  const customerId = await fetchCustomerIdForUser(session.user.id);
 
   if (customerId) {
     redirect('/customer');
@@ -23,11 +20,12 @@ export default async function CustomerUnlinkedPage() {
     <div className="mx-auto w-full max-w-lg">
       <h1 className={`${lusitana.className} text-2xl`}>Cuenta sin vincular</h1>
       <p className="mt-4 text-sm text-muted-foreground">
-        Tu usuario de acceso no está asociado a un cliente en nuestro sistema. El email de tu
-        cuenta debe coincidir con el registrado en tu ficha de cliente.
+        Tu usuario de acceso no está vinculado a un cliente en nuestro sistema. Un administrador
+        debe asignarte a la ficha de cliente correspondiente (persona o empresa) para que puedas
+        ver pedidos y cursos.
       </p>
       <p className="mt-2 text-sm text-muted-foreground">
-        Contactanos para que podamos vincular tu cuenta:{' '}
+        Contactanos indicando tu email de acceso:{' '}
         <span className="font-medium">{session.user.email}</span>
       </p>
     </div>
