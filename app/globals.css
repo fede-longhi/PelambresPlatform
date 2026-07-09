@@ -21,6 +21,7 @@ input[type='number']::-webkit-outer-spin-button {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --heading-foreground: 222 24% 14%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
@@ -64,6 +65,7 @@ input[type='number']::-webkit-outer-spin-button {
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+    --heading-foreground: 210 25% 92%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;

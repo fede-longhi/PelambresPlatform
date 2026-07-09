@@ -18,7 +18,9 @@ Use semantic tokens from `app/globals.css` — `bg-primary`, `text-primary`, `te
 
 ## Typography
 
-Page titles: `lusitana` from `@/app/fonts`. Public heroes scale `text-4xl sm:text-5xl lg:text-6xl`.
+- **Public** (landing, marketing): default sans (`inter` via root layout). Headings use weight/scale only — `text-4xl sm:text-5xl lg:text-6xl` for heroes; do not use `lusitana`.
+- **Admin / customer**: page `h1` with `lusitana` from `@/app/fonts`.
+- **Auth**: titles via `AuthFormTitle` (`lusitana`).
 
 ## Components
 
@@ -29,6 +31,15 @@ Page titles: `lusitana` from `@/app/fonts`. Public heroes scale `text-4xl sm:tex
 ## Copy
 
 Spanish (es-AR). Voseo on public/auth (`Ingresá`, `Completá`); neutral labels on admin forms.
+
+## Accessibility (baseline)
+
+- Every form control has a visible label (`Label` + `htmlFor`, or `label` + `id`).
+- Icon-only buttons must include `aria-label` (Spanish).
+- Decorative icons: `aria-hidden="true"`.
+- Do not remove focus outlines; use `focus-visible:ring-*` on custom controls.
+
+Full patterns: **ui-design** skill → `a11y-reference.md`.
 
 ## Deeper guidance
 
