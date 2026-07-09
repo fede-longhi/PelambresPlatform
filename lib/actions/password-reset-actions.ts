@@ -9,7 +9,7 @@ import {
   insertPasswordResetToken,
   markPasswordResetTokenUsed,
 } from '@/lib/data/password-reset-data';
-import { fetchUserById, fetchActiveUsersWithPasswordByEmail } from '@/lib/data/user-data';
+import { fetchUserById, fetchActiveUsersByEmail, fetchActiveUsersWithPasswordByEmail } from '@/lib/data/user-data';
 import { sendPasswordResetEmail } from '@/lib/mail/mailer';
 import { hashPassword } from '@/lib/utils/password';
 import type { UserRole } from '@/types/user-definitions';
@@ -18,6 +18,12 @@ const PASSWORD_MIN_LENGTH = 6;
 
 const GENERIC_RESET_MESSAGE =
   'Si existe una cuenta con contraseña para ese email, te enviamos instrucciones para restablecerla.';
+
+const EMAIL_NOT_FOUND_MESSAGE =
+  'No existe una cuenta registrada con ese email.';
+
+const NO_PASSWORD_ACCOUNT_MESSAGE =
+  'Esa cuenta no tiene contraseña configurada. Creá tu cuenta o ingresá con Google si ya te inscribiste a un curso.';
 
 const ResetPasswordSchema = z
   .object({
@@ -116,10 +122,15 @@ export async function requestPasswordReset(
       return { status: 'success', message: GENERIC_RESET_MESSAGE };
     }
 
+    const activeUsers = await fetchActiveUsersByEmail(email);
     const usersWithPassword = await fetchActiveUsersWithPasswordByEmail(email);
 
+    if (activeUsers.length === 0) {
+      return { status: 'error', message: EMAIL_NOT_FOUND_MESSAGE };
+    }
+
     if (usersWithPassword.length === 0) {
-      return { status: 'success', message: GENERIC_RESET_MESSAGE };
+      return { status: 'error', message: NO_PASSWORD_ACCOUNT_MESSAGE };
     }
 
     if (usersWithPassword.length === 1) {

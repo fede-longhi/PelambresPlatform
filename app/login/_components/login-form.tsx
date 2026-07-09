@@ -1,13 +1,11 @@
 'use client';
 
-import { lusitana } from '@/app/fonts';
 import {
   AtSymbolIcon,
   KeyIcon,
-  ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import {
   authenticate,
   completeAccountSelection,
@@ -18,11 +16,23 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
 import type { UserRole } from '@/types/user-definitions';
+import {
+  AuthFormDescription,
+  AuthFormError,
+  AuthFormFooterText,
+  AuthFormPanel,
+  AuthFormTitle,
+  authFieldInputClassName,
+  authFieldLabelClassName,
+} from '@/components/shared/auth-form-panel';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/admin';
   const passwordWasSet = searchParams.get('passwordSet') === '1';
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
   const [authState, formAction, isPending] = useActionState<AuthenticateState, FormData>(
     authenticate,
     undefined
@@ -37,11 +47,11 @@ export default function LoginForm() {
 
   if (activeState?.status === 'role_selection') {
     return (
-      <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <h1 className={`${lusitana.className} mb-3 text-2xl`}>Elegí cómo ingresar</h1>
-        <p className="mb-4 text-sm text-muted-foreground">
+      <AuthFormPanel>
+        <AuthFormTitle>Elegí cómo ingresar</AuthFormTitle>
+        <AuthFormDescription>
           Tu email tiene más de un perfil. Seleccioná con cuál querés continuar.
-        </p>
+        </AuthFormDescription>
         <form action={selectionAction} className="space-y-3">
           <input type="hidden" name="selectionToken" value={activeState.selectionToken} />
           <input type="hidden" name="redirectTo" value={activeState.redirectTo} />
@@ -64,86 +74,85 @@ export default function LoginForm() {
             </button>
           ))}
         </form>
-      </div>
+      </AuthFormPanel>
     );
   }
 
   return (
     <form action={formAction} className="space-y-3">
-      <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8">
-        <p className="mb-3 text-sm text-muted-foreground">
-          Ingrese su email y contraseña para acceder a su cuenta.
-        </p>
+      <AuthFormPanel>
+        <AuthFormTitle>Iniciar sesión</AuthFormTitle>
+        <AuthFormDescription>
+          Ingresá tu email y contraseña para acceder a tu cuenta.
+        </AuthFormDescription>
+
         {passwordWasSet && (
           <p className="mb-3 text-sm text-green-700">
             Contraseña establecida. Ingresá con tu nueva contraseña.
           </p>
         )}
-        <div className="w-full">
-          <div>
-            <label
-              className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="email"
-            >
-              Email
-            </label>
-            <div className="relative">
-              <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-                id="email"
-                type="email"
-                name="email"
-                placeholder="Enter your email address"
-                required
-              />
-              <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label
-              className="mb-3 mt-5 block text-xs font-medium text-gray-900"
-              htmlFor="password"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Enter password"
-                required
-                minLength={6}
-              />
-              <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
-            </div>
+
+        <div>
+          <label className={`mb-3 mt-2 block ${authFieldLabelClassName}`} htmlFor="email">
+            Email
+          </label>
+          <div className="relative">
+            <input
+              className={authFieldInputClassName}
+              id="email"
+              type="email"
+              name="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="tu@email.com"
+              required
+              disabled={isSubmitting}
+            />
+            <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
           </div>
         </div>
+
+        <div className="mt-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label className={authFieldLabelClassName} htmlFor="password">
+              Contraseña
+            </label>
+            <Link href="/login/forgot-password" className="text-xs text-primary hover:underline">
+              Olvidé mi contraseña
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              className={authFieldInputClassName}
+              id="password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Tu contraseña"
+              required
+              minLength={6}
+              disabled={isSubmitting}
+            />
+            <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
+          </div>
+        </div>
+
         <input type="hidden" name="redirectTo" value={callbackUrl} />
-        <div className="mt-2 text-right">
-          <Link href="/login/forgot-password" className="text-sm text-primary hover:underline">
-            Olvidé mi contraseña
-          </Link>
-        </div>
-        <Button className="mt-4 w-full" aria-disabled={isSubmitting}>
-          Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
+
+        <Button className="mt-6 w-full" aria-disabled={isSubmitting} disabled={isSubmitting}>
+          Iniciar sesión <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+
+        <AuthFormFooterText>
           ¿No tenés cuenta?{' '}
           <Link href="/register" className="font-medium text-primary hover:underline">
             Creá tu cuenta
           </Link>
-        </p>
-        <div className="flex h-8 items-end space-x-1">
-          {activeState?.status === 'error' && (
-            <>
-              <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
-              <p className="text-sm text-red-500">{activeState.message}</p>
-            </>
-          )}
-        </div>
-      </div>
+        </AuthFormFooterText>
+
+        {activeState?.status === 'error' && <AuthFormError message={activeState.message} />}
+      </AuthFormPanel>
     </form>
   );
 }
