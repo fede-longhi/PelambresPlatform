@@ -34,9 +34,6 @@ export default function SocialLogin() {
           <GoogleIcon className="mr-2" />
           Ingresar con Google
         </button>
-        <p className="mt-2 text-center text-xs text-muted-foreground">
-          Pedidos, cursos y tu perfil de cliente.
-        </p>
         <div className="flex h-8 items-end space-x-1">
           {errorMessage && (
             <>

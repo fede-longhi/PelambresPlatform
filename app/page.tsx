@@ -6,8 +6,10 @@ import { Package, DraftingCompass, Slice, PencilRuler } from "lucide-react";
 import { GoogleReviews } from '@/components/google-reviews/google-reviews';
 import MainHeader from '@/components/layout/main-header';
 import MainFooter from '@/components/layout/main-footer';
+import { getMainHeaderUser } from '@/lib/auth/main-header-user';
 
-export default function Page() {
+export default async function Page() {
+    const headerUser = await getMainHeaderUser();
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
@@ -36,7 +38,7 @@ export default function Page() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <MainHeader />
+            <MainHeader user={headerUser} />
 
             <main className="space-y-20">
                 <section className="relative bg-white pt-12 sm:pt-16 lg:pt-24">

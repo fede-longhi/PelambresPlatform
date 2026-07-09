@@ -1,0 +1,35 @@
+---
+description: Pelambres 3D design tokens and surface patterns for UI work
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Design System
+
+Use semantic tokens from `app/globals.css` — `bg-primary`, `text-primary`, `text-muted-foreground`, `border-border`. Do not introduce ad hoc hex colors.
+
+## Surfaces
+
+| Surface | Shell |
+|---------|-------|
+| Public | `MainHeader` + `MainFooter`, `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` |
+| Auth | `AuthPageShell` + `AuthFormPanel` + `AuthFormTitle` |
+| Admin / customer | Route-group layout + sidenav |
+
+## Typography
+
+Page titles: `lusitana` from `@/app/fonts`. Public heroes scale `text-4xl sm:text-5xl lg:text-6xl`.
+
+## Components
+
+- Primitives: `@/components/ui/*` (shadcn new-york)
+- Shared: `components/shared/`, `components/layout/`
+- Route UI: `app/.../_components/`
+
+## Copy
+
+Spanish (es-AR). Voseo on public/auth (`Ingresá`, `Completá`); neutral labels on admin forms.
+
+## Deeper guidance
+
+For full design or UX review workflows, use the **ui-design** skill (`.cursor/skills/ui-design/`).
