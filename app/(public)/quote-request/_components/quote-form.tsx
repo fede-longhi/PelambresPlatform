@@ -45,9 +45,9 @@ function FieldErrors({ id, errors }: FieldErrorsProps) {
     }
 
     return (
-        <div id={id} aria-live="polite" aria-atomic="true">
+        <div id={id} role="alert" aria-live="polite" aria-atomic="true">
             {errors.map((error) => (
-                <p className="mt-2 text-xs text-red-500" key={error}>
+                <p className="mt-2 text-xs text-destructive" key={error}>
                     {error}
                 </p>
             ))}
@@ -247,8 +247,11 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
         <form onSubmit={handleSubmit} className="space-y-2">
             <div aria-live="polite" aria-atomic="true">
                 {state.message && (
-                    <div className="flex flex-row items-center mt-2 text-sm text-red-500 border border-red-200 bg-red-50 rounded-md p-3">
-                        <AlertTriangle className="mr-3 h-5 w-5"/>
+                    <div
+                        className="mt-2 flex flex-row items-center rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"
+                        role="alert"
+                    >
+                        <AlertTriangle className="mr-3 h-5 w-5" aria-hidden="true" />
                         <p className="font-medium">{state.message}</p>
                     </div>
                 )}
@@ -262,8 +265,9 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                         name="name"
                         className="py-3 px-4 bg-white text-lg"
                         defaultValue={(state.payload?.get('name') || MOCK_DATA.name) as string}
-                        placeholder="Ingresa tu nombre completo"
+                        placeholder="Ingresá tu nombre completo"
                         aria-describedby="name-error"
+                        aria-invalid={!!state.errors?.name}
                         disabled={isProcessing}
                     />
                     <FieldErrors id="name-error" errors={state.errors?.name} />
@@ -276,8 +280,9 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                         name="email"
                         className="bg-white"
                         defaultValue={(state.payload?.get('email') || MOCK_DATA.email) as string}
-                        placeholder="Ingresa tu email"
+                        placeholder="Ingresá tu email"
                         aria-describedby="email-error"
+                        aria-invalid={!!state.errors?.email}
                         disabled={isProcessing}
                     />
                     <FieldErrors id="email-error" errors={state.errors?.email} />
@@ -291,8 +296,9 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                     name="phone"
                     className="bg-white"
                     defaultValue={(state.payload?.get('phone') || MOCK_DATA.phone) as string}
-                    placeholder="Teléfono"
+                    placeholder="Teléfono de contacto"
                     aria-describedby="phone-error"
+                    aria-invalid={!!state.errors?.phone}
                     disabled={isProcessing}
                 />
                 <FieldErrors id="phone-error" errors={state.errors?.phone} />
@@ -306,6 +312,7 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                     rows={4}
                     defaultValue={(state.payload?.get('detail') || MOCK_DATA.detail) as string}
                     aria-describedby="detail-error"
+                    aria-invalid={!!state.errors?.detail}
                     disabled={isProcessing}
                 />
                 <FieldErrors id="detail-error" errors={state.errors?.detail} />
@@ -333,16 +340,27 @@ export default function Form({ showBackToHomeButton = true }: QuoteFormProps) {
                 formatHint={`STL, OBJ, 3MF, PDF, JPG, PNG y WEBP. Máximo ${formatFileSize(MAX_FILE_ATTACHMENT_SIZE_BYTES)} por archivo.`}
             />
             {isUploadingFiles && (
-                <div className="sm:col-span-2 mt-4 max-w-md mx-auto w-full">
-                    <div className="flex justify-between mb-1">
+                <div
+                    className="mx-auto mt-4 w-full max-w-md sm:col-span-2"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <div className="mb-1 flex justify-between">
                         <span className="text-sm font-medium text-primary">Subiendo archivos...</span>
                         <span className="text-sm font-medium text-primary">{uploadProgress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
-                        <div 
-                            className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out" 
+                    <div
+                        className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
+                        role="progressbar"
+                        aria-valuenow={uploadProgress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label="Progreso de subida de archivos"
+                    >
+                        <div
+                            className="h-2.5 rounded-full bg-primary transition-all duration-300 ease-out motion-reduce:transition-none"
                             style={{ width: `${uploadProgress}%` }}
-                        ></div>
+                        />
                     </div>
                 </div>
             )}
@@ -372,8 +390,8 @@ const SubmissionSuccessMessage = ({
     onNewRequest,
 }: SubmissionSuccessMessageProps) => (
     <div className="flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-xl text-center">
-        <CheckCircle className="w-16 h-16 text-primary mb-6" />
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+        <CheckCircle className="mb-6 h-16 w-16 text-primary" aria-hidden="true" />
+        <h2 className="mb-4 text-3xl font-bold text-foreground">
             ¡Solicitud Recibida con Éxito!
         </h2>
         <p className="text-xl text-muted-foreground max-w-lg mb-4">
@@ -381,7 +399,7 @@ const SubmissionSuccessMessage = ({
         </p>
 
         <div className="inline-flex items-center p-4 bg-primary/10 rounded-lg text-primary font-semibold text-lg mb-8">
-            <Clock className="w-8 h-8 mx-3" />
+            <Clock className="mx-3 h-8 w-8" aria-hidden="true" />
             Nos pondremos en contacto contigo dentro de las próximas 24 horas con tu cotización personalizada.
         </div>
 

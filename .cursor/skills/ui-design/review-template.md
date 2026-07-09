@@ -31,16 +31,31 @@
 |---|-----------|----------|------------|
 | 1 | | | |
 
-## Checklist
+## Checklist — Visual & UX
 
 - [ ] Mobile ~375px — sin overflow, acciones usables
 - [ ] Desktop ~1280px — layout correcto
 - [ ] Tokens de marca (`primary`, `muted-foreground`, etc.)
-- [ ] Tipografía (`lusitana` en títulos donde corresponde)
+- [ ] Tipografía consistente con la superficie (sans en público; `lusitana` en admin/auth)
 - [ ] Estados: loading, vacío, error, validación
 - [ ] Componentes reutilizables (no markup duplicado)
 - [ ] Copy en español (es-AR) consistente con la superficie
 - [ ] Tablas/formularios con estrategia mobile
+
+## Checklist — Accesibilidad
+
+- [ ] Un solo `h1` por página; jerarquía de headings sin saltos
+- [ ] Todos los inputs con etiqueta visible (`Label` / `label` + `htmlFor`)
+- [ ] Botones solo ícono con `aria-label` en español
+- [ ] Íconos decorativos con `aria-hidden="true"`
+- [ ] Errores de campo: `aria-invalid` + `aria-describedby` + texto visible
+- [ ] Errores globales / alertas: anunciados (`role="alert"` o equivalente)
+- [ ] Foco visible en todos los controles interactivos
+- [ ] Navegación completa por teclado (Tab, Enter, Escape en diálogos)
+- [ ] Estado no comunicado solo por color (texto o ícono + texto)
+- [ ] Imágenes informativas con `alt` descriptivo en español
+- [ ] Tablas: `th scope="col"`; alternativa mobile con la misma información
+- [ ] Diálogos/menús Radix con título y cierre por Escape
 
 ## Referencias usadas
 

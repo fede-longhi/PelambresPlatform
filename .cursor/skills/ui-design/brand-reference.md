@@ -25,8 +25,9 @@ Header/sidebar CSS vars exist (`--header-background`, `--sidebar-*`) — use via
 
 ## Typography
 
-- **Display / page titles**: `lusitana` from `@/app/fonts` — `className={lusitana.className}`
-- **Body**: default sans (project font stack)
+- **Public** (landing, marketing): default sans — no `lusitana`. Scale headings with weight/size (`text-4xl sm:text-5xl lg:text-6xl` for heroes).
+- **Admin / customer page titles**: `lusitana` from `@/app/fonts` — `className={lusitana.className}`
+- **Body**: default sans (project font stack via `inter` in root layout)
 - **Scale**: `text-2xl` admin titles; `text-3xl md:text-5xl` public heroes; `text-sm` form labels
 
 ## Page archetypes
@@ -87,6 +88,8 @@ Header/sidebar CSS vars exist (`--header-background`, `--sidebar-*`) — use via
 - Form validation: inline field errors + optional `AuthFormError` for global message
 - Links to primary actions: `text-primary hover:underline`
 - Destructive: `destructive` variant or explicit confirm dialog
+
+Accessibility detail: [a11y-reference.md](a11y-reference.md).
 
 ## Copy (es-AR)
 

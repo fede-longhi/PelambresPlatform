@@ -138,19 +138,19 @@ export function FileAttachmentPicker({
     event.target.value = '';
   }
 
-  function handleDragOver(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragOver(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     if (!disabled) {
       setIsDragging(true);
     }
   }
 
-  function handleDragLeave(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragLeave(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     setIsDragging(false);
   }
 
-  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+  function handleDrop(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     setIsDragging(false);
     if (!disabled) {
@@ -181,8 +181,8 @@ export function FileAttachmentPicker({
 
       {(validationErrors.length > 0 || (fieldErrors?.length ?? 0) > 0) && (
         <div
-          className="mt-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600"
-          aria-live="polite"
+          className="mt-2 rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive"
+          role="alert"
         >
           <p className="font-medium">Revisá los archivos adjuntos:</p>
           <ul className="mt-1 list-disc pl-5">
@@ -197,18 +197,21 @@ export function FileAttachmentPicker({
       )}
 
       {showDropZone && (
-        <div
-          className={`mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
+        <button
+          type="button"
+          aria-label={`${label}: arrastrá y soltá archivos o hacé click para buscar`}
+          className={`mt-1 flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
             isDragging
               ? 'border-primary bg-primary/10'
-              : 'border-gray-300 hover:border-primary/50 dark:border-gray-700'
+              : 'border-border hover:border-primary/50'
           } ${disabled ? 'pointer-events-none cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => !disabled && fileInputRef.current?.click()}
+          disabled={disabled}
         >
-          <Upload className="h-8 w-8 text-muted-foreground" />
+          <Upload className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <div className="mt-2 space-y-1 text-center">
             <p className="text-sm font-medium">
               Arrastrá y soltá aquí, o{' '}
@@ -216,7 +219,7 @@ export function FileAttachmentPicker({
             </p>
             <p className="text-xs text-muted-foreground">{resolvedFormatHint}</p>
           </div>
-        </div>
+        </button>
       )}
 
       <ul className="mt-4 space-y-2">
@@ -243,7 +246,7 @@ export function FileAttachmentPicker({
               className="h-8 w-8 shrink-0 p-0"
               disabled={disabled}
             >
-              <X className={`h-4 w-4 ${disabled ? 'text-gray-400' : 'text-red-500'}`} />
+              <X className={`h-4 w-4 ${disabled ? 'text-muted-foreground' : 'text-destructive'}`} aria-hidden="true" />
               <span className="sr-only">Eliminar archivo</span>
             </Button>
           </li>
