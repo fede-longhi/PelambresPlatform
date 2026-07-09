@@ -138,19 +138,19 @@ export function FileAttachmentPicker({
     event.target.value = '';
   }
 
-  function handleDragOver(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragOver(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     if (!disabled) {
       setIsDragging(true);
     }
   }
 
-  function handleDragLeave(event: React.DragEvent<HTMLDivElement>) {
+  function handleDragLeave(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     setIsDragging(false);
   }
 
-  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+  function handleDrop(event: React.DragEvent<HTMLButtonElement>) {
     event.preventDefault();
     setIsDragging(false);
     if (!disabled) {
