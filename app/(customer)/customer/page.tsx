@@ -1,50 +1,95 @@
 import { requireCustomerPortalContext } from '@/lib/auth/customer-portal';
 import { fetchCustomerPortalOrders } from '@/lib/data/customer-portal-data';
 import { fetchCustomerCourses } from '@/lib/data/customer-course-data';
+import { fetchCustomerPortalQuotes } from '@/lib/data/quote-data';
 import { lusitana } from '@/app/fonts';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDateToLocal } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import OrderStatusField from '@/app/(admin)/admin/orders/_components/status-field';
 import { CourseRegistrationStatusBadges } from './courses/_components/course-status-badges';
 import type { OrderStatus } from '@/types/order-definitions';
-import { GraduationCap, Package, Search } from 'lucide-react';
+import { FileText, GraduationCap, Search } from 'lucide-react';
 
 function greetingFirstName(sessionName: string, fallback: string) {
   const firstName = sessionName.trim().split(/\s+/)[0];
   return firstName || fallback;
 }
 
+function quoteDetailPreview(detail: string) {
+  const trimmed = detail.trim();
+  if (trimmed.length <= 100) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, 100).trim()}…`;
+}
+
 export default async function CustomerHomePage() {
   const { customer, userId, name } = await requireCustomerPortalContext();
-  const [orders, courses] = await Promise.all([
+  const [orders, courses, quotes] = await Promise.all([
     fetchCustomerPortalOrders(customer.id),
     fetchCustomerCourses(userId),
+    fetchCustomerPortalQuotes(customer.id),
   ]);
 
   const recentOrders = orders.slice(0, 3);
   const recentCourses = courses.slice(0, 3);
+  const recentQuotes = quotes.slice(0, 3);
   const displayName = greetingFirstName(
     name,
     customer.type === 'person' ? customer.first_name || customer.name : customer.name
   );
-  const showShortcuts = orders.length === 0 && courses.length === 0;
+  const showShortcuts =
+    orders.length === 0 && courses.length === 0 && quotes.length === 0;
 
   return (
     <div className="w-full max-w-4xl">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className={`${lusitana.className} text-2xl md:text-3xl`}>
-            Hola, {displayName}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Acá ves tus pedidos y cursos.
-          </p>
-        </div>
-        <Button asChild className="w-full shrink-0 sm:w-auto">
-          <Link href="/quote-request">Solicitar presupuesto</Link>
-        </Button>
+      <div>
+        <h1 className={`${lusitana.className} text-2xl md:text-3xl`}>
+          Hola, {displayName}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Acá ves tus presupuestos, pedidos y cursos.
+        </p>
       </div>
+
+      <section aria-labelledby="home-quotes-heading" className="mt-10">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 id="home-quotes-heading" className="text-lg font-semibold">
+            Mis solicitudes de presupuesto
+          </h2>
+          <Button asChild className="w-full shrink-0 sm:w-auto">
+            <Link href="/quote-request">Solicitar presupuesto</Link>
+          </Button>
+        </div>
+
+        {recentQuotes.length === 0 ? (
+          <div className="rounded-lg border border-dashed bg-white px-4 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Todavía no tenés solicitudes. Pedí un presupuesto y vas a verlas acá.
+            </p>
+            <Button asChild variant="link" className="mt-2">
+              <Link href="/quote-request">Solicitar presupuesto</Link>
+            </Button>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {recentQuotes.map((quote) => (
+              <li
+                key={quote.id}
+                className="rounded-lg border bg-white p-4"
+              >
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {formatDateToLocal(quote.date, 'es-AR')}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm">{quoteDetailPreview(quote.detail)}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-8">
         <section aria-labelledby="home-orders-heading">
@@ -65,11 +110,8 @@ export default async function CustomerHomePage() {
           {recentOrders.length === 0 ? (
             <div className="rounded-lg border border-dashed bg-white px-4 py-8 text-center">
               <p className="text-sm text-muted-foreground">
-                Todavía no tenés pedidos. Pedí un presupuesto y vas a verlos acá.
+                Todavía no tenés pedidos registrados.
               </p>
-              <Button asChild variant="link" className="mt-2">
-                <Link href="/quote-request">Solicitar presupuesto</Link>
-              </Button>
             </div>
           ) : (
             <ul className="space-y-3">
@@ -153,7 +195,7 @@ export default async function CustomerHomePage() {
             href="/quote-request"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            <Package className="size-4 shrink-0" aria-hidden="true" />
+            <FileText className="size-4 shrink-0" aria-hidden="true" />
             Solicitar presupuesto
           </Link>
           <Link

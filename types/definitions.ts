@@ -86,11 +86,19 @@ export type Quote = {
 
 export type QuoteTable = {
     id: string;
-    first_name: string;
-    last_name: string;
+    first_name: string | null;
+    last_name: string | null;
     name: string;
     email: string;
     phone: string;
+    detail: string;
+    date: string;
+    customer_id: string | null;
+}
+
+export type CustomerPortalQuote = {
+    id: string;
+    name: string;
     detail: string;
     date: string;
 }
@@ -106,6 +114,11 @@ export type Customer = {
     email: string;
     phone: string;
     address: string | null;
+}
+
+export type QuoteRequestDetail = QuoteTable & {
+    attachments: { fileUrl: string }[];
+    customer: Customer | null;
 }
 
 export type OrderTable = {
