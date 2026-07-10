@@ -5,40 +5,33 @@ import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { DollarSign, ArrowRight, Menu, X } from 'lucide-react';
-import { UserAvatar } from '@/components/shared/user-avatar';
+import { HeaderUserMenu } from '@/components/layout/header-user-menu';
+import type { UserRole } from '@/types/user-definitions';
 
 const navItems = [
-  { title: 'Mi Pedido', href: '/print-status' },
+  { title: 'Cursos', href: '/education' },
+  { title: 'Guía', href: '/print-guide' },
   { title: 'Herramientas', href: '/tools' },
-  { title: 'Guía de Impresión', href: '/print-guide' },
+  { title: 'Mi pedido', href: '/print-status' },
 ];
 
 export type MainHeaderUser = {
   username: string;
   displayName: string;
+  email: string;
   imageUrl?: string | null;
+  role: UserRole;
+  portalHref: string;
   profileHref: string;
+  alternateAccount?: {
+    userId: string;
+    role: UserRole;
+  } | null;
 };
 
 type MainHeaderProps = {
   user?: MainHeaderUser | null;
 };
-
-function HeaderUserMenu({ user }: { user: MainHeaderUser }) {
-  return (
-    <Link
-      href={user.profileHref}
-      className="flex items-center gap-2 rounded-full bg-white/10 px-2 py-1.5 pr-3 transition hover:bg-white/20"
-    >
-      <UserAvatar
-        imageUrl={user.imageUrl}
-        displayName={user.displayName}
-        size="sm"
-      />
-      <span className="max-w-[140px] truncate text-sm font-medium">{user.username}</span>
-    </Link>
-  );
-}
 
 export default function MainHeader({ user }: MainHeaderProps) {
   const isProduction = process.env.IS_PRODUCTION === 'true';
@@ -166,7 +159,7 @@ export default function MainHeader({ user }: MainHeaderProps) {
                 href="/login"
                 className={buttonVariants({ variant: 'ghost', className: 'text-white hover:bg-white/10' })}
               >
-                Login
+                Iniciar sesión
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </Link>
             ) : null}
@@ -228,23 +221,13 @@ export default function MainHeader({ user }: MainHeaderProps) {
           </Button>
 
           {user ? (
-            <Link
-              href={user.profileHref}
-              className="mt-2 flex items-center gap-3 rounded-md bg-gray-50 p-3 text-gray-800 hover:bg-gray-100"
-              onClick={closeMenu}
-            >
-              <UserAvatar
-                imageUrl={user.imageUrl}
-                displayName={user.displayName}
-                size="sm"
-                fallbackClassName="bg-primary/10 text-primary"
-              />
-              <span className="truncate text-sm font-medium">{user.username}</span>
-            </Link>
+            <div className="mt-2">
+              <HeaderUserMenu user={user} variant="drawer" />
+            </div>
           ) : showLoginLink ? (
             <Button asChild variant="ghost" className="w-full mt-2 text-gray-700 hover:bg-gray-100">
               <Link href="/login" onClick={closeMenu}>
-                Login
+                Iniciar sesión
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </Link>
             </Button>

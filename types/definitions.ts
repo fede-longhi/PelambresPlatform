@@ -105,6 +105,7 @@ export type Customer = {
     type: CustomerType;
     email: string;
     phone: string;
+    address: string | null;
 }
 
 export type OrderTable = {

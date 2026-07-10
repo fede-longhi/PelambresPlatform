@@ -53,7 +53,7 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
           aria-expanded={isOpen}
           onClick={() => setIsOpen(true)}
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-6 w-6" aria-hidden="true" />
         </Button>
         <Link href={logoHref} className="min-w-0 flex-1 overflow-hidden">
           <PelambresSidenavLogo />
@@ -85,11 +85,11 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
             aria-label="Cerrar menú de navegación"
             onClick={() => setIsOpen(false)}
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       </aside>
     </>
   );

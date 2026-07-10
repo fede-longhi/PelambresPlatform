@@ -5,9 +5,10 @@ import { WhatsApp, Instagram } from '@mui/icons-material';
 
 const navLinks = [
     { title: "Inicio", href: "/" },
-    { title: "Cotizar Ahora", href: "/quote-request" },
-    { title: "Mi Pedido", href: "/print-status" },
-    { title: "Guía de Impresión", href: "/print-guide" },
+    { title: "Cursos", href: "/education" },
+    { title: "Cotizar ahora", href: "/quote-request" },
+    { title: "Mi pedido", href: "/print-status" },
+    { title: "Guía de impresión", href: "/print-guide" },
 ];
 
 const toolLinks = [

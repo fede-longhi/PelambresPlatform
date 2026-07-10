@@ -39,7 +39,7 @@ export async function fetchLinkedCustomerForUser(
 
   try {
     const rows = await sql<Customer[]>`
-      SELECT id, name, first_name, last_name, email, phone, type
+      SELECT id, name, first_name, last_name, email, phone, address, type
       FROM customers
       WHERE id = ${customerId}
       LIMIT 1

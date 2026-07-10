@@ -50,7 +50,7 @@ Clarify scope if missing: **surface** (public / admin / customer / auth), **rout
 | Public | `MainHeader` + `MainFooter`, `max-w-7xl mx-auto` | Sans headings + `text-primary` accents | Confident, approachable, voseo |
 | Auth | `AuthPageShell` + `AuthFormPanel` | `lusitana` titles via `AuthFormTitle` | Clear, reassuring, voseo |
 | Admin | Admin layout sidenav | `lusitana` page `h1`, utilitarian tables/forms | Neutral, precise |
-| Customer | Customer sidenav, `bg-primary` logo strip | Same as admin, warmer CTAs | Helpful, voseo in guidance text |
+| Customer | `MainHeader` + `MainFooter` (no sidenav), `max-w-7xl` content | Same as admin for page titles, warmer CTAs | Helpful, voseo in guidance text |
 
 ## Do not
 

@@ -14,7 +14,7 @@ Use semantic tokens from `app/globals.css` — `bg-primary`, `text-primary`, `te
 |---------|-------|
 | Public | `MainHeader` + `MainFooter`, `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` |
 | Auth | `AuthPageShell` + `AuthFormPanel` + `AuthFormTitle` |
-| Admin / customer | Route-group layout + sidenav |
+| Admin / customer | Admin: sidenav. Customer: `MainHeader` + `MainFooter` |
 
 ## Typography
 

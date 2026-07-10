@@ -1,6 +1,6 @@
 'use server';
 
-import { signIn } from '@/auth';
+import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
 import { fetchActiveUsersByEmail, fetchUserById } from '@/lib/data/user-data';
 import { createAccountSelectionToken } from '@/lib/auth/account-selection';
@@ -177,4 +177,8 @@ export async function doSocialLogin(
     }
     throw error;
   }
+}
+
+export async function signOutUser() {
+  await signOut({ redirectTo: '/' });
 }
