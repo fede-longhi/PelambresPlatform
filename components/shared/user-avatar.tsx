@@ -21,7 +21,7 @@ type UserAvatarProps = {
   displayName: string;
   className?: string;
   fallbackClassName?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 };
 
 export function UserAvatar({
@@ -31,15 +31,26 @@ export function UserAvatar({
   fallbackClassName,
   size = 'md',
 }: UserAvatarProps) {
-  const sizeClass = size === 'sm' ? 'h-8 w-8' : 'h-9 w-9';
-  const iconSize = size === 'sm' ? 16 : 18;
+  const sizeClass =
+    size === 'sm'
+      ? 'h-8 w-8'
+      : size === 'lg'
+        ? 'h-16 w-16'
+        : size === 'xl'
+          ? 'h-24 w-24'
+          : 'h-9 w-9';
+  const iconSize = size === 'sm' ? 16 : size === 'xl' ? 32 : size === 'lg' ? 24 : 18;
+  const initialsClass =
+    size === 'xl' ? 'text-lg' : size === 'lg' ? 'text-sm' : 'text-xs';
 
   return (
     <Avatar className={cn(sizeClass, className)}>
       {imageUrl ? <AvatarImage src={imageUrl} alt={displayName} /> : null}
       <AvatarFallback className={cn('bg-white/20 text-white', fallbackClassName)}>
         {displayName.trim() ? (
-          <span className="text-xs font-semibold">{getInitials(displayName)}</span>
+          <span className={cn('font-semibold', initialsClass)}>
+            {getInitials(displayName)}
+          </span>
         ) : (
           <User size={iconSize} aria-hidden />
         )}

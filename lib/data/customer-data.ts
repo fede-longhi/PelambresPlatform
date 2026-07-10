@@ -16,6 +16,7 @@ export async function fetchFilteredCustomers(query: string, currentPage: number)
                 last_name,
                 email,
                 phone,
+                address,
                 type
             FROM customers
             WHERE
@@ -71,6 +72,7 @@ export async function fetchCustomerByEmail(email: string) {
                 last_name,
                 email,
                 phone,
+                address,
                 type
             FROM customers
             WHERE lower(trim(email)) = lower(trim(${email}))
@@ -93,6 +95,7 @@ export async function fetchCustomerById(id: string) {
                 last_name,
                 email,
                 phone,
+                address,
                 type
             FROM customers
             WHERE

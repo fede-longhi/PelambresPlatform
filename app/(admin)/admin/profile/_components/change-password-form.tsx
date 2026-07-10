@@ -8,7 +8,13 @@ import { Label } from '@/components/ui/label';
 import FieldErrorDisplay from '@/components/ui/field-error-display';
 import { useToast } from '@/hooks/use-toast';
 
-export default function ChangePasswordForm({ hasExistingPassword }: { hasExistingPassword: boolean }) {
+export default function ChangePasswordForm({
+  hasExistingPassword,
+  onSuccess,
+}: {
+  hasExistingPassword: boolean;
+  onSuccess?: () => void;
+}) {
   const initialState: PasswordFormState = { message: null, success: false };
   const [state, formAction, isPending] = useActionState(changeOwnPassword, initialState);
   const { toast } = useToast();
@@ -20,8 +26,9 @@ export default function ChangePasswordForm({ hasExistingPassword }: { hasExistin
         description: 'Tu contraseña se guardó correctamente.',
         variant: 'success',
       });
+      onSuccess?.();
     }
-  }, [state.message, toast, hasExistingPassword]);
+  }, [state.message, toast, hasExistingPassword, onSuccess]);
 
   return (
     <form action={formAction} className="space-y-4 rounded-md border bg-gray-50 p-6">
@@ -36,7 +43,9 @@ export default function ChangePasswordForm({ hasExistingPassword }: { hasExistin
       )}
 
       {!state.success && state.message && state.message !== 'success' && (
-        <p className="text-sm text-red-500">{state.message}</p>
+        <p className="text-sm text-destructive" role="alert">
+          {state.message}
+        </p>
       )}
 
       {hasExistingPassword && (

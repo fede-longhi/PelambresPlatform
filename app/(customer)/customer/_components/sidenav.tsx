@@ -17,22 +17,28 @@ export default async function CustomerSideNav() {
 
   return (
     <PortalMobileNav logoHref="/customer">
-      <div className="flex flex-col px-3 py-4 md:h-full md:px-2">
-        <Link
-          className="mb-2 hidden h-24 items-center rounded-md bg-primary p-3 md:flex"
-          href="/customer"
+      <div className="flex h-full min-h-0 flex-col px-3 py-4 md:px-2">
+        <div className="shrink-0 space-y-2">
+          <Link
+            className="mb-2 hidden h-24 items-center rounded-md bg-primary p-3 md:flex"
+            href="/customer"
+          >
+            <PelambresSidenavLogo />
+          </Link>
+          <CustomerUserProfile
+            name={session.user.name ?? 'Cliente'}
+            email={session.user.email ?? ''}
+          />
+        </div>
+
+        <nav
+          aria-label="Navegación de cliente"
+          className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain py-3"
         >
-          <PelambresSidenavLogo />
-        </Link>
-
-        <CustomerUserProfile
-          name={session.user.name ?? 'Cliente'}
-          email={session.user.email ?? ''}
-        />
-
-        <div className="flex flex-col space-y-2 md:grow">
           <CustomerNavLinks />
-          <div className="hidden grow md:block" />
+        </nav>
+
+        <div className="shrink-0 space-y-2 border-t border-border/60 pt-3">
           <RoleSwitchNavItem />
           <form
             action={async () => {
@@ -44,7 +50,7 @@ export default async function CustomerSideNav() {
               type="submit"
               className="flex h-[48px] w-full items-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:justify-start md:p-2 md:px-3"
             >
-              <PowerIcon className="h-6 w-6 shrink-0" />
+              <PowerIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
               <span>Cerrar sesión</span>
             </button>
           </form>

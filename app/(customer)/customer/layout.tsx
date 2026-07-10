@@ -1,12 +1,15 @@
-import CustomerSideNav from '@/app/(customer)/customer/_components/sidenav';
+import MainHeader from '@/components/layout/main-header';
+import { getMainHeaderUser } from '@/lib/auth/main-header-user';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const headerUser = await getMainHeaderUser();
+
   return (
-    <div className="flex h-screen w-full max-w-[100vw] flex-col overflow-x-hidden md:flex-row md:overflow-hidden">
-      <div className="flex-none md:h-full md:w-64">
-        <CustomerSideNav />
-      </div>
-      <div className="min-w-0 flex-1 overflow-y-auto p-4 md:p-12">{children}</div>
+    <div className="flex min-h-screen w-full flex-col bg-gray-50 text-gray-800">
+      <MainHeader user={headerUser} />
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+        {children}
+      </main>
     </div>
   );
 }

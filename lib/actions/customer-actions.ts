@@ -47,7 +47,7 @@ export async function createCustomerRecord(input: {
   const insertedCustomers = await sql<Customer[]>`
     INSERT INTO customers (name, first_name, last_name, email, phone, type)
     VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone ?? ''}, ${type})
-    RETURNING id, name, first_name, last_name, email, phone, type
+    RETURNING id, name, first_name, last_name, email, phone, address, type
   `;
 
   return insertedCustomers[0];
@@ -98,7 +98,7 @@ export async function createCustomer(
         insertedCustomers = await sql<Customer[]>`
         INSERT INTO customers (name, first_name, last_name, email, phone, type)
         VALUES (${name ?? null}, ${firstName ?? null}, ${lastName ?? null}, ${email}, ${phone}, ${type})
-        RETURNING id, name, first_name, last_name, type
+        RETURNING id, name, first_name, last_name, email, phone, address, type
         `;
     } catch (error) {
         console.error(error);

@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { auth } from '@/auth';
-import { canAccessAdmin } from '@/lib/auth/permissions';
+import { canAccessAdmin, canAccessCustomer } from '@/lib/auth/permissions';
 import {
   fetchUserById,
   fetchUserByEmail,
@@ -118,6 +118,34 @@ export type PasswordFormState = {
   success?: boolean;
 };
 
+const OwnProfileSchema = z.object({
+  firstName: z.string().trim().min(1, { message: 'El nombre es obligatorio.' }),
+  lastName: z.string().trim().optional().default(''),
+  phone: z.string().trim().max(40, { message: 'El teléfono es demasiado largo.' }).optional().default(''),
+  address: z
+    .string()
+    .trim()
+    .max(300, { message: 'La dirección es demasiado larga.' })
+    .optional()
+    .default(''),
+});
+
+export type OwnProfileFormState = {
+  errors?: {
+    firstName?: string[];
+    lastName?: string[];
+    phone?: string[];
+    address?: string[];
+  };
+  message?: string | null;
+  success?: boolean;
+};
+
+export type OwnProfileImageFormState = {
+  message?: string | null;
+  success?: boolean;
+  imageUrl?: string | null;
+};
 function isUniqueViolation(error: unknown): boolean {
   return (
     typeof error === 'object' &&
@@ -676,6 +704,179 @@ export async function changeOwnPassword(
   }
 }
 
+async function requireCustomerSessionUser() {
+  const session = await auth();
+  const sessionUser = session?.user;
+
+  if (
+    !sessionUser?.id ||
+    !sessionUser.email ||
+    !canAccessCustomer({
+      id: sessionUser.id,
+      email: sessionUser.email,
+      name: sessionUser.name ?? '',
+      role: sessionUser.role,
+      isActive: sessionUser.isActive,
+      mustChangePassword: sessionUser.mustChangePassword,
+    })
+  ) {
+    return null;
+  }
+
+  return sessionUser;
+}
+
+export async function updateOwnProfile(
+  prevState: OwnProfileFormState,
+  formData: FormData
+): Promise<OwnProfileFormState> {
+  const sessionUser = await requireCustomerSessionUser();
+
+  if (!sessionUser) {
+    return { message: 'No estás autenticado.', success: false };
+  }
+
+  const validatedFields = OwnProfileSchema.safeParse({
+    firstName: formData.get('firstName'),
+    lastName: formData.get('lastName'),
+    phone: formData.get('phone'),
+    address: formData.get('address'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Revisá los campos marcados.',
+      success: false,
+    };
+  }
+
+  const { firstName, lastName, phone, address } = validatedFields.data;
+  const fullName = composeUserFullName(firstName, lastName);
+  const existingUser = await fetchUserById(sessionUser.id);
+
+  if (!existingUser) {
+    return { message: 'Usuario no encontrado.', success: false };
+  }
+
+  try {
+    await sql`
+      UPDATE users
+      SET
+        first_name = ${firstName},
+        last_name = ${lastName},
+        name = ${fullName}
+      WHERE id = ${sessionUser.id}
+        AND deleted_at IS NULL
+    `;
+
+    if (existingUser.customer_id) {
+      await sql`
+        UPDATE customers
+        SET
+          phone = ${phone},
+          address = ${address || null}
+        WHERE id = ${existingUser.customer_id}
+      `;
+    }
+  } catch (error) {
+    console.error(error);
+    return { message: 'Hubo un error al guardar tu perfil.', success: false };
+  }
+
+  revalidatePath('/customer/profile');
+  revalidatePath('/customer');
+  return { message: 'success', success: true };
+}
+
+export async function updateOwnProfileImage(
+  formData: FormData
+): Promise<OwnProfileImageFormState> {
+  const sessionUser = await requireCustomerSessionUser();
+
+  if (!sessionUser) {
+    return { message: 'No estás autenticado.', success: false };
+  }
+
+  const { put, del } = await import('@vercel/blob');
+  const {
+    PROFILE_AVATAR_ALLOWED_MIME_TYPES,
+    PROFILE_AVATAR_FOLDER,
+    PROFILE_AVATAR_MAX_BYTES,
+  } = await import('@/lib/consts/profile-avatar-consts');
+
+  const file = formData.get('avatar');
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { message: 'Seleccioná una imagen.', success: false };
+  }
+
+  if (!PROFILE_AVATAR_ALLOWED_MIME_TYPES.has(file.type)) {
+    return {
+      message: 'Usá una imagen JPG, PNG o WebP.',
+      success: false,
+    };
+  }
+
+  if (file.size > PROFILE_AVATAR_MAX_BYTES) {
+    return {
+      message: 'La imagen no puede superar los 2 MB.',
+      success: false,
+    };
+  }
+
+  const existingUser = await fetchUserById(sessionUser.id);
+
+  if (!existingUser) {
+    return { message: 'Usuario no encontrado.', success: false };
+  }
+
+  const extension =
+    file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const blobPath = `${PROFILE_AVATAR_FOLDER}/${sessionUser.id}/${Date.now()}.${extension}`;
+
+  let blob;
+  try {
+    blob = await put(blobPath, file, { access: 'public', contentType: file.type });
+  } catch (error) {
+    console.error('Failed to upload profile avatar:', error);
+    return { message: 'No se pudo subir la imagen.', success: false };
+  }
+
+  try {
+    await sql`
+      UPDATE users
+      SET image_url = ${blob.url}
+      WHERE id = ${sessionUser.id}
+        AND deleted_at IS NULL
+    `;
+  } catch (error) {
+    console.error(error);
+    try {
+      await del(blob.url);
+    } catch {
+      // ignore cleanup failure
+    }
+    return { message: 'Hubo un error al guardar la foto.', success: false };
+  }
+
+  const previousImageUrl = existingUser.image_url;
+  if (
+    previousImageUrl &&
+    previousImageUrl.includes('blob.vercel-storage.com') &&
+    previousImageUrl.includes(`${PROFILE_AVATAR_FOLDER}/`)
+  ) {
+    try {
+      await del(previousImageUrl);
+    } catch (error) {
+      console.error('Failed to delete previous profile avatar:', error);
+    }
+  }
+
+  revalidatePath('/customer/profile');
+  revalidatePath('/customer');
+  return { message: 'success', success: true, imageUrl: blob.url };
+}
 /** @deprecated Use fetchUserByEmail from lib/data/user-data.ts */
 export async function getUser(email: string) {
   return fetchUserByEmail(email);
