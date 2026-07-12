@@ -97,20 +97,20 @@ export default function MainHeader({ user }: MainHeaderProps) {
   }, [isMenuOpen]);
 
   return (
-    <header className="bg-gradient-to-r from-primary to-yellow-500 shadow-xl sticky top-0 z-50 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3 md:py-4 md:space-x-10">
-          <div className="flex justify-start items-center space-x-2 z-20">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-primary to-yellow-500 text-white shadow-xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-3 md:space-x-10 md:py-4">
+          <div className="z-20 flex items-center justify-start space-x-2">
             <button
               ref={openMenuButtonRef}
               type="button"
-              className="md:hidden p-2 text-white hover:opacity-80 transition"
+              className="p-2 text-white transition hover:opacity-80 md:hidden"
               onClick={openMenu}
               aria-label="Abrir menú de navegación"
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation-menu"
             >
-              <Menu className="w-6 h-6" aria-hidden="true" />
+              <Menu className="h-6 w-6" aria-hidden="true" />
             </button>
 
             <Link href="/" className="flex items-center space-x-2">
@@ -118,18 +118,21 @@ export default function MainHeader({ user }: MainHeaderProps) {
                 src="/pelambres_logo.svg"
                 width={64}
                 height={64}
-                className="w-8 h-8 md:w-10 md:h-10"
+                className="h-8 w-8 md:h-10 md:w-10"
                 alt="Logo de Pelambres"
                 priority={true}
               />
-              <span className="text-2xl font-bold text-white tracking-tight">
+              <span className="text-2xl font-bold tracking-tight text-white">
                 Pelambres
                 <span className="text-orange-300">3D</span>
               </span>
             </Link>
           </div>
 
-          <nav className="hidden md:flex space-x-8 items-center" aria-label="Navegación principal">
+          <nav
+            className="hidden items-center space-x-8 md:flex"
+            aria-label="Navegación principal"
+          >
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -141,14 +144,14 @@ export default function MainHeader({ user }: MainHeaderProps) {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center justify-end md:flex-1 lg:w-0 space-x-4">
+          <div className="hidden items-center justify-end space-x-4 md:flex md:flex-1 lg:w-0">
             <Button
               asChild
               variant="secondary"
               className="rounded-full shadow-lg transition-transform hover:scale-[1.02]"
             >
               <Link href="/quote-request">
-                <DollarSign className="w-5 h-5 mr-2" aria-hidden="true" />
+                <DollarSign className="mr-2 h-5 w-5" aria-hidden="true" />
                 Solicitar Presupuesto
               </Link>
             </Button>
@@ -157,10 +160,26 @@ export default function MainHeader({ user }: MainHeaderProps) {
             ) : showLoginLink ? (
               <Link
                 href="/login"
-                className={buttonVariants({ variant: 'ghost', className: 'text-white hover:bg-white/10' })}
+                className={buttonVariants({
+                  variant: 'ghost',
+                  className: 'text-white hover:bg-white/10',
+                })}
               >
                 Iniciar sesión
-                <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="flex items-center md:hidden">
+            {user ? (
+              <HeaderUserMenu user={user} />
+            ) : showLoginLink ? (
+              <Link
+                href="/login"
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/15"
+              >
+                Ingresar
               </Link>
             ) : null}
           </div>
@@ -168,8 +187,8 @@ export default function MainHeader({ user }: MainHeaderProps) {
       </div>
 
       <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity md:hidden ${
-          isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${
+          isMenuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={closeMenu}
         aria-hidden={!isMenuOpen}
@@ -183,28 +202,28 @@ export default function MainHeader({ user }: MainHeaderProps) {
         aria-label="Menú de navegación"
         aria-hidden={!isMenuOpen}
         inert={!isMenuOpen ? true : undefined}
-        className={`fixed top-0 left-0 w-64 h-full bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-4 flex justify-end">
+        <div className="flex justify-end p-4">
           <button
             ref={closeMenuButtonRef}
             type="button"
-            className="text-gray-800 hover:text-primary transition"
+            className="text-gray-800 transition hover:text-primary"
             onClick={closeMenu}
             aria-label="Cerrar menú de navegación"
           >
-            <X className="w-6 h-6" aria-hidden="true" />
+            <X className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
-        <nav className="flex flex-col p-4 space-y-2" aria-label="Navegación móvil">
+        <nav className="flex flex-col space-y-2 p-4" aria-label="Navegación móvil">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="block p-3 text-lg font-medium text-gray-700 hover:bg-gray-100 rounded transition"
+              className="block rounded p-3 text-lg font-medium text-gray-700 transition hover:bg-gray-100"
               onClick={closeMenu}
             >
               {item.title}
@@ -213,25 +232,12 @@ export default function MainHeader({ user }: MainHeaderProps) {
 
           <hr className="my-4 border-gray-200" />
 
-          <Button asChild className="w-full mt-2">
+          <Button asChild className="mt-2 w-full">
             <Link href="/quote-request" onClick={closeMenu}>
-              <DollarSign className="w-5 h-5 mr-2" aria-hidden="true" />
+              <DollarSign className="mr-2 h-5 w-5" aria-hidden="true" />
               Solicitar Presupuesto
             </Link>
           </Button>
-
-          {user ? (
-            <div className="mt-2">
-              <HeaderUserMenu user={user} variant="drawer" />
-            </div>
-          ) : showLoginLink ? (
-            <Button asChild variant="ghost" className="w-full mt-2 text-gray-700 hover:bg-gray-100">
-              <Link href="/login" onClick={closeMenu}>
-                Iniciar sesión
-                <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
-              </Link>
-            </Button>
-          ) : null}
         </nav>
       </div>
     </header>
