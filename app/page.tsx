@@ -13,7 +13,7 @@ const sectionHeadingClassName =
 
 export default async function Page() {
     const headerUser = await getMainHeaderUser();
-    const jsonLd = {
+    const localBusinessJsonLd = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
         "name": "Pelambres 3D",
@@ -37,9 +37,9 @@ export default async function Page() {
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted text-foreground">
             <Script
-                id="faq-schema"
+                id="local-business-schema"
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
             />
             <MainHeader user={headerUser} />
 

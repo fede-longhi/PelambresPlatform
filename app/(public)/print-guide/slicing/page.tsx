@@ -1,103 +1,86 @@
-import React from 'react';
-import Link from 'next/link';
-import { Section, SectionContent, SectionHeader } from "@/app/(public)/print-guide/_components/section-components";
-import { Slice, Settings, FileCheck, Info } from 'lucide-react'; 
-import { Button } from '@/components/ui/button';
+import {
+  GuideCallout,
+  GuideCta,
+  GuidePageHeader,
+  GuideSection,
+} from '@/app/(public)/print-guide/_components/section-components';
+import { FileCheck, Settings, Slice } from 'lucide-react';
 
 export default function SlicingPage() {
-    return (
-        <div className="space-y-12">
-            <Section>
-                <SectionHeader title="El Archivo STL y la Integridad del Modelo" icon={<FileCheck />} />
-                <SectionContent className="space-y-4">
-                    <p>
-                        El archivo más común que utilizamos para la impresión es el <span className="font-semibold">.STL</span> (Standard Tessellation Language). Este formato define la geometría de tu modelo como una malla de triángulos.
-                    </p>
-                    
-                    <h3 className="text-xl font-semibold mt-6">Verificación de la Malla (Manifold)</h3>
-                    <p>
-                        Es crucial que tu modelo sea &quot;manifold&quot; (cerrado) para que el software laminador (slicer) sepa exactamente dónde está el interior y el exterior de la pieza. Una malla no manifold puede causar errores o agujeros en la impresión final.
-                    </p>
-                    
-                    <ul className="list-disc list-inside ml-4 space-y-2">
-                        <li>
-                            **Escala:** Siempre modela en <span className="font-bold">milímetros (mm)</span>. Si tu archivo está en pulgadas, la impresora lo reducirá en 25.4 veces.
-                        </li>
-                        <li>
-                            **Reparación:** Utiliza herramientas gratuitas como MeshMixer o la función de reparación de modelos de tu software CAD antes de exportar el STL final.
-                        </li>
-                    </ul>
-                </SectionContent>
-            </Section>
-            
+  return (
+    <div className="space-y-6">
+      <GuidePageHeader
+        title="Archivos y laminado"
+        description="Cómo preparar el STL, qué miramos en el laminado y qué parámetros mueven calidad y precio."
+      />
 
-            {/* Sección 2: Fundamentos del Laminado (Slicing) */}
-            <Section>
-                <SectionHeader title="Conceptos Clave del Laminado (Slicing)" icon={<Slice />} />
-                <SectionContent className="space-y-4">
-                    <p>
-                        El laminado es el proceso donde el software (como Cura o PrusaSlicer) toma tu archivo STL y lo convierte en instrucciones (código G) para la impresora, definiendo capa por capa cómo se debe mover el extrusor. 
-                    </p>
-                    
-                    <h3 className="text-xl font-semibold mt-6">Ajustes que Afectan el Presupuesto y la Calidad</h3>
-                    <ul className="list-disc list-inside ml-4 space-y-2">
-                        <li>
-                            **Altura de Capa (Layer Height):** Determina la calidad del detalle y la suavidad de las curvas.
-                            <p className="text-sm text-muted-foreground ml-4">
-                                <span className="font-bold">0.2 mm</span> (Estándar, rápido y balanceado). <span className="font-bold">0.12 mm</span> (Alta calidad, más lento y costoso).
-                            </p>
-                        </li>
-                        <li>
-                            **Relleno (Infill):** El porcentaje de material que rellena el interior de la pieza. Afecta la resistencia y el costo del material.
-                            <p className="text-sm text-muted-foreground ml-4">
-                                <span className="font-bold">10-20%</span> (Estándar para prototipos). <span className="font-bold">50-100%</span> (Piezas funcionales o de alta carga).
-                            </p>
-                        </li>
-                        <li>
-                            **Soportes (Supports):** Material temporal necesario para imprimir voladizos o geometrías complejas.
-                            <p className="text-sm text-muted-foreground ml-4">
-                                El costo y el tiempo de post-procesado aumentan si se requieren soportes densos.
-                            </p>
-                        </li>
-                    </ul>
+      <GuideSection
+        title="El archivo STL y la malla"
+        icon={<FileCheck className="size-5" />}
+      >
+        <p>
+          El formato más habitual es <strong>.STL</strong>: describe la geometría como una
+          malla de triángulos. También aceptamos otros formatos según el caso (por ejemplo
+          3MF u OBJ); si dudás, mandá el STL.
+        </p>
 
-                    <h3 className="text-xl font-semibold mt-6">Consideraciones de Diseño Estructural</h3>
-                    <p>
-                        Para garantizar la integridad estructural y minimizar la necesidad de soportes complejos:
-                    </p>
-                    <ul className="list-disc list-inside ml-4 space-y-2">
-                        <li>
-                            **Voladizos (Overhangs):** Evita ángulos de voladizo superiores a <span className="font-bold">45°</span> si no quieres usar soportes.
-                        </li>
-                        <li>
-                            **Espesor de Pared:** Asegura que las paredes tengan un grosor mínimo de <span className="font-bold">0.8 mm a 1.2 mm</span> para que el filamento pueda extruirse correctamente.
-                        </li>
-                    </ul>
-                </SectionContent>
-            </Section>
-            
-            <Section>
-                <SectionHeader title="Optimización del Archivo Final" icon={<Settings />} />
-                <SectionContent className="space-y-4">
-                    <p>
-                        Si envías un archivo que ya fue laminado (.GCODE), **siempre confirmaremos los ajustes contigo**, ya que solo usamos nuestros perfiles optimizados para garantizar la calidad y la durabilidad de nuestras máquinas.
-                    </p>
-                    
-                    <div className="flex flex-row bg-primary/10 p-4 border-l-4 border-primary rounded-r-md my-6">
-                        <Info className="mr-3 text-primary w-5 h-5 flex-shrink-0" />
-                        <p className="text-sm text-gray-700">
-                            **Consejo Pelambres:** Si no especificas el relleno o la altura de capa, usaremos nuestros ajustes estándar (<span className="font-bold">20%</span> de relleno, <span className="font-bold">0.2 mm</span> de altura) para darte la mejor relación costo-beneficio.
-                        </p>
-                    </div>
+        <h3 className="text-base font-semibold text-gray-900">Malla cerrada (manifold)</h3>
+        <p>
+          El modelo tiene que estar cerrado para que el laminador sepa qué es interior y qué
+          es exterior. Una malla abierta puede generar agujeros o errores de impresión.
+        </p>
+        <ul>
+          <li>
+            <strong>Unidades:</strong> modelá en <strong>milímetros</strong>. Si el archivo
+            está en pulgadas, la pieza sale ~25,4 veces más chica.
+          </li>
+          <li>
+            <strong>Reparación:</strong> antes de exportar, usá la reparación de tu CAD o
+            herramientas como Microsoft 3D Builder / Meshmixer.
+          </li>
+        </ul>
+      </GuideSection>
 
-                    <Link href="/quote-request" passHref>
-                        <Button className="text-lg">
-                            Listo para Cotizar - Sube tus Archivos
-                        </Button>
-                    </Link>
-                </SectionContent>
-            </Section>
+      <GuideSection
+        title="Qué es el laminado (slicing)"
+        icon={<Slice className="size-5" />}
+      >
+        <p>
+          El laminador convierte el modelo en instrucciones capa a capa (G-code) para la
+          impresora. Ajustes típicos que afectan calidad y presupuesto:
+        </p>
+        <ul>
+          <li>
+            <strong>Altura de capa:</strong>{' '}
+            <strong>0,2&nbsp;mm</strong> (estándar, buen equilibrio) ·{' '}
+            <strong>0,12&nbsp;mm</strong> (más detalle, más tiempo y costo).
+          </li>
+          <li>
+            <strong>Relleno (infill):</strong> 10–20&nbsp;% para prototipos; 50–100&nbsp;%
+            cuando hay carga o necesidad de rigidez.
+          </li>
+          <li>
+            <strong>Soportes:</strong> material temporal para voladizos. Más soportes =
+            más tiempo, más postprocesado y a veces más costo.
+          </li>
+        </ul>
+        <GuideCallout>
+          <p>
+            Si no indicás relleno ni altura de capa, usamos el perfil estándar:{' '}
+            <strong>20&nbsp;% de relleno</strong> y <strong>0,2&nbsp;mm</strong> de altura,
+            pensando en buena relación calidad–precio.
+          </p>
+        </GuideCallout>
+      </GuideSection>
 
-        </div>
-    );
+      <GuideSection title="Archivos G-code" icon={<Settings className="size-5" />}>
+        <p>
+          Si mandás un <strong>.gcode</strong> ya laminado, igual revisamos los parámetros
+          con vos. Trabajamos con perfiles propios, optimizados para calidad y para el
+          cuidado de nuestras máquinas.
+        </p>
+        <GuideCta href="/quote-request">Subir archivos y cotizar</GuideCta>
+      </GuideSection>
+    </div>
+  );
 }
