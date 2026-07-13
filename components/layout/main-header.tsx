@@ -8,11 +8,20 @@ import { DollarSign, ArrowRight, Menu, X } from 'lucide-react';
 import { HeaderUserMenu } from '@/components/layout/header-user-menu';
 import type { UserRole } from '@/types/user-definitions';
 
-const navItems = [
+const PUBLIC_NAV_ITEMS = [
   { title: 'Cursos', href: '/education' },
   { title: 'Guía', href: '/print-guide' },
+  { title: 'FAQ', href: '/faq' },
   { title: 'Herramientas', href: '/tools' },
   { title: 'Mi pedido', href: '/print-status' },
+];
+
+const CUSTOMER_NAV_ITEMS = [
+  { title: 'Mi cuenta', href: '/customer' },
+  { title: 'Mis pedidos', href: '/customer/orders' },
+  { title: 'Cursos', href: '/education' },
+  { title: 'Herramientas', href: '/tools' },
+  { title: 'FAQ', href: '/faq' },
 ];
 
 export type MainHeaderUser = {
@@ -40,6 +49,8 @@ export default function MainHeader({ user }: MainHeaderProps) {
   const openMenuButtonRef = useRef<HTMLButtonElement>(null);
   const closeMenuButtonRef = useRef<HTMLButtonElement>(null);
   const menuPanelRef = useRef<HTMLDivElement>(null);
+  const navItems =
+    user?.role === 'customer' ? CUSTOMER_NAV_ITEMS : PUBLIC_NAV_ITEMS;
 
   const closeMenu = () => {
     setIsMenuOpen(false);

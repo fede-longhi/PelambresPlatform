@@ -1,212 +1,198 @@
-import { ExternalLinkButton, Header, Section, SectionContent, SectionHeader } from "@/app/(public)/print-guide/_components/section-components";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Info } from "lucide-react";
+import {
+  GuideCallout,
+  GuideCta,
+  GuideExternalLink,
+  GuidePageHeader,
+  GuideSection,
+} from '@/app/(public)/print-guide/_components/section-components';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Calculator, Link2, PackageSearch, Rocket } from 'lucide-react';
 
 const filamentos = [
-    {
-        nombre: "PLA",
-        propiedades: "Fácil de imprimir, biodegradable, baja resistencia térmica",
-        costo: "bajo",
-        usos: "Prototipos, decoración, piezas no funcionales, modelos para pintar"
-    },
-    {
-        nombre: "PETG",
-        propiedades: "Resistente, resistente a químicos, mejor resistencia térmica que el PLA",
-        costo: "bajo",
-        usos: "Piezas funcionales, piezas expuestas al exterior"
-    },
-    {
-        nombre: "TPU",
-        propiedades: "Flexible, elástico, resistente al desgaste",
-        costo: "moderado",
-        usos: "Fundas, juntas, ruedas, piezas que requieren elasticidad"
-    },
-    {
-        nombre: "PLA FLEX",
-        propiedades: "Similar al PLA pero con mayor flexibilidad, fácil de imprimir",
-        costo: "bajo",
-        usos: "Piezas decorativas con flexibilidad, juguetes, prototipos con partes móviles"
-    }
+  {
+    nombre: 'PLA',
+    propiedades: 'Fácil de imprimir, rígido, baja resistencia al calor',
+    costo: 'Bajo',
+    usos: 'Prototipos, decoración, piezas no estructurales',
+  },
+  {
+    nombre: 'PETG',
+    propiedades: 'Buena resistencia mecánica y química, mejor al calor que el PLA',
+    costo: 'Bajo',
+    usos: 'Piezas funcionales, uso liviano en exterior',
+  },
+  {
+    nombre: 'TPU',
+    propiedades: 'Flexible, elástico, resistente al desgaste',
+    costo: 'Moderado',
+    usos: 'Fundas, juntas, ruedas, piezas con elasticidad',
+  },
+  {
+    nombre: 'PLA Flex',
+    propiedades: 'Más flexible que el PLA estándar, relativamente fácil de imprimir',
+    costo: 'Bajo / moderado',
+    usos: 'Decoración con algo de flexión, juguetes, prototipos móviles',
+  },
 ];
 
 export default function Page() {
-    return (
-        <div>
-            <Header title="Guía Rápida"/>
+  return (
+    <div className="space-y-6">
+      <GuidePageHeader
+        title="Guía rápida"
+        description="Todo lo esencial para empezar: cómo encargar una pieza, dónde buscar modelos, qué material elegir y cómo se arma el precio."
+      />
 
-            <div className="space-y-12">
-                <Section>
-                    <SectionHeader title="¿Cómo empezar?"/>
-                    <SectionContent className="space-y-2">
-                        <p>Para poder imprimir un archivo contactate con nosotros, envíanos el archivo o contanos que querés imprimir y nosotros te asesoramos.</p>
-                        <p>Los modelos los podes diseñar vos, encontrar en internet o pedirnos a nosotros el diseño.</p>
-                        <p>Dependiendo del tamaño y la complejidad la impresión suele estar en <b>menos de 5 días hábiles.</b></p>
-                        <p>Si ya tenés el modelo y la impresión es pequeña el modelo puede llegar a estar en el día!</p>
-                    </SectionContent>
-                </Section>
+      <GuideSection title="¿Cómo empezar?" icon={<Rocket className="size-5" />}>
+        <p>
+          Para imprimir, escribinos o pedí un presupuesto: mandanos el archivo o contanos qué
+          necesitás y te asesoramos.
+        </p>
+        <p>
+          El modelo lo podés diseñar vos, buscarlo en repositorios de la comunidad o pedirnos el
+          diseño.
+        </p>
+        <p>
+          Según tamaño y complejidad, la entrega suele estar en{' '}
+          <strong>menos de 5 días hábiles</strong>. Si ya tenés el modelo y la pieza es chica,
+          a veces llega el mismo día.
+        </p>
+        <GuideCta href="/quote-request">Pedir presupuesto</GuideCta>
+      </GuideSection>
 
-                <Section>
-                    <SectionHeader title="Links para buscar modelos"/>
-                    <SectionContent>
-                        <p>En los siguientes links podes buscar modelos hechos por la comunidad:</p>
-                        <div className="m-2 flex flex-col w-fit space-y-2">
-                            <ExternalLinkButton
-                                name="Makerworld"
-                                description="pagina oficial de bambu lab"
-                                href="https://www.makerworld.com/"
-                                domain="makerworld.com"
-                            />
-                            <ExternalLinkButton
-                                name="Thingiverse"
-                                description="todos los modelos son gratis"
-                                href="https://www.thingiverse.com/"
-                                domain="thingiverse.com"
-                            />
-                            <ExternalLinkButton
-                                name="Printables"
-                                description="pagina oficial de prusa"
-                                href="https://www.printables.com/"
-                                domain="printables.com"
-                            />
-                            <ExternalLinkButton
-                                href="https://cults3d.com/"
-                                name="Cults 3D"
-                                description="modelos gratuitos y pagos"
-                                domain="cults3d.com"
-                            />
-                            <ExternalLinkButton
-                                href="https://thangs.com/"
-                                name="Thangs"
-                                description="buscador de modelos en varios sitios a la vez"
-                                domain="thangs.com"
-                            />
-                            <ExternalLinkButton
-                                href="https://www.myminifactory.com/"
-                                name="My mini factory"
-                                description="modelos gratuitos y pagos"
-                                domain="myminifactory.com"
-                            />
-                        </div>
-                        ¡Proximamente nuestro propio catálogo! 
-                    </SectionContent>
-                </Section>
-
-                <Section>
-                    <SectionHeader title="Que filamento elegir"/>
-                    <SectionContent>
-                        Hay una gran cantidad de materiales para elegir, sin embargo acá te contamos las opciones más populares:
-
-                        <div className="m-12">
-                            <Table>
-                                <TableCaption>Lista de filamentos más populares.</TableCaption>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Filamento</TableHead>
-                                        <TableHead>Propiedades</TableHead>
-                                        <TableHead>Costo</TableHead>
-                                        <TableHead>Usos</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {
-                                        filamentos.map((filamento) => (
-                                            <TableRow key={filamento.nombre}> 
-                                                <TableCell>{filamento.nombre}</TableCell>
-                                                <TableCell>{filamento.propiedades}</TableCell>
-                                                <TableCell>{filamento.costo}</TableCell>
-                                                <TableCell>{filamento.usos}</TableCell>
-                                            </TableRow>
-
-                                        ))
-                                    }
-                                </TableBody>
-                            </Table>
-                        </div>
-
-                    </SectionContent>
-                </Section>
-
-                <Section>
-                    <SectionHeader title="Catálogo de filamentos"/>
-                    <SectionContent>
-                        En Pelambres utilizamos la mejor calidad de filamentos. Los principales proveedores son:
-                        <div className="m-2 flex flex-col w-fit space-y-2">
-                            <ExternalLinkButton
-                                href="https://printalot.com.ar/categoria-producto/filamentos/"
-                                name="Printalot"
-                                domain="printalot.com.ar"
-                            />        
-                            <ExternalLinkButton
-                                href="https://grilon3.com.ar/productos/"
-                                name="Grilon"
-                                domain="grilon3.com.ar"
-                            />
-                        </div>
-                        Hoy en día el mercado se amplía constantemente y hay muchas más opciones de filamentos, si tenés alguna preferencia o querés un tipo de filamento específico no dudes en preguntarnos!
-                        {/* Además podes encontrar más opciones en:
-                        <div className="m-2 flex flex-col w-fit space-y-2">
-                            <ExternalLinkButton
-                                href="https://hellbot.com.ar/11-filamentos/"
-                                name="Hellbot"
-                                domain="hellbot.com.ar"
-                            />
-                            <span className="text-sm text-gray-700">
-                            </span>
-                        </div> */}
-
-
-                    </SectionContent>
-                </Section>
-
-                <Section>
-                    <SectionHeader title="Cómo se calcula el valor del proyecto"/>
-                    <SectionContent>
-                        <div className="mb-6">
-                            <h2 className="text-lg font-semibold mb-2">Costo de la impresión</h2>
-                            <p className="mb-2">Este valor depende principalmente de dos factores:</p>
-                            <ul className="list-disc list-inside space-y-1">
-                                <li>
-                                    <strong>Tiempo de impresión</strong>:
-                                    <ul className="list-disc list-inside ml-5 space-y-1">
-                                        <li>Tamaño de las piezas</li>
-                                        <li>Complejidad del modelo</li>
-                                    </ul>
-                                </li>
-                                <li>
-                                    <strong>Costo del material</strong>:
-                                    <ul className="list-disc list-inside ml-5 space-y-1">
-                                        <li>Cantidad de filamento utilizado</li>
-                                        <li>Tipo de material (PLA, PETG, TPU, etc.)</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            <div className="flex flex-row bg-secondary/50 p-4 my-4">
-                                <Info className="mr-2 text-primary" />
-                                Importante: una pieza más grande no siempre cuesta más, ya que una pieza pequeña pero densa o compleja puede requerir más tiempo y material.
-                            </div>
-                        </div>
-
-                        <div>
-                            <h2 className="text-lg font-semibold mb-2">Costo total del proyecto</h2>
-                            <p>Además del costo de impresión, hay otros elementos que componen el precio final:</p>
-                            <ul className="list-disc list-inside space-y-1">
-                                <li><strong>Diseño del modelo</strong>: si hay que crearlo desde cero o modificar uno existente.</li>
-                                <li><strong>Impresión 3D</strong>: basado en tiempo y materiales como se explicó arriba.</li>
-                                <li>
-                                <strong>Postprocesado</strong>: tareas adicionales como:
-                                <ul className="list-disc list-inside ml-5 space-y-1">
-                                    <li>Emprolijar bordes o soportes</li>
-                                    <li>Pintura y acabados</li>
-                                    <li>Ensamblaje de piezas</li>
-                                    <li>Otros detalles personalizados</li>
-                                </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </SectionContent>
-                </Section>
-
-            </div>
+      <GuideSection title="Dónde buscar modelos" icon={<Link2 className="size-5" />}>
+        <p>Sitios útiles de la comunidad (gratis y/o pagos):</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <GuideExternalLink
+            name="MakerWorld"
+            description="Catálogo de Bambu Lab"
+            href="https://www.makerworld.com/"
+            domain="makerworld.com"
+          />
+          <GuideExternalLink
+            name="Thingiverse"
+            description="Modelos mayormente gratuitos"
+            href="https://www.thingiverse.com/"
+            domain="thingiverse.com"
+          />
+          <GuideExternalLink
+            name="Printables"
+            description="Catálogo de Prusa"
+            href="https://www.printables.com/"
+            domain="printables.com"
+          />
+          <GuideExternalLink
+            name="Cults 3D"
+            description="Gratuitos y pagos"
+            href="https://cults3d.com/"
+            domain="cults3d.com"
+          />
+          <GuideExternalLink
+            name="Thangs"
+            description="Busca en varios sitios a la vez"
+            href="https://thangs.com/"
+            domain="thangs.com"
+          />
+          <GuideExternalLink
+            name="MyMiniFactory"
+            description="Gratuitos y pagos"
+            href="https://www.myminifactory.com/"
+            domain="myminifactory.com"
+          />
         </div>
-    )
+        <p className="text-sm text-muted-foreground">
+          Pronto vamos a sumar un catálogo propio de Pelambres.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Qué filamento elegir" icon={<PackageSearch className="size-5" />}>
+        <p>Hay muchos materiales; estos son los más pedidos:</p>
+        <div className="overflow-x-auto rounded-lg border">
+          <Table>
+            <TableCaption>Filamentos más usados en Pelambres.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Filamento</TableHead>
+                <TableHead>Propiedades</TableHead>
+                <TableHead>Costo</TableHead>
+                <TableHead>Usos típicos</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filamentos.map((filamento) => (
+                <TableRow key={filamento.nombre}>
+                  <TableCell className="font-medium">{filamento.nombre}</TableCell>
+                  <TableCell>{filamento.propiedades}</TableCell>
+                  <TableCell>{filamento.costo}</TableCell>
+                  <TableCell>{filamento.usos}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <p>
+          Trabajamos con filamentos de buena calidad. Proveedores frecuentes:
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <GuideExternalLink
+            href="https://printalot.com.ar/categoria-producto/filamentos/"
+            name="Printalot"
+            domain="printalot.com.ar"
+          />
+          <GuideExternalLink
+            href="https://grilon3.com.ar/productos/"
+            name="Grilon3"
+            domain="grilon3.com.ar"
+          />
+        </div>
+        <p>
+          Si necesitás un material puntual, consultanos: el mercado cambia rápido y podemos
+          conseguir opciones específicas.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Cómo se calcula el valor" icon={<Calculator className="size-5" />}>
+        <h3 className="text-base font-semibold text-gray-900">Costo de impresión</h3>
+        <p>Depende sobre todo de:</p>
+        <ul>
+          <li>
+            <strong>Tiempo de impresión:</strong> tamaño y complejidad del modelo.
+          </li>
+          <li>
+            <strong>Material:</strong> cantidad de filamento y tipo (PLA, PETG, TPU, etc.).
+          </li>
+        </ul>
+        <GuideCallout>
+          <p>
+            Una pieza más grande no siempre sale más cara: una chica pero densa o con muchos
+            soportes puede consumir más tiempo y material.
+          </p>
+        </GuideCallout>
+
+        <h3 className="pt-2 text-base font-semibold text-gray-900">Costo total del proyecto</h3>
+        <p>Al presupuesto de impresión se pueden sumar:</p>
+        <ul>
+          <li>
+            <strong>Diseño:</strong> crear o adaptar el modelo.
+          </li>
+          <li>
+            <strong>Impresión 3D:</strong> tiempo + material.
+          </li>
+          <li>
+            <strong>Postprocesado:</strong> limpieza de soportes, lijado, pintura, ensamble u
+            otros acabados.
+          </li>
+        </ul>
+        <GuideCta href="/quote-request">Cotizar mi proyecto</GuideCta>
+      </GuideSection>
+    </div>
+  );
 }

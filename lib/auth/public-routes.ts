@@ -3,6 +3,7 @@ const LOGGED_IN_PUBLIC_PREFIXES = [
   '/quote-request',
   '/tools',
   '/print-guide',
+  '/faq',
   '/course-slides',
 ] as const;
 

@@ -1,50 +1,117 @@
-import React from 'react';
-import { Info } from 'lucide-react';
-import { Section, SectionContent, SectionHeader } from '@/app/(public)/print-guide/_components/section-components';
+import {
+  GuideCallout,
+  GuideCta,
+  GuidePageHeader,
+  GuideSection,
+} from '@/app/(public)/print-guide/_components/section-components';
+import { Boxes, Cpu, Layers } from 'lucide-react';
+import Link from 'next/link';
+import { PRINT_GUIDE_NAV } from '@/lib/consts/print-guide-consts';
 
 export default function Page() {
+  return (
+    <div className="space-y-6">
+      <GuidePageHeader
+        title="Empezá por acá"
+        description="Una visión clara de la impresión 3D industrial y de cómo trabajamos en Pelambres, para que sepas qué pedir y qué esperar."
+      />
 
-    return (
-        <div>
-            <div className="space-y-12">
-                <Section>
-                    <SectionContent>
-                        <p>La impresión 3d involucra muchas tecnologías y areas, desde la construcción hasta el uso en medicina. Sin embargo nos vamos a centrar en lo que es la producción industrial.</p>
-                        <p>En este sentido la impresión 3d introduce una alternativa a los métodos tradicionales como el moldeo por inyección. A pesar de que a gran escala es más rapido y barato, la impresión 3d ofrece mayor versatilidad y menor inversión inicial para la producción. Esto lo hace perfecta para el desarrollo de prototipos y producciones en pequeña y mediana escala.</p>
-                    </SectionContent>
-                </Section>
+      <GuideSection title="Qué es la impresión 3D (para producción)" icon={<Cpu className="size-5" />}>
+        <p>
+          La impresión 3D abarca muchas industrias, desde construcción hasta medicina. En
+          Pelambres nos enfocamos en <strong>producción y prototipado</strong> con tecnologías
+          de escritorio e industriales accesibles.
+        </p>
+        <p>
+          Frente a métodos como el moldeo por inyección, la impresión 3D no siempre gana en
+          costo a gran escala, pero sí en <strong>flexibilidad</strong>, velocidad de iteración
+          y menor inversión inicial. Por eso es ideal para prototipos, series cortas y
+          piezas personalizadas.
+        </p>
+      </GuideSection>
 
-                <Section>
-                    <SectionHeader title="Tecnologías" />
-                    <SectionContent>
-                            <p>Hay diferentes tecnologías para la impresión 3d siendo FDM y SLA las más comunes.</p>
-                            <ul className="list-none md:list-disc m-4">
-                                <li><b>FDM</b> (moldeado por deposición fundida): consiste en ir depositando material fundido (plástico en nuestro caso) en diferentes capas.</li> 
-                                <li><b>SLA</b> (estereolitografía ): utiliza resinas líquidas que se solidifcan al ser expuestas a la luz. Esta téncnica es un poco más costosa y requiere un proceso más complejo de postprocesado, pero suele ser más rápida y tener mejores terminaciones.</li> 
-                            </ul>
-                            <p>Nosotros actualmente utilizamos principalmente FDM, pero ofrecemos asesoramiento en SLA.</p>
-                    </SectionContent>
-                </Section>
+      <GuideSection title="Tecnologías que usamos" icon={<Layers className="size-5" />}>
+        <p>Las dos más comunes son:</p>
+        <ul>
+          <li>
+            <strong>FDM</strong> (modelado por deposición fundida): deposita plástico fundido
+            capa por capa. Es nuestra tecnología principal: versátil, económica y apta para
+            prototipos y piezas funcionales.
+          </li>
+          <li>
+            <strong>SLA</strong> (estereolitografía): solidifica resina líquida con luz. Suele
+            dar mejor detalle superficial, pero el postprocesado es más exigente y el costo
+            suele ser mayor.
+          </li>
+        </ul>
+        <p>
+          Hoy imprimimos principalmente en <strong>FDM</strong>. Si tu proyecto pide SLA, te
+          asesoramos sobre viabilidad y alternativas.
+        </p>
+      </GuideSection>
 
-                <Section>
-                    <SectionHeader title="Materiales" />
-                    <SectionContent>
-                        <p>Para la impresión FDM utilizamos bobinas de filamento de distintos materiales termoplásticos (materiales que se deforman a altas temperaturas).</p>
-                        Estos son los más comunes:
-                        <ul className="list-none md:list-disc m-4">
-                            <li><b>PLA</b>: utilizado principalmente para prototipos y piezas decorativas. Fácil de imprimir. Baja tolerancia al calor. Rígido, poca resistencia mecánica.</li> 
-                            <li><b>PET-G</b>: un poco más complicado de imprimir que el PLA pero sigue siendo fácil de imprimir. Tiene mejor tolerancia al calor y mejor resistencia mecánica.</li> 
-                            <li><b>TPU</b>: flexible. Complejo para imprimir. Fuerte y resistente al calor.</li> 
-                            <li><b>ABS</b>: características similares al PET-G, suele ser un poco más complicado para imprimir por eso se suele utilizar el PET-G antes que el ABS.</li> 
-                            <li><b>NYLON</b>: extremadamente duradero y notable resistencia química. Difícil de imprimir.</li> 
-                        </ul>
-                        <div className="flex flex-row bg-secondary/50 p-4">
-                            <Info className="mr-2 text-primary"/>
-                            Para tener en cuenta, los materiales que suelen ser más difíciles de imprimir tienden a incrementar el costo de la impresión por su mayor tasa de fallos. Además el suele perder algo de calidad en el acabado final.
-                        </div>
-                    </SectionContent>
-                </Section>
-            </div>
-        </div>
-    );
+      <GuideSection title="Materiales más usados" icon={<Boxes className="size-5" />}>
+        <p>
+          En FDM trabajamos con filamentos termoplásticos. Estos son los más frecuentes:
+        </p>
+        <ul>
+          <li>
+            <strong>PLA:</strong> fácil de imprimir. Ideal para prototipos y piezas
+            decorativas. Baja resistencia al calor.
+          </li>
+          <li>
+            <strong>PETG:</strong> buen equilibrio entre facilidad, resistencia mecánica y
+            tolerancia térmica. Muy usado en piezas funcionales.
+          </li>
+          <li>
+            <strong>TPU:</strong> flexible y resistente al desgaste. Más exigente de imprimir;
+            ideal para fundas, juntas y piezas elásticas.
+          </li>
+          <li>
+            <strong>ABS / ASA:</strong> más resistentes al calor que el PLA; requieren mejor
+            control térmico. En muchos casos el PETG alcanza un resultado similar con menos
+            complicaciones.
+          </li>
+          <li>
+            <strong>Nylon:</strong> muy durable y con buena resistencia química. Absorbe
+            humedad y es más difícil de imprimir.
+          </li>
+        </ul>
+        <GuideCallout>
+          <p>
+            Los materiales más difíciles de imprimir suelen subir el costo por mayor tiempo,
+            riesgo de fallos y postprocesado. Si no estás seguro, empezá por PLA o PETG y te
+            orientamos según el uso.
+          </p>
+        </GuideCallout>
+      </GuideSection>
+
+      <GuideSection title="Seguí explorando">
+        <ul className="!list-none !pl-0 space-y-2">
+          {PRINT_GUIDE_NAV.filter((item) => item.href !== '/print-guide').map((item) => (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className="group flex items-start gap-3 rounded-lg border border-transparent px-3 py-2 transition hover:border-border hover:bg-gray-50"
+              >
+                <item.icon
+                  className="mt-0.5 size-4 shrink-0 text-primary"
+                  aria-hidden="true"
+                />
+                <span>
+                  <span className="block font-medium text-gray-900 group-hover:text-primary">
+                    {item.name}
+                  </span>
+                  <span className="block text-sm text-muted-foreground">
+                    {item.description}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <GuideCta href="/quote-request">Solicitar presupuesto</GuideCta>
+      </GuideSection>
+    </div>
+  );
 }

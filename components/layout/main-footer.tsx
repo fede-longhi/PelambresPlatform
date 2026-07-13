@@ -9,6 +9,7 @@ const navLinks = [
     { title: "Cotizar ahora", href: "/quote-request" },
     { title: "Mi pedido", href: "/print-status" },
     { title: "Guía de impresión", href: "/print-guide" },
+    { title: "Preguntas frecuentes", href: "/faq" },
 ];
 
 const toolLinks = [

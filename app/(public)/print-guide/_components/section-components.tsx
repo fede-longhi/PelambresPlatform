@@ -1,115 +1,204 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { lusitana } from "@/app/fonts";
-import { cn } from "@/lib/utils";
-import { BookOpen, ExternalLink} from "lucide-react";
+import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { BookOpen, ExternalLink, Info } from 'lucide-react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
-interface SectionHeaderProps {
-    title: string;
-    icon?: React.ReactNode; // Permite pasar cualquier componente o elemento React como icono
+export function GuidePageHeader({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <header className="mb-8 space-y-2 md:mb-10">
+      <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+        {title}
+      </h1>
+      {description ? (
+        <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
+          {description}
+        </p>
+      ) : null}
+    </header>
+  );
 }
 
-export function SectionHeader({ title, icon }: SectionHeaderProps) {
-    return (
-        <header className={cn(`${lusitana.className} flex items-center pb-6 pt-4 px-4 rounded-t-md mb-6 shadow-sm rounded-t-md`)}>
-            <div className="mr-3 text-primary">
-                {icon ? icon : <BookOpen className="w-6 h-6" />}
-            </div>
-
-            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                {title}
-            </h2>
-        </header>
-    );
-}
-
-
-export function Header({title, className} : {title: string, className?: string}) {
-    return (
-        <h1 className={cn(`${lusitana.className} text-center font-medium text-[44px] mb-12`, className)}>
+export function GuideSection({
+  title,
+  icon,
+  children,
+  className,
+}: {
+  title?: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        'rounded-xl border border-border bg-white p-5 shadow-sm sm:p-6',
+        className
+      )}
+    >
+      {title ? (
+        <div className="mb-4 flex items-start gap-3">
+          <div className="mt-0.5 text-primary" aria-hidden="true">
+            {icon ?? <BookOpen className="size-5" />}
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
             {title}
-        </h1>   
-    )
+          </h2>
+        </div>
+      ) : null}
+      <div className="space-y-3 text-base leading-relaxed text-gray-700 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-5">
+        {children}
+      </div>
+    </section>
+  );
 }
 
-// export function SectionHeader({title, className} : {title?: string, className?: string}) {
-//     return (
-//         <h2 className={cn(`${lusitana.className} font-medium text-[32px] bg-primary text-primary-foreground p-2 px-8 mb-2`, className)}>
-//             {title}
-//         </h2>
-//     );
-// }
+export function GuideCallout({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-gray-700',
+        className
+      )}
+      role="note"
+    >
+      <Info className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+      <div className="min-w-0 space-y-1">{children}</div>
+    </div>
+  );
+}
 
-const Section = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "bg-white",
-      className
-    )}
-    {...props}
-  />
-))
-Section.displayName = "Section"
+export function GuideExternalLink({
+  href,
+  name,
+  description,
+  domain,
+}: {
+  href: string;
+  name: string;
+  description?: string;
+  domain: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-primary/5"
+    >
+      <Image
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+        alt=""
+        width={16}
+        height={16}
+        className="size-4 shrink-0"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-gray-900">{name}</span>
+        {description ? (
+          <span className="block text-xs text-muted-foreground">{description}</span>
+        ) : null}
+      </span>
+      <ExternalLink className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <span className="sr-only">(se abre en una pestaña nueva)</span>
+    </a>
+  );
+}
 
-const SectionContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "p-4",
-      className
-    )}
-    {...props}
-  />
-))
-SectionContent.displayName = "SectionContent"
-
-interface ExternalLinkButtonProps {
-    href: string;
-    name: string;
-    description?: string;
-    domain: string;
-};
-  
-export function ExternalLinkButton({
-    href,
-    name,
-    description,
-    domain,
-}: ExternalLinkButtonProps) {
-    return (
+export function GuideCta({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="pt-2">
       <Link
         href={href}
-        target="_blank"
-        className="flex flex-row border border-primary rounded-md items-center p-2 space-x-2 hover:bg-primary/10 transition"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
       >
-        <div className="flex flex-col md:flex-row md:items-center">
-            <span className="flex flex-row items-center">
-                <Image
-                src={`https://www.google.com/s2/favicons?domain=${domain}`}
-                alt={`${name}-icon`}
-                width={16}
-                height={16}
-                className="w-4 h-4 mr-2"
-                />
-                {name}
-            </span>
-            {
-                description &&
-                <span className="text-gray-500 text-sm md:ml-4">{description}</span>
-            }
-        </div>
-        <span className="flex-1" />
-        <ExternalLink />
+        {children}
       </Link>
-    );
+    </div>
+  );
 }
 
-export {Section, SectionContent}
+/** @deprecated Prefer GuideSection */
+export function SectionHeader({
+  title,
+  icon,
+}: {
+  title: string;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <div className="text-primary" aria-hidden="true">
+        {icon ?? <BookOpen className="size-5" />}
+      </div>
+      <h2 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h2>
+    </div>
+  );
+}
+
+/** @deprecated Prefer GuidePageHeader */
+export function Header({
+  title,
+  className,
+}: {
+  title: string;
+  className?: string;
+}) {
+  return (
+    <h1
+      className={cn(
+        'mb-8 text-center text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl',
+        className
+      )}
+    >
+      {title}
+    </h1>
+  );
+}
+
+/** @deprecated Prefer GuideSection */
+export function Section({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn('rounded-xl border bg-white p-5 sm:p-6', className)} {...props} />
+  );
+}
+
+/** @deprecated Prefer children of GuideSection */
+export function SectionContent({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('space-y-3', className)} {...props} />;
+}
+
+/** @deprecated Prefer GuideExternalLink */
+export function ExternalLinkButton(props: {
+  href: string;
+  name: string;
+  description?: string;
+  domain: string;
+}) {
+  return <GuideExternalLink {...props} />;
+}

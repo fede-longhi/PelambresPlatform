@@ -1,17 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useState, type ComponentType } from 'react';
 import {
   ArrowLeftRight,
-  BookOpen,
   ChevronDown,
   LayoutDashboard,
   LogOut,
-  Package,
   Settings,
-  Store,
 } from 'lucide-react';
 import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
 import { signOutUser } from '@/lib/actions/auth-actions';
@@ -35,7 +31,6 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import type { MainHeaderUser } from '@/components/layout/main-header';
-import type { UserRole } from '@/types/user-definitions';
 
 type HeaderUserMenuProps = {
   user: MainHeaderUser;
@@ -43,64 +38,25 @@ type HeaderUserMenuProps = {
 
 type AccountAction = {
   key: string;
-  href?: string;
+  href: string;
   label: string;
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' }>;
-  destructive?: boolean;
 };
 
-function isPublicSurface(pathname: string): boolean {
-  return !pathname.startsWith('/customer') && !pathname.startsWith('/admin');
-}
-
-function isCustomerSurface(pathname: string): boolean {
-  return pathname.startsWith('/customer');
-}
-
-function portalLabel(role: UserRole): string {
-  return role === 'customer' ? 'Ir a mi portal' : 'Ir al panel de admin';
-}
-
 function useAccountMenuItems(user: MainHeaderUser) {
-  const pathname = usePathname();
-  const onPublicSurface = isPublicSurface(pathname);
-  const onCustomerSurface = isCustomerSurface(pathname);
   const switchAction = user.alternateAccount
     ? switchRoleAccountForUser.bind(null, user.alternateAccount.userId)
     : null;
 
   const links: AccountAction[] = [];
 
-  if (onPublicSurface) {
+  if (user.role === 'admin') {
     links.push({
-      key: 'portal',
-      href: user.portalHref,
-      label: portalLabel(user.role),
+      key: 'admin',
+      href: '/admin',
+      label: 'Ir al panel de admin',
       icon: LayoutDashboard,
     });
-  }
-
-  if (onCustomerSurface) {
-    links.push(
-      {
-        key: 'orders',
-        href: '/customer/orders',
-        label: 'Mis pedidos',
-        icon: Package,
-      },
-      {
-        key: 'courses',
-        href: '/customer/courses',
-        label: 'Mis cursos',
-        icon: BookOpen,
-      },
-      {
-        key: 'site',
-        href: '/',
-        label: 'Ir al sitio',
-        icon: Store,
-      }
-    );
   }
 
   links.push({
@@ -147,7 +103,7 @@ export function HeaderUserMenu({ user }: HeaderUserMenuProps) {
 
             {links.map((item) => (
               <DropdownMenuItem key={item.key} asChild className="cursor-pointer">
-                <Link href={item.href!}>
+                <Link href={item.href}>
                   <item.icon aria-hidden="true" />
                   {item.label}
                 </Link>
@@ -199,11 +155,11 @@ export function HeaderUserMenu({ user }: HeaderUserMenuProps) {
               />
             </button>
           </SheetTrigger>
-          <SheetContent
-            side="bottom"
-            className="rounded-t-2xl px-4 pb-8 pt-4"
-          >
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted" aria-hidden="true" />
+          <SheetContent side="bottom" className="rounded-t-2xl px-4 pb-8 pt-4">
+            <div
+              className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted"
+              aria-hidden="true"
+            />
             <SheetHeader className="mb-4 text-left">
               <SheetTitle className="truncate">{user.displayName}</SheetTitle>
               <SheetDescription className="truncate">{user.email}</SheetDescription>
@@ -213,7 +169,7 @@ export function HeaderUserMenu({ user }: HeaderUserMenuProps) {
               {links.map((item) => (
                 <Link
                   key={item.key}
-                  href={item.href!}
+                  href={item.href}
                   onClick={() => setSheetOpen(false)}
                   className={cn(
                     'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted'
