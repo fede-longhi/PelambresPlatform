@@ -1,0 +1,39 @@
+---
+description: URL path segments must be English kebab-case; Spanish is for UI copy only
+alwaysApply: true
+---
+
+# URL Routes (English)
+
+App Router **pathnames** and **search param names** are English. User-facing labels stay Spanish (es-AR).
+
+## Rules
+
+1. **Path segments** — English, kebab-case: `/store`, `/store/products`, `/quote-request`, `/admin/categories`.
+2. **Dynamic params** — English names in folders and types: `[slug]`, `[storeType]`, `params.id`.
+3. **Query keys** — English: `?category=`, `?page=`, `?query=` — not `?categoria=`.
+4. **UI copy** — Spanish is fine and expected (`Productos`, `Diseños`, botón text). Do not Spanish-ify the URL to match the label.
+5. **Slugs in DB** — Prefer English or language-neutral kebab-case when admin-generated; customer-visible category/product slugs may follow content language but route **prefixes** stay English.
+
+## Examples
+
+```text
+✅ /store
+✅ /store/products
+✅ /store/designs
+✅ /store/products/gear-box
+✅ /store/designs?category=miniatures
+✅ /admin/products
+✅ /admin/categories
+
+❌ /store/productos
+❌ /store/disenos
+❌ /tienda
+❌ ?categoria=
+```
+
+## When adding a route
+
+- Match existing public patterns: `/education`, `/print-guide`, `/faq`, `/tools`.
+- Admin under `/admin/{domain}` in English plurals (`products`, `orders`, `customers`).
+- If an old Spanish path must stay temporarily, add a **redirect** to the English path in `next.config.ts` — do not leave Spanish as the canonical route.

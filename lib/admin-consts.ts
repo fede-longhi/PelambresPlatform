@@ -4,11 +4,14 @@ import {
   Calculator,
   FileBox,
   FileInput,
+  Flag,
   Hammer,
   House,
   LifeBuoy,
+  Package,
   Printer,
   Settings,
+  Tags,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -38,6 +41,13 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     ],
   },
   {
+    label: 'Tienda',
+    links: [
+      { name: 'Productos', href: '/admin/products', icon: Package },
+      { name: 'Categorías', href: '/admin/categories', icon: Tags },
+    ],
+  },
+  {
     label: 'Educación',
     links: [{ name: 'Cursos', href: '/admin/courses', icon: Book }],
   },
@@ -53,6 +63,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: 'Sistema',
     links: [
       { name: 'Usuarios', href: '/admin/users', icon: Users },
+      { name: 'Features', href: '/admin/features', icon: Flag },
       { name: 'Configuración', href: '/admin/configuration', icon: Settings },
     ],
   },

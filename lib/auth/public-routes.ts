@@ -4,6 +4,7 @@ const LOGGED_IN_PUBLIC_PREFIXES = [
   '/tools',
   '/print-guide',
   '/faq',
+  '/store',
   '/course-slides',
 ] as const;
 

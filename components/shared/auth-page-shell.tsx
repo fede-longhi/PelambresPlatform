@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import MainHeader from '@/components/layout/main-header';
 import { PelambresAuthLogo } from '@/components/shared/pelambres-auth-logo';
+import { getAccessibleFeatureKeysForSession } from '@/lib/auth/feature-access';
 import { getMainHeaderUser } from '@/lib/auth/main-header-user';
 
 type AuthPageShellProps = {
@@ -9,12 +10,15 @@ type AuthPageShellProps = {
 };
 
 export async function AuthPageShell({ children }: AuthPageShellProps) {
-  const headerUser = await getMainHeaderUser();
+  const [headerUser, accessibleFeatures] = await Promise.all([
+    getMainHeaderUser(),
+    getAccessibleFeatureKeysForSession(),
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <div className="hidden md:block">
-        <MainHeader user={headerUser} />
+        <MainHeader user={headerUser} accessibleFeatures={accessibleFeatures} />
       </div>
 
       <div className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden">
