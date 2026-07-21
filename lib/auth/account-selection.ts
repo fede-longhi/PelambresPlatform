@@ -1,5 +1,5 @@
+import 'server-only';
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { UserRole } from '@/types/user-definitions';
 
 const TOKEN_TTL_MS = 10 * 60 * 1000;
 
@@ -77,8 +77,3 @@ export function verifyAccountSelectionToken(token: string): AccountSelectionPayl
     return null;
   }
 }
-
-export const ROLE_SELECTION_LABELS: Record<UserRole, string> = {
-  admin: 'Administrador',
-  customer: 'Cliente',
-};

@@ -9,7 +9,7 @@ import {
   requestPasswordReset,
   type ForgotPasswordState,
 } from '@/lib/actions/password-reset-actions';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import type { UserRole } from '@/types/user-definitions';
 import {
   AuthFormDescription,
