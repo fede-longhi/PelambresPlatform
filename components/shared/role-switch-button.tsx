@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { ArrowLeftRight } from 'lucide-react';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import { switchRoleAccountForUser } from '@/lib/actions/role-switch-actions';
 import type { UserRole } from '@/types/user-definitions';
 

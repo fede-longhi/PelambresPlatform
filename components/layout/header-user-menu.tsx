@@ -9,7 +9,7 @@ import {
   LogOut,
   Settings,
 } from 'lucide-react';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import { signOutUser } from '@/lib/actions/auth-actions';
 import { switchRoleAccountForUser } from '@/lib/actions/role-switch-actions';
 import { UserAvatar } from '@/components/shared/user-avatar';

@@ -34,6 +34,10 @@ input[type='number']::-webkit-outer-spin-button {
     --secondary-foreground: 222.2 47.4% 11.2%;
     --success: 	114.2 54.2% 37.6%;
     --success-foreground: 210 40% 98%;
+    --whatsapp: 142 70% 45%;
+    --whatsapp-foreground: 0 0% 100%;
+    --mail: 199 89% 48%;
+    --mail-foreground: 0 0% 100%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 286.9 49.8% 41.4%;
@@ -75,6 +79,10 @@ input[type='number']::-webkit-outer-spin-button {
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+    --whatsapp: 142 70% 49%;
+    --whatsapp-foreground: 0 0% 100%;
+    --mail: 199 89% 55%;
+    --mail-foreground: 222.2 47.4% 11.2%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;

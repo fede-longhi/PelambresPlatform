@@ -6,13 +6,17 @@ import { Package, DraftingCompass, Slice, PencilRuler } from "lucide-react";
 import { GoogleReviews } from '@/components/google-reviews/google-reviews';
 import MainHeader from '@/components/layout/main-header';
 import MainFooter from '@/components/layout/main-footer';
+import { getAccessibleFeatureKeysForSession } from '@/lib/auth/feature-access';
 import { getMainHeaderUser } from '@/lib/auth/main-header-user';
 
 const sectionHeadingClassName =
     'text-3xl font-extrabold text-center text-heading-foreground sm:text-4xl';
 
 export default async function Page() {
-    const headerUser = await getMainHeaderUser();
+    const [headerUser, accessibleFeatures] = await Promise.all([
+        getMainHeaderUser(),
+        getAccessibleFeatureKeysForSession(),
+    ]);
     const localBusinessJsonLd = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
@@ -41,7 +45,7 @@ export default async function Page() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
             />
-            <MainHeader user={headerUser} />
+            <MainHeader user={headerUser} accessibleFeatures={accessibleFeatures} />
 
             <main className="space-y-20">
                 <section className="relative bg-background pt-12 sm:pt-16 lg:pt-24">
@@ -186,7 +190,7 @@ export default async function Page() {
 
             </main>
 
-            <MainFooter />
+            <MainFooter accessibleFeatures={accessibleFeatures} />
         </div>
     );
 }

@@ -14,7 +14,7 @@ import {
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import type { UserRole } from '@/types/user-definitions';
 import {
   AuthFormDescription,

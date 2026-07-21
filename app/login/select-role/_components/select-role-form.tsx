@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { completeAccountSelection, type AuthenticateState } from '@/lib/actions/auth-actions';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import type { UserRole } from '@/types/user-definitions';

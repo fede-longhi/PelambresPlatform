@@ -126,6 +126,7 @@ Reference implementations:
 - Files: kebab-case (`order-actions.ts`, `orders-table.tsx`).
 - Components: PascalCase exports.
 - DB: `snake_case` columns; TypeScript: `camelCase`.
+- **URL paths**: English kebab-case (`/admin/suppliers`, `/store/products`) — see `url-routes.mdc`. UI copy stays Spanish.
 
 ## Do not
 

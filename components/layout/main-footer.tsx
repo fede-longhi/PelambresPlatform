@@ -2,9 +2,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Mail, MapPin } from 'lucide-react';
 import { WhatsApp, Instagram } from '@mui/icons-material';
+import {
+  isHrefAllowedForFeatures,
+  type FeatureKey,
+} from '@/lib/consts/feature-flag-consts';
 
 const navLinks = [
     { title: "Inicio", href: "/" },
+    { title: "Tienda", href: "/store" },
     { title: "Cursos", href: "/education" },
     { title: "Cotizar ahora", href: "/quote-request" },
     { title: "Mi pedido", href: "/print-status" },
@@ -21,8 +26,15 @@ const toolLinks = [
 const textToShare = "Hola, quiero imprimir!";
 const mailAddress = "pelambres3d@gmail.com";
 
-export default function Footer() {
+type MainFooterProps = {
+  accessibleFeatures?: FeatureKey[];
+};
+
+export default function Footer({ accessibleFeatures = [] }: MainFooterProps) {
     const currentYear = new Date().getFullYear();
+    const visibleNavLinks = navLinks.filter((link) =>
+      isHrefAllowedForFeatures(link.href, accessibleFeatures)
+    );
 
     return (
         <footer className="bg-gray-900 text-gray-300 border-t border-gray-800 mt-12">
@@ -47,7 +59,7 @@ export default function Footer() {
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold text-white">Navegación</h3>
                         <ul className="space-y-2">
-                            {navLinks.map((link) => (
+                            {visibleNavLinks.map((link) => (
                                 <li key={link.title}>
                                     <Link 
                                         href={link.href} 
@@ -102,7 +114,7 @@ export default function Footer() {
                                 href={`https://wa.me/5491158928659?text=${textToShare}`}
                                 target='_blank'
                                 className="hover:text-primary transition">
-                                    <WhatsApp className="text-green-600" fontSize="small"/>
+                                    <WhatsApp className="text-whatsapp" fontSize="small"/>
                                     <span className="ml-2">+54 9 11 5892-8659</span>
                                 </Link>
                             </li>

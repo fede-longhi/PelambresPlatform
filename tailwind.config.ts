@@ -44,6 +44,14 @@ const config: Config = {
   				DEFAULT: 'hsl(var(--success))',
   				foreground: 'hsl(var(--success-foreground))'
   			},
+  			whatsapp: {
+  				DEFAULT: 'hsl(var(--whatsapp))',
+  				foreground: 'hsl(var(--whatsapp-foreground))'
+  			},
+  			mail: {
+  				DEFAULT: 'hsl(var(--mail))',
+  				foreground: 'hsl(var(--mail-foreground))'
+  			},
   			muted: {
   				DEFAULT: 'hsl(var(--muted))',
   				foreground: 'hsl(var(--muted-foreground))'

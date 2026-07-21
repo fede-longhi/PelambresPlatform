@@ -29,6 +29,26 @@ const nextConfig: NextConfig = {
         destination: '/admin/print-jobs/:path*',
         permanent: true,
       },
+      {
+        source: '/store/productos',
+        destination: '/store/products',
+        permanent: true,
+      },
+      {
+        source: '/store/productos/:path*',
+        destination: '/store/products/:path*',
+        permanent: true,
+      },
+      {
+        source: '/store/disenos',
+        destination: '/store/designs',
+        permanent: true,
+      },
+      {
+        source: '/store/disenos/:path*',
+        destination: '/store/designs/:path*',
+        permanent: true,
+      },
     ];
   },
   images: {

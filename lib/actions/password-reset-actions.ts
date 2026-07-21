@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import sql from '@/lib/db';
-import { ROLE_SELECTION_LABELS } from '@/lib/auth/account-selection';
+import { ROLE_SELECTION_LABELS } from '@/lib/auth/role-labels';
 import {
   createPasswordResetRawToken,
   fetchPasswordResetByRawToken,
