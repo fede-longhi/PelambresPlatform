@@ -141,6 +141,97 @@ export async function createStoreCategory(
   redirect('/admin/categories');
 }
 
+export type CreateStoreCategoryInlineResult = {
+  success: boolean;
+  message?: string;
+  errors?: {
+    name?: string[];
+    slug?: string[];
+    productType?: string[];
+  };
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+    productType: StoreProductType;
+    isActive: boolean;
+  };
+};
+
+export async function createStoreCategoryInline(input: {
+  name: string;
+  slug: string;
+  productType: StoreProductType;
+  isActive?: boolean;
+}): Promise<CreateStoreCategoryInlineResult> {
+  await requireAdminSession();
+
+  const validatedFields = CategorySchema.safeParse({
+    name: input.name,
+    slug: input.slug,
+    productType: input.productType,
+    isActive: input.isActive ?? true,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: 'Revisá los campos e intentá de nuevo.',
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { name, slug, productType, isActive } = validatedFields.data;
+  const sortOrder = await fetchNextStoreCategorySortOrder(productType);
+
+  try {
+    const rows = await sql<
+      {
+        id: string;
+        name: string;
+        slug: string;
+        productType: StoreProductType;
+        isActive: boolean;
+      }[]
+    >`
+      INSERT INTO store_categories (name, slug, product_type, sort_order, is_active)
+      VALUES (${name}, ${slug}, ${productType}, ${sortOrder}, ${isActive})
+      RETURNING
+        id,
+        name,
+        slug,
+        product_type as "productType",
+        is_active as "isActive"
+    `;
+
+    const category = rows[0];
+    if (!category) {
+      return {
+        success: false,
+        message: 'No se pudo crear la categoría.',
+      };
+    }
+
+    revalidateCategoryPaths(productType);
+    return {
+      success: true,
+      message: 'Categoría creada.',
+      category,
+    };
+  } catch (error) {
+    console.error(error);
+    const isDuplicate =
+      error instanceof Error && /unique|duplicate/i.test(error.message);
+    return {
+      success: false,
+      message: isDuplicate
+        ? 'Ya existe una categoría con ese slug para este tipo.'
+        : 'No se pudo crear la categoría.',
+      errors: isDuplicate ? { slug: ['Elegí otro slug.'] } : undefined,
+    };
+  }
+}
+
 export async function updateStoreCategory(
   id: string,
   _prevState: StoreCategoryFormState,

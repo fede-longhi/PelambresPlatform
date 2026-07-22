@@ -4,6 +4,7 @@ import { Download, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getStoreProductHref } from '@/lib/consts/store-consts';
 import type { PublishedStoreProduct } from '@/lib/data/store-product-data';
+import { isRichTextEmpty, richTextToPlainText } from '@/lib/utils/sanitize-html';
 import { StorePriceDisplay } from './store-price-display';
 
 type StoreProductCardProps = {
@@ -55,9 +56,9 @@ export function StoreProductCard({ product }: StoreProductCardProps) {
             {product.name}
           </h2>
 
-          {product.description && (
+          {!isRichTextEmpty(product.description) && (
             <p className="mb-6 line-clamp-3 flex-1 text-sm text-muted-foreground">
-              {product.description}
+              {richTextToPlainText(product.description)}
             </p>
           )}
 

@@ -4,6 +4,7 @@ import { STORE_FEATURED_LIMIT } from '@/lib/consts/store-consts';
 import type {
   StoreProduct,
   StoreProductCategoryRef,
+  StoreProductImage,
   StoreProductTableRow,
   StoreProductType,
 } from '@/types/store-definitions';
@@ -15,6 +16,8 @@ export type PublishedStoreProduct = {
   description: string | null;
   productType: StoreProductType;
   categories: StoreProductCategoryRef[];
+  tags: string[];
+  images: StoreProductImage[];
   priceCents: number;
   discountPercent: number | null;
   currency: string;
@@ -29,11 +32,21 @@ export type PublishedStoreProductSort =
   | 'price-desc'
   | 'name-asc';
 
+export type StoreProductAdminStats = {
+  total: number;
+  published: number;
+  drafts: number;
+  featured: number;
+  products: number;
+  designs: number;
+};
+
 type ProductRowBase = {
   id: string;
   name: string;
   description: string | null;
   productType: StoreProductType;
+  tags?: string[];
   priceCents: number;
   currency: string;
   stock: number | null;
@@ -77,6 +90,37 @@ async function fetchCategoriesByProductIds(productIds: string[]) {
   return categoriesByProductId;
 }
 
+async function fetchImagesByProductIds(productIds: string[]) {
+  if (productIds.length === 0) {
+    return new Map<string, StoreProductImage[]>();
+  }
+
+  const rows = await sql<(StoreProductImage & { productId: string })[]>`
+    SELECT
+      product_id as "productId",
+      id,
+      url,
+      sort_order as "sortOrder"
+    FROM store_product_images
+    WHERE product_id IN ${sql(productIds)}
+    ORDER BY sort_order ASC, created_at ASC
+  `;
+
+  const imagesByProductId = new Map<string, StoreProductImage[]>();
+
+  for (const row of rows) {
+    const list = imagesByProductId.get(row.productId) ?? [];
+    list.push({
+      id: row.id,
+      url: row.url,
+      sortOrder: row.sortOrder,
+    });
+    imagesByProductId.set(row.productId, list);
+  }
+
+  return imagesByProductId;
+}
+
 function withCategories<T extends { id: string }>(
   rows: T[],
   categoriesByProductId: Map<string, StoreProductCategoryRef[]>
@@ -85,6 +129,20 @@ function withCategories<T extends { id: string }>(
     ...row,
     categories: categoriesByProductId.get(row.id) ?? [],
   }));
+}
+
+function withImages<T extends { id: string; imageUrl?: string | null }>(
+  rows: T[],
+  imagesByProductId: Map<string, StoreProductImage[]>
+): Array<T & { images: StoreProductImage[]; imageUrl: string | null }> {
+  return rows.map((row) => {
+    const images = imagesByProductId.get(row.id) ?? [];
+    return {
+      ...row,
+      images,
+      imageUrl: images[0]?.url ?? row.imageUrl ?? null,
+    };
+  });
 }
 
 export async function fetchFilteredStoreProducts(
@@ -119,6 +177,11 @@ export async function fetchFilteredStoreProducts(
           OR p.product_type ILIKE ${search}
           OR EXISTS (
             SELECT 1
+            FROM unnest(p.tags) AS tag
+            WHERE tag ILIKE ${search}
+          )
+          OR EXISTS (
+            SELECT 1
             FROM store_product_categories pc
             JOIN store_categories c
               ON c.id = pc.category_id
@@ -132,14 +195,49 @@ export async function fetchFilteredStoreProducts(
       OFFSET ${offset}
     `;
 
-    const categoriesByProductId = await fetchCategoriesByProductIds(
-      rows.map((row) => row.id)
-    );
+    const productIds = rows.map((row) => row.id);
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds(productIds),
+      fetchImagesByProductIds(productIds),
+    ]);
 
-    return withCategories(rows, categoriesByProductId);
+    return withImages(
+      withCategories(rows, categoriesByProductId),
+      imagesByProductId
+    );
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch store products.');
+  }
+}
+
+export async function fetchStoreProductAdminStats(): Promise<StoreProductAdminStats> {
+  try {
+    const rows = await sql<StoreProductAdminStats[]>`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE is_published)::int AS published,
+        COUNT(*) FILTER (WHERE NOT is_published)::int AS drafts,
+        COUNT(*) FILTER (WHERE is_featured)::int AS featured,
+        COUNT(*) FILTER (WHERE product_type = 'product')::int AS products,
+        COUNT(*) FILTER (WHERE product_type = 'design')::int AS designs
+      FROM store_products
+      WHERE deleted_at IS NULL
+    `;
+
+    return (
+      rows[0] ?? {
+        total: 0,
+        published: 0,
+        drafts: 0,
+        featured: 0,
+        products: 0,
+        designs: 0,
+      }
+    );
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch store product stats.');
   }
 }
 
@@ -156,6 +254,11 @@ export async function fetchStoreProductPages(query: string) {
           p.name ILIKE ${search}
           OR p.description ILIKE ${search}
           OR p.product_type ILIKE ${search}
+          OR EXISTS (
+            SELECT 1
+            FROM unnest(p.tags) AS tag
+            WHERE tag ILIKE ${search}
+          )
           OR EXISTS (
             SELECT 1
             FROM store_product_categories pc
@@ -177,12 +280,13 @@ export async function fetchStoreProductPages(query: string) {
 
 export async function fetchStoreProductById(id: string) {
   try {
-    const rows = await sql<Omit<StoreProduct, 'categories'>[]>`
+    const rows = await sql<Omit<StoreProduct, 'categories' | 'images'>[]>`
       SELECT
         p.id,
         p.name,
         p.description,
         p.product_type as "productType",
+        p.tags,
         p.price_cents as "priceCents",
         p.discount_percent as "discountPercent",
         p.currency,
@@ -204,11 +308,13 @@ export async function fetchStoreProductById(id: string) {
       return null;
     }
 
-    const categoriesByProductId = await fetchCategoriesByProductIds([product.id]);
-    return {
-      ...product,
-      categories: categoriesByProductId.get(product.id) ?? [],
-    };
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds([product.id]),
+      fetchImagesByProductIds([product.id]),
+    ]);
+
+    const withCats = withCategories([product], categoriesByProductId)[0];
+    return withImages([withCats], imagesByProductId)[0];
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch store product.');
@@ -250,12 +356,13 @@ export async function fetchPublishedStoreProducts(
   })();
 
   try {
-    const rows = await sql<Omit<PublishedStoreProduct, 'categories'>[]>`
+    const rows = await sql<Omit<PublishedStoreProduct, 'categories' | 'images'>[]>`
       SELECT
         p.id,
         p.name,
         p.description,
         p.product_type as "productType",
+        p.tags,
         p.price_cents as "priceCents",
         p.discount_percent as "discountPercent",
         p.currency,
@@ -289,6 +396,11 @@ export async function fetchPublishedStoreProducts(
                 AND (
                   p.name ILIKE ${search}
                   OR COALESCE(p.description, '') ILIKE ${search}
+                  OR EXISTS (
+                    SELECT 1
+                    FROM unnest(p.tags) AS tag
+                    WHERE tag ILIKE ${search}
+                  )
                   OR EXISTS (
                     SELECT 1
                     FROM store_product_categories pc
@@ -333,11 +445,16 @@ export async function fetchPublishedStoreProducts(
       ORDER BY ${orderBy}
     `;
 
-    const categoriesByProductId = await fetchCategoriesByProductIds(
-      rows.map((row) => row.id)
-    );
+    const productIds = rows.map((row) => row.id);
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds(productIds),
+      fetchImagesByProductIds(productIds),
+    ]);
 
-    return withCategories(rows, categoriesByProductId);
+    return withImages(
+      withCategories(rows, categoriesByProductId),
+      imagesByProductId
+    );
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch published store products.');
@@ -349,12 +466,13 @@ export async function fetchFeaturedStoreProducts(
   limit = STORE_FEATURED_LIMIT
 ) {
   try {
-    const rows = await sql<Omit<PublishedStoreProduct, 'categories'>[]>`
+    const rows = await sql<Omit<PublishedStoreProduct, 'categories' | 'images'>[]>`
       SELECT
         p.id,
         p.name,
         p.description,
         p.product_type as "productType",
+        p.tags,
         p.price_cents as "priceCents",
         p.discount_percent as "discountPercent",
         p.currency,
@@ -371,11 +489,16 @@ export async function fetchFeaturedStoreProducts(
       LIMIT ${limit}
     `;
 
-    const categoriesByProductId = await fetchCategoriesByProductIds(
-      rows.map((row) => row.id)
-    );
+    const productIds = rows.map((row) => row.id);
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds(productIds),
+      fetchImagesByProductIds(productIds),
+    ]);
 
-    return withCategories(rows, categoriesByProductId);
+    return withImages(
+      withCategories(rows, categoriesByProductId),
+      imagesByProductId
+    );
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch featured store products.');
@@ -387,12 +510,13 @@ export async function fetchPublishedStoreProductById(
   id: string
 ) {
   try {
-    const rows = await sql<Omit<PublishedStoreProduct, 'categories'>[]>`
+    const rows = await sql<Omit<PublishedStoreProduct, 'categories' | 'images'>[]>`
       SELECT
         p.id,
         p.name,
         p.description,
         p.product_type as "productType",
+        p.tags,
         p.price_cents as "priceCents",
         p.discount_percent as "discountPercent",
         p.currency,
@@ -413,11 +537,13 @@ export async function fetchPublishedStoreProductById(
       return null;
     }
 
-    const categoriesByProductId = await fetchCategoriesByProductIds([product.id]);
-    return {
-      ...product,
-      categories: categoriesByProductId.get(product.id) ?? [],
-    };
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds([product.id]),
+      fetchImagesByProductIds([product.id]),
+    ]);
+
+    const withCats = withCategories([product], categoriesByProductId)[0];
+    return withImages([withCats], imagesByProductId)[0];
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch published store product.');

@@ -17,12 +17,20 @@ export type StoreProductCategoryRef = {
   slug: string;
 };
 
+export type StoreProductImage = {
+  id: string;
+  url: string;
+  sortOrder: number;
+};
+
 export type StoreProduct = {
   id: string;
   name: string;
   description: string | null;
   productType: StoreProductType;
   categories: StoreProductCategoryRef[];
+  tags: string[];
+  images: StoreProductImage[];
   priceCents: number;
   discountPercent: number | null;
   currency: string;

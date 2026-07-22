@@ -63,6 +63,7 @@ export function buildStoreWhatsAppUrl(productName: string): string {
 
 export const STORE_PRODUCTS_FOLDER = 'store-products';
 export const STORE_PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+export const STORE_PRODUCT_IMAGE_MAX_COUNT = 8;
 export const STORE_PRODUCT_FILE_MAX_SIZE_BYTES = 80 * 1024 * 1024;
 
 export const STORE_PRODUCT_IMAGE_ALLOWED_EXTENSIONS = new Set([
@@ -83,6 +84,36 @@ export const STORE_PRODUCT_FILE_ALLOWED_EXTENSIONS = new Set([
   'step',
   'stp',
 ]);
+
+export const STORE_PRODUCT_TAG_MAX_LENGTH = 40;
+export const STORE_PRODUCT_TAG_MAX_COUNT = 20;
+
+/** Normalize free-text product tags: trim, collapse spaces, dedupe (case-insensitive). */
+export function normalizeStoreTags(rawTags: string[]): string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const rawTag of rawTags) {
+    const tag = rawTag.trim().replace(/\s+/g, ' ');
+    if (!tag) {
+      continue;
+    }
+    if (tag.length > STORE_PRODUCT_TAG_MAX_LENGTH) {
+      continue;
+    }
+    const key = tag.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    normalized.push(tag);
+    if (normalized.length >= STORE_PRODUCT_TAG_MAX_COUNT) {
+      break;
+    }
+  }
+
+  return normalized;
+}
 
 export function getStoreProductTypeLabel(productType: StoreProductType): string {
   return (

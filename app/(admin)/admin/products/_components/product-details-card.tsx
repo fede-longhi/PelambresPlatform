@@ -7,9 +7,13 @@ import {
   BadgePercent,
   Check,
   ExternalLink,
+  Eye,
+  EyeOff,
   Minus,
   Pencil,
   Plus,
+  Star,
+  StarOff,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   adjustStoreProductStock,
+  setStoreProductFeatured,
   setStoreProductPublished,
   updateStoreProductDiscount,
   updateStoreProductPrice,
@@ -36,6 +41,8 @@ import {
   hasStoreDiscount,
   PRODUCT_FULFILLMENT_MESSAGE,
 } from '@/lib/consts/store-consts';
+import { RichTextContent } from '@/components/shared/rich-text-content';
+import { cn } from '@/lib/utils';
 import type { StoreProduct } from '@/types/store-definitions';
 
 type ProductDetailsCardProps = {
@@ -51,6 +58,7 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
     product.discountPercent
   );
   const [isPublished, setIsPublished] = useState(product.isPublished);
+  const [isFeatured, setIsFeatured] = useState(product.isFeatured);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [priceDraft, setPriceDraft] = useState(
     (product.priceCents / 100).toFixed(2)
@@ -60,7 +68,7 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
   const [isEditingDiscount, setIsEditingDiscount] = useState(false);
   const [discountDraft, setDiscountDraft] = useState('');
   const [discountError, setDiscountError] = useState<string | null>(null);
-  const [publishError, setPublishError] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const publicHref = getStoreProductHref(product.productType, product.id);
   const catalogHref = getStoreCatalogHref(product.productType);
@@ -162,7 +170,7 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
 
   const togglePublished = () => {
     const nextIsPublished = !isPublished;
-    setPublishError(null);
+    setStatusError(null);
 
     startTransition(async () => {
       const result = await setStoreProductPublished(
@@ -170,13 +178,31 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
         nextIsPublished
       );
       if (!result.success) {
-        setPublishError(
+        setStatusError(
           result.message ?? 'No se pudo actualizar la publicación.'
         );
         return;
       }
 
       setIsPublished(result.isPublished ?? nextIsPublished);
+      router.refresh();
+    });
+  };
+
+  const toggleFeatured = () => {
+    const nextIsFeatured = !isFeatured;
+    setStatusError(null);
+
+    startTransition(async () => {
+      const result = await setStoreProductFeatured(product.id, nextIsFeatured);
+      if (!result.success) {
+        setStatusError(
+          result.message ?? 'No se pudo actualizar el destacado.'
+        );
+        return;
+      }
+
+      setIsFeatured(result.isFeatured ?? nextIsFeatured);
       router.refresh();
     });
   };
@@ -190,17 +216,49 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            size="sm"
-            variant={isPublished ? 'outline' : 'default'}
+            size="icon"
+            variant="outline"
             onClick={togglePublished}
             disabled={isPending}
-            className={
+            aria-pressed={isPublished}
+            aria-label={isPublished ? 'Despublicar' : 'Publicar'}
+            title={isPublished ? 'Publicado — click para despublicar' : 'No publicado — click para publicar'}
+            className={cn(
               isPublished
-                ? 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700'
-                : undefined
-            }
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800'
+                : 'text-slate-400 hover:text-slate-700'
+            )}
           >
-            {isPublished ? 'Despublicar' : 'Publicar'}
+            {isPublished ? (
+              <Eye size={18} aria-hidden="true" />
+            ) : (
+              <EyeOff size={18} aria-hidden="true" />
+            )}
+          </Button>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            onClick={toggleFeatured}
+            disabled={isPending}
+            aria-pressed={isFeatured}
+            aria-label={isFeatured ? 'Quitar destacado' : 'Marcar como destacado'}
+            title={
+              isFeatured
+                ? 'Destacado — click para quitar'
+                : 'No destacado — click para destacar'
+            }
+            className={cn(
+              isFeatured
+                ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800'
+                : 'text-slate-400 hover:text-slate-700'
+            )}
+          >
+            {isFeatured ? (
+              <Star size={18} aria-hidden="true" />
+            ) : (
+              <StarOff size={18} aria-hidden="true" />
+            )}
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link href={`/admin/products/${product.id}/edit`}>
@@ -210,9 +268,9 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
           </Button>
         </div>
       </div>
-      {publishError && (
+      {statusError && (
         <p className="mb-4 text-xs text-red-500" role="alert">
-          {publishError}
+          {statusError}
         </p>
       )}
 
@@ -244,6 +302,28 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
               </ul>
             ) : (
               <span className="text-sm text-slate-900">Sin categoría</span>
+            )}
+          </dd>
+        </div>
+
+        <div className="sm:col-span-2">
+          <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Tags
+          </dt>
+          <dd className="mt-2">
+            {product.tags.length > 0 ? (
+              <ul className="flex flex-wrap gap-2" aria-label="Tags">
+                {product.tags.map((tag) => (
+                  <li
+                    key={tag}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700"
+                  >
+                    {tag}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-sm text-slate-900">Sin tags</span>
             )}
           </dd>
         </div>
@@ -573,8 +653,12 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
             Descripción
           </dt>
-          <dd className="mt-1 whitespace-pre-wrap text-sm text-slate-900">
-            {product.description || 'Sin descripción'}
+          <dd className="mt-1 text-sm text-slate-900">
+            <RichTextContent
+              html={product.description}
+              emptyFallback="Sin descripción"
+              className="text-sm text-slate-900"
+            />
           </dd>
         </div>
       </dl>
