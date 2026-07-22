@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Eye, Star } from 'lucide-react';
 import { fetchFilteredStoreProducts } from '@/lib/data/store-product-data';
 import {
   formatStoreDiscountLabel,
@@ -58,12 +59,21 @@ export default async function ProductsTable({
               className="w-full border-b text-sm last-of-type:border-none"
             >
               <TableCell className="px-4 py-4">
-                <Link
-                  href={`/admin/products/${product.id}`}
-                  className="font-medium hover:underline"
-                >
-                  {product.name}
-                </Link>
+                <div className="flex items-center gap-2">
+                  {product.isFeatured ? (
+                    <Star
+                      size={16}
+                      className="shrink-0 fill-amber-500 text-amber-500"
+                      aria-label="Destacado"
+                    />
+                  ) : null}
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {product.name}
+                  </Link>
+                </div>
               </TableCell>
               <TableCell className="px-4 py-4">
                 {getStoreProductTypeLabel(product.productType)}
@@ -97,16 +107,14 @@ export default async function ProductsTable({
                 )}
               </TableCell>
               <TableCell className="px-4 py-4">
-                <div className="flex flex-wrap gap-1">
-                  {product.isPublished ? (
-                    <Badge>Publicado</Badge>
-                  ) : (
-                    <Badge variant="secondary">Borrador</Badge>
-                  )}
-                  {product.isFeatured && (
-                    <Badge variant="outline">Destacado</Badge>
-                  )}
-                </div>
+                {product.isPublished ? (
+                  <Badge className="gap-1 border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                    <Eye size={14} aria-hidden="true" />
+                    Publicado
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Borrador</Badge>
+                )}
               </TableCell>
               <TableCell className="px-4 py-4">
                 <div className="flex justify-end gap-1">

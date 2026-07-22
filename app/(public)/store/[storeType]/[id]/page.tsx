@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Download, Mail, MessageCircle, Package } from 'lucide-react';
+import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -17,6 +16,9 @@ import {
 } from '@/lib/consts/store-consts';
 import { StoreBreadcrumbs } from '../../_components/store-breadcrumbs';
 import { StorePriceDisplay } from '../../_components/store-price-display';
+import { StoreProductGallery } from '../../_components/store-product-gallery';
+import { RichTextContent } from '@/components/shared/rich-text-content';
+import { isRichTextEmpty, richTextToPlainText } from '@/lib/utils/sanitize-html';
 
 type StoreProductPageProps = {
   params: Promise<{ storeType: string; id: string }>;
@@ -40,9 +42,9 @@ export async function generateMetadata({
 
   return {
     title: `${product.name} | ${getStoreProductTypeLabel(productType)}`,
-    description:
-      product.description?.slice(0, 160) ||
-      `${product.name} en la tienda de Pelambres 3D.`,
+    description: isRichTextEmpty(product.description)
+      ? `${product.name} en la tienda de Pelambres 3D.`
+      : richTextToPlainText(product.description).slice(0, 160),
   };
 }
 
@@ -109,36 +111,32 @@ export default async function StoreProductDetailPage({
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-slate-300">
-              {isDesign ? (
-                <Download size={64} aria-hidden="true" />
-              ) : (
-                <Package size={64} aria-hidden="true" />
-              )}
-            </div>
-          )}
-        </div>
+        <StoreProductGallery
+          images={product.images}
+          productName={product.name}
+          productType={product.productType}
+        />
 
         <div className="space-y-8">
-          {product.description && (
+          {!isRichTextEmpty(product.description) && (
             <section>
               <h2 className="mb-3 text-lg font-semibold text-slate-900">
                 Descripción
               </h2>
-              <p className="whitespace-pre-wrap text-slate-600">
-                {product.description}
-              </p>
+              <RichTextContent html={product.description} />
+            </section>
+          )}
+
+          {product.tags.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-lg font-semibold text-slate-900">Tags</h2>
+              <ul className="flex flex-wrap gap-2" aria-label="Tags">
+                {product.tags.map((tag) => (
+                  <li key={tag}>
+                    <Badge variant="secondary">{tag}</Badge>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

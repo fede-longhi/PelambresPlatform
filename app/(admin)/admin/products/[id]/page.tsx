@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { fetchStoreProductById } from '@/lib/data/store-product-data';
@@ -35,13 +35,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </Link>
           <div>
             <div className="flex flex-wrap items-center gap-2">
+              {product.isFeatured ? (
+                <Star
+                  size={22}
+                  className="shrink-0 fill-amber-500 text-amber-500"
+                  aria-label="Destacado"
+                />
+              ) : null}
               <h1 className="text-3xl font-bold text-slate-900">{product.name}</h1>
               {product.isPublished ? (
-                <Badge>Publicado</Badge>
+                <Badge className="gap-1 border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                  <Eye size={14} aria-hidden="true" />
+                  Publicado
+                </Badge>
               ) : (
                 <Badge variant="secondary">Borrador</Badge>
               )}
-              {product.isFeatured && <Badge variant="outline">Destacado</Badge>}
             </div>
           </div>
         </div>
@@ -53,14 +62,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {product.imageUrl && (
+      {(product.images?.length ?? 0) > 0 ? (
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {product.images.map((image, index) => (
+            <li
+              key={image.id}
+              className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.url}
+                alt={`${product.name}${index === 0 ? ' (portada)' : ''}`}
+                className="h-full w-full object-cover"
+              />
+              {index === 0 ? (
+                <span className="absolute left-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  Portada
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : product.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={product.imageUrl}
           alt={product.name}
           className="max-h-72 w-full rounded-xl object-cover"
         />
-      )}
+      ) : null}
 
       <ProductDetailsCard product={product} />
     </div>

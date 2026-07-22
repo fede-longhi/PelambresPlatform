@@ -10,16 +10,24 @@ import { canAccessAdmin } from '@/lib/auth/permissions';
 import {
   getStoreCatalogHref,
   getStoreProductHref,
+  normalizeStoreTags,
   STORE_CURRENCIES,
   STORE_PRODUCT_FILE_ALLOWED_EXTENSIONS,
   STORE_PRODUCT_FILE_MAX_SIZE_BYTES,
   STORE_PRODUCT_IMAGE_ALLOWED_EXTENSIONS,
+  STORE_PRODUCT_IMAGE_MAX_COUNT,
   STORE_PRODUCT_IMAGE_MAX_SIZE_BYTES,
+  STORE_PRODUCT_TAG_MAX_COUNT,
+  STORE_PRODUCT_TAG_MAX_LENGTH,
   STORE_PRODUCTS_FOLDER,
 } from '@/lib/consts/store-consts';
 import { fetchStoreCategoryById } from '@/lib/data/store-category-data';
 import { fetchStoreProductById } from '@/lib/data/store-product-data';
-import type { StoreProductType } from '@/types/store-definitions';
+import { isRichTextEmpty, sanitizeRichTextHtml } from '@/lib/utils/sanitize-html';
+import type {
+  StoreProductImage,
+  StoreProductType,
+} from '@/types/store-definitions';
 
 function revalidateStorePaths(productType: StoreProductType, productId?: string) {
   revalidatePath('/admin/products');
@@ -68,13 +76,26 @@ const ProductSchema = z
     description: z
       .string()
       .trim()
-      .max(5000, { message: 'La descripción es demasiado larga.' })
+      .max(20000, { message: 'La descripción es demasiado larga.' })
       .optional()
       .or(z.literal('')),
     productType: z.enum(['product', 'design'], {
       message: 'Seleccioná un tipo.',
     }),
     categoryIds: z.array(z.string().uuid({ message: 'Categoría inválida.' })),
+    tags: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(1, { message: 'El tag no puede estar vacío.' })
+          .max(STORE_PRODUCT_TAG_MAX_LENGTH, {
+            message: `Cada tag puede tener hasta ${STORE_PRODUCT_TAG_MAX_LENGTH} caracteres.`,
+          })
+      )
+      .max(STORE_PRODUCT_TAG_MAX_COUNT, {
+        message: `Podés agregar hasta ${STORE_PRODUCT_TAG_MAX_COUNT} tags.`,
+      }),
     price: z.coerce
       .number({ message: 'Ingresá un precio válido.' })
       .min(0, { message: 'El precio no puede ser negativo.' }),
@@ -113,6 +134,7 @@ export type StoreProductFormState = {
     description?: string[];
     productType?: string[];
     categoryIds?: string[];
+    tags?: string[];
     price?: string[];
     discountPercent?: string[];
     currency?: string[];
@@ -199,11 +221,16 @@ function parseFormFields(formData: FormData) {
     .map(String)
     .filter((value) => value.length > 0);
 
+  const tags = normalizeStoreTags(
+    formData.getAll('tags').map(String)
+  );
+
   return {
     name: formData.get('name'),
     description: formData.get('description') || '',
     productType: formData.get('productType'),
     categoryIds,
+    tags,
     price: formData.get('price'),
     discountPercent,
     currency: formData.get('currency'),
@@ -272,6 +299,146 @@ async function replaceProductCategories(
   }
 }
 
+async function replaceProductImages(productId: string, imageUrls: string[]) {
+  await sql`
+    DELETE FROM store_product_images
+    WHERE product_id = ${productId}
+  `;
+
+  for (let index = 0; index < imageUrls.length; index += 1) {
+    const url = imageUrls[index];
+    await sql`
+      INSERT INTO store_product_images (product_id, url, sort_order)
+      VALUES (${productId}, ${url}, ${index})
+    `;
+  }
+
+  await sql`
+    UPDATE store_products
+    SET
+      image_url = ${imageUrls[0] ?? null},
+      updated_at = NOW()
+    WHERE id = ${productId}
+      AND deleted_at IS NULL
+  `;
+}
+
+async function resolveProductImageUrls(
+  formData: FormData,
+  existingImages: StoreProductImage[]
+): Promise<{
+  urls: string[];
+  uploadedUrls: string[];
+  blobsToDelete: string[];
+  error?: StoreProductFormState;
+}> {
+  const orderTokens = formData.getAll('imageOrder').map(String);
+  const newFiles = formData.getAll('images').filter(isUploadedFile);
+
+  if (orderTokens.length > STORE_PRODUCT_IMAGE_MAX_COUNT) {
+    return {
+      urls: [],
+      uploadedUrls: [],
+      blobsToDelete: [],
+      error: toFormError(
+        `Podés subir hasta ${STORE_PRODUCT_IMAGE_MAX_COUNT} imágenes.`,
+        formData,
+        {
+          image: [
+            `Máximo ${STORE_PRODUCT_IMAGE_MAX_COUNT} imágenes por artículo.`,
+          ],
+        }
+      ),
+    };
+  }
+
+  for (const file of newFiles) {
+    const imageError = validateImageFile(file);
+    if (imageError) {
+      return {
+        urls: [],
+        uploadedUrls: [],
+        blobsToDelete: [],
+        error: toFormError(imageError, formData, { image: [imageError] }),
+      };
+    }
+  }
+
+  const existingById = new Map(
+    existingImages.map((image) => [image.id, image])
+  );
+  const keptIds = new Set<string>();
+  const uploadedUrls: string[] = [];
+  const resolvedUrls: string[] = [];
+
+  try {
+    for (const token of orderTokens) {
+      if (token.startsWith('existing:')) {
+        const imageId = token.slice('existing:'.length);
+        const existing = existingById.get(imageId);
+        if (!existing) {
+          return {
+            urls: [],
+            uploadedUrls,
+            blobsToDelete: [],
+            error: toFormError(
+              'Una de las imágenes ya no está disponible. Recargá e intentá de nuevo.',
+              formData,
+              { image: ['Imagen inválida.'] }
+            ),
+          };
+        }
+        keptIds.add(imageId);
+        resolvedUrls.push(existing.url);
+        continue;
+      }
+
+      if (token.startsWith('new:')) {
+        const fileIndex = Number(token.slice('new:'.length));
+        const file = newFiles[fileIndex];
+        if (!file || Number.isNaN(fileIndex)) {
+          return {
+            urls: [],
+            uploadedUrls,
+            blobsToDelete: [],
+            error: toFormError(
+              'No se pudo asociar una imagen nueva. Intentá de nuevo.',
+              formData,
+              { image: ['Archivo de imagen inválido.'] }
+            ),
+          };
+        }
+
+        const uploadedUrl = await uploadStoreBlob(
+          file,
+          `${STORE_PRODUCTS_FOLDER}/images`
+        );
+        uploadedUrls.push(uploadedUrl);
+        resolvedUrls.push(uploadedUrl);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    for (const url of uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
+    return {
+      urls: [],
+      uploadedUrls: [],
+      blobsToDelete: [],
+      error: toFormError('No se pudieron subir las imágenes.', formData, {
+        image: ['Error al subir imágenes.'],
+      }),
+    };
+  }
+
+  const blobsToDelete = existingImages
+    .filter((image) => !keptIds.has(image.id))
+    .map((image) => image.url);
+
+  return { urls: resolvedUrls, uploadedUrls, blobsToDelete };
+}
+
 export async function createStoreProduct(
   _prevState: StoreProductFormState,
   formData: FormData
@@ -291,6 +458,7 @@ export async function createStoreProduct(
     description,
     productType,
     categoryIds: rawCategoryIds,
+    tags,
     price,
     discountPercent,
     currency,
@@ -308,18 +476,14 @@ export async function createStoreProduct(
     return resolvedCategories.error;
   }
 
-  const imageFile = formData.get('image');
   const digitalFile = formData.get('digitalFile');
 
-  let imageUrl: string | null = null;
-  let digitalFileUrl: string | null = null;
-
-  if (isUploadedFile(imageFile)) {
-    const imageError = validateImageFile(imageFile);
-    if (imageError) {
-      return toFormError(imageError, formData, { image: [imageError] });
-    }
+  const imageResolution = await resolveProductImageUrls(formData, []);
+  if (imageResolution.error) {
+    return imageResolution.error;
   }
+
+  let digitalFileUrl: string | null = null;
 
   if (productType === 'design' && isUploadedFile(digitalFile)) {
     const fileError = validateDigitalFile(digitalFile);
@@ -329,6 +493,9 @@ export async function createStoreProduct(
   }
 
   if (productType === 'design' && isPublished && !isUploadedFile(digitalFile)) {
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     return toFormError(
       'Subí el archivo de diseño antes de publicar.',
       formData,
@@ -337,13 +504,6 @@ export async function createStoreProduct(
   }
 
   try {
-    if (isUploadedFile(imageFile)) {
-      imageUrl = await uploadStoreBlob(
-        imageFile,
-        `${STORE_PRODUCTS_FOLDER}/images`
-      );
-    }
-
     if (productType === 'design' && isUploadedFile(digitalFile)) {
       digitalFileUrl = await uploadStoreBlob(
         digitalFile,
@@ -352,15 +512,24 @@ export async function createStoreProduct(
     }
   } catch (error) {
     console.error(error);
-    await deleteBlobUrlIfPresent(imageUrl);
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     await deleteBlobUrlIfPresent(digitalFileUrl);
     return toFormError('No se pudieron subir los archivos.', formData);
   }
 
+  const coverImageUrl = imageResolution.urls[0] ?? null;
   const priceCents = priceToCents(price);
   const stockValue: number | null =
     productType === 'product' ? (stock ?? 0) : null;
-  const descriptionValue = description?.trim() || null;
+  const descriptionValue = (() => {
+    const raw = description?.trim() || '';
+    if (isRichTextEmpty(raw)) {
+      return null;
+    }
+    return sanitizeRichTextHtml(raw);
+  })();
 
   let insertedId: string | null = null;
 
@@ -377,7 +546,8 @@ export async function createStoreProduct(
         image_url,
         digital_file_url,
         is_published,
-        is_featured
+        is_featured,
+        tags
       )
       VALUES (
         ${name},
@@ -387,10 +557,11 @@ export async function createStoreProduct(
         ${discountPercent},
         ${currency},
         ${stockValue},
-        ${imageUrl},
+        ${coverImageUrl},
         ${digitalFileUrl},
         ${isPublished},
-        ${isFeatured}
+        ${isFeatured},
+        ${tags}
       )
       RETURNING id
     `;
@@ -401,9 +572,12 @@ export async function createStoreProduct(
     }
 
     await replaceProductCategories(insertedId, resolvedCategories.categoryIds);
+    await replaceProductImages(insertedId, imageResolution.urls);
   } catch (error) {
     console.error(error);
-    await deleteBlobUrlIfPresent(imageUrl);
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     await deleteBlobUrlIfPresent(digitalFileUrl);
     return toFormError('No se pudo crear el artículo.', formData);
   }
@@ -437,6 +611,7 @@ export async function updateStoreProduct(
     description,
     productType,
     categoryIds: rawCategoryIds,
+    tags,
     price,
     discountPercent,
     currency,
@@ -454,36 +629,31 @@ export async function updateStoreProduct(
     return resolvedCategories.error;
   }
 
-  const imageFile = formData.get('image');
   const digitalFile = formData.get('digitalFile');
-  const removeImage = parseFormBoolean(formData.get('removeImage'));
   const removeDigitalFile = parseFormBoolean(formData.get('removeDigitalFile'));
 
-  if (isUploadedFile(imageFile)) {
-    const imageError = validateImageFile(imageFile);
-    if (imageError) {
-      return toFormError(imageError, formData, { image: [imageError] });
-    }
+  const imageResolution = await resolveProductImageUrls(
+    formData,
+    existing.images ?? []
+  );
+  if (imageResolution.error) {
+    return imageResolution.error;
   }
 
   if (productType === 'design' && isUploadedFile(digitalFile)) {
     const fileError = validateDigitalFile(digitalFile);
     if (fileError) {
+      for (const url of imageResolution.uploadedUrls) {
+        await deleteBlobUrlIfPresent(url);
+      }
       return toFormError(fileError, formData, { digitalFile: [fileError] });
     }
   }
 
-  let nextImageUrl = existing.imageUrl;
   let nextDigitalFileUrl =
     productType === 'design' ? existing.digitalFileUrl : null;
-  let uploadedImageUrl: string | null = null;
   let uploadedDigitalFileUrl: string | null = null;
-  const blobsToDelete: string[] = [];
-
-  if (removeImage && existing.imageUrl) {
-    blobsToDelete.push(existing.imageUrl);
-    nextImageUrl = null;
-  }
+  const blobsToDelete = [...imageResolution.blobsToDelete];
 
   if (
     (productType !== 'design' || removeDigitalFile) &&
@@ -496,17 +666,6 @@ export async function updateStoreProduct(
   }
 
   try {
-    if (isUploadedFile(imageFile)) {
-      uploadedImageUrl = await uploadStoreBlob(
-        imageFile,
-        `${STORE_PRODUCTS_FOLDER}/images`
-      );
-      if (existing.imageUrl) {
-        blobsToDelete.push(existing.imageUrl);
-      }
-      nextImageUrl = uploadedImageUrl;
-    }
-
     if (productType === 'design' && isUploadedFile(digitalFile)) {
       uploadedDigitalFileUrl = await uploadStoreBlob(
         digitalFile,
@@ -519,13 +678,17 @@ export async function updateStoreProduct(
     }
   } catch (error) {
     console.error(error);
-    await deleteBlobUrlIfPresent(uploadedImageUrl);
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     await deleteBlobUrlIfPresent(uploadedDigitalFileUrl);
     return toFormError('No se pudieron subir los archivos.', formData);
   }
 
   if (productType === 'design' && isPublished && !nextDigitalFileUrl) {
-    await deleteBlobUrlIfPresent(uploadedImageUrl);
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     await deleteBlobUrlIfPresent(uploadedDigitalFileUrl);
     return toFormError(
       'Subí el archivo de diseño antes de publicar.',
@@ -534,10 +697,17 @@ export async function updateStoreProduct(
     );
   }
 
+  const coverImageUrl = imageResolution.urls[0] ?? null;
   const priceCents = priceToCents(price);
   const stockValue: number | null =
     productType === 'product' ? (stock ?? 0) : null;
-  const descriptionValue = description?.trim() || null;
+  const descriptionValue = (() => {
+    const raw = description?.trim() || '';
+    if (isRichTextEmpty(raw)) {
+      return null;
+    }
+    return sanitizeRichTextHtml(raw);
+  })();
 
   try {
     await sql`
@@ -550,25 +720,32 @@ export async function updateStoreProduct(
         discount_percent = ${discountPercent},
         currency = ${currency},
         stock = ${stockValue},
-        image_url = ${nextImageUrl},
+        image_url = ${coverImageUrl},
         digital_file_url = ${nextDigitalFileUrl},
         is_published = ${isPublished},
         is_featured = ${isFeatured},
+        tags = ${tags},
         updated_at = NOW()
       WHERE id = ${id}
         AND deleted_at IS NULL
     `;
 
     await replaceProductCategories(id, resolvedCategories.categoryIds);
+    await replaceProductImages(id, imageResolution.urls);
   } catch (error) {
     console.error(error);
-    await deleteBlobUrlIfPresent(uploadedImageUrl);
+    for (const url of imageResolution.uploadedUrls) {
+      await deleteBlobUrlIfPresent(url);
+    }
     await deleteBlobUrlIfPresent(uploadedDigitalFileUrl);
     return toFormError('No se pudo actualizar el artículo.', formData);
   }
 
   for (const blobUrl of [...new Set(blobsToDelete)]) {
-    if (blobUrl !== nextImageUrl && blobUrl !== nextDigitalFileUrl) {
+    if (
+      !imageResolution.urls.includes(blobUrl) &&
+      blobUrl !== nextDigitalFileUrl
+    ) {
       await deleteBlobUrlIfPresent(blobUrl);
     }
   }
@@ -643,6 +820,34 @@ export async function setStoreProductPublished(
 
   revalidateStorePaths(existing.productType, id);
   return { success: true, isPublished };
+}
+
+export type SetStoreProductFeaturedResult = {
+  success: boolean;
+  message?: string;
+  isFeatured?: boolean;
+};
+
+export async function setStoreProductFeatured(
+  id: string,
+  isFeatured: boolean
+): Promise<SetStoreProductFeaturedResult> {
+  await requireAdminSession();
+
+  const existing = await fetchStoreProductById(id);
+  if (!existing) {
+    return { success: false, message: 'Artículo no encontrado.' };
+  }
+
+  await sql`
+    UPDATE store_products
+    SET is_featured = ${isFeatured}, updated_at = NOW()
+    WHERE id = ${id}
+      AND deleted_at IS NULL
+  `;
+
+  revalidateStorePaths(existing.productType, id);
+  return { success: true, isFeatured };
 }
 
 export async function adjustStoreProductStock(id: string, delta: 1 | -1) {
