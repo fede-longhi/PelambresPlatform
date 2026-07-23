@@ -1,4 +1,7 @@
-import type { StoreProductType } from '@/types/store-definitions';
+import type {
+  StoreOrderStatus,
+  StoreProductType,
+} from '@/types/store-definitions';
 
 export const STORE_PRODUCT_TYPES = [
   { value: 'product' as const, label: 'Artículos' },
@@ -152,4 +155,31 @@ export function getStoreFinalPriceCents(
 
 export function formatStoreDiscountLabel(discountPercent: number): string {
   return `-${discountPercent}%`;
+}
+
+export const STORE_ORDER_STATUSES = [
+  { value: 'pending' as const, label: 'Pendiente' },
+  { value: 'paid' as const, label: 'Pagado' },
+  { value: 'failed' as const, label: 'Fallido' },
+  { value: 'cancelled' as const, label: 'Cancelado' },
+  { value: 'refunded' as const, label: 'Reembolsado' },
+] as const;
+
+export function getStoreOrderStatusLabel(status: StoreOrderStatus): string {
+  return (
+    STORE_ORDER_STATUSES.find((entry) => entry.value === status)?.label ??
+    status
+  );
+}
+
+export function getStoreCheckoutSuccessHref(orderId: string): string {
+  return `/store/checkout/success?order=${orderId}`;
+}
+
+export function getStoreCheckoutPendingHref(orderId: string): string {
+  return `/store/checkout/pending?order=${orderId}`;
+}
+
+export function getStoreCheckoutFailureHref(orderId: string): string {
+  return `/store/checkout/failure?order=${orderId}`;
 }

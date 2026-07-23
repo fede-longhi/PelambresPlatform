@@ -152,7 +152,7 @@ export default async function StoreCatalogByTypePage({
             <p className="max-w-2xl text-lg text-muted-foreground">
               {productType === 'product'
                 ? 'Listos para retirar. Coordinación por WhatsApp y mail.'
-                : 'Archivos de diseño 3D. La descarga online llega con el checkout.'}
+                : 'Archivos de diseño 3D. Pagá online y la descarga llega después del pago.'}
             </p>
           </div>
         </div>

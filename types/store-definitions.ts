@@ -57,3 +57,53 @@ export type StoreProductTableRow = {
   imageUrl: string | null;
   updatedAt: string;
 };
+
+export type StoreOrderStatus =
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded';
+
+export type StoreOrderItem = {
+  id: string;
+  orderId: string;
+  productId: string | null;
+  productType: StoreProductType;
+  name: string;
+  unitPriceCents: number;
+  discountPercent: number | null;
+  quantity: number;
+  lineTotalCents: number;
+  createdAt: string;
+};
+
+export type StoreOrder = {
+  id: string;
+  customerId: string | null;
+  buyerEmail: string;
+  buyerName: string;
+  status: StoreOrderStatus;
+  currency: string;
+  totalCents: number;
+  mpPreferenceId: string | null;
+  mpPaymentId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: StoreOrderItem[];
+};
+
+export type StoreOrderTableRow = {
+  id: string;
+  buyerEmail: string;
+  buyerName: string;
+  status: StoreOrderStatus;
+  currency: string;
+  totalCents: number;
+  itemName: string | null;
+  productType: StoreProductType | null;
+  mpPaymentId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+};
