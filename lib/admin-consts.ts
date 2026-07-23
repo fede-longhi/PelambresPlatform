@@ -11,6 +11,7 @@ import {
   Package,
   Printer,
   Settings,
+  ShoppingBag,
   Tags,
   Users,
   type LucideIcon,
@@ -45,6 +46,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     links: [
       { name: 'Productos', href: '/admin/products', icon: Package },
       { name: 'Categorías', href: '/admin/categories', icon: Tags },
+      { name: 'Pedidos tienda', href: '/admin/store-orders', icon: ShoppingBag },
     ],
   },
   {

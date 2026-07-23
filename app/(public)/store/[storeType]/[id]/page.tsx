@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
+import { auth } from '@/auth';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { fetchPublishedStoreProductById } from '@/lib/data/store-product-data';
+import { fetchLinkedCustomerForUser } from '@/lib/data/customer-portal-data';
 import {
   PRODUCT_FULFILLMENT_MESSAGE,
   STORE_CONTACT_EMAIL,
@@ -15,6 +17,7 @@ import {
   parseStoreTypeFromPath,
 } from '@/lib/consts/store-consts';
 import { StoreBreadcrumbs } from '../../_components/store-breadcrumbs';
+import { StoreBuyButton } from '../../_components/store-buy-button';
 import { StorePriceDisplay } from '../../_components/store-price-display';
 import { StoreProductGallery } from '../../_components/store-product-gallery';
 import { RichTextContent } from '@/components/shared/rich-text-content';
@@ -71,6 +74,28 @@ export default async function StoreProductDetailPage({
     `Consulta por ${product.name}`
   )}`;
   const catalogHref = getStoreCatalogHref(productType);
+
+  const session = await auth();
+  let defaultEmail = session?.user?.email ?? '';
+  let defaultName = session?.user?.name ?? '';
+  if (
+    session?.user?.id &&
+    session.user.role === 'customer' &&
+    session.user.isActive !== false
+  ) {
+    const linkedCustomer = await fetchLinkedCustomerForUser(session.user.id);
+    if (linkedCustomer) {
+      defaultEmail = linkedCustomer.email || defaultEmail;
+      const personName = [linkedCustomer.first_name, linkedCustomer.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+      defaultName =
+        personName || linkedCustomer.name || defaultName;
+    }
+  }
+
+  const canCheckout = !isOutOfStock;
 
   return (
     <div className="min-h-screen bg-muted pb-24 font-sans">
@@ -146,7 +171,7 @@ export default async function StoreProductDetailPage({
             </h2>
             <p className="text-sm text-slate-600">
               {isDesign
-                ? 'Archivo digital. Cuando esté el pago online, lo vas a poder descargar después de abonar.'
+                ? 'Archivo digital. Después del pago vas a poder descargarlo desde tu compra (próximamente en el portal).'
                 : PRODUCT_FULFILLMENT_MESSAGE}
             </p>
             {!isDesign && !isOutOfStock && (
@@ -156,19 +181,31 @@ export default async function StoreProductDetailPage({
             )}
           </section>
 
-          <section className="space-y-3">
-            <p className="text-sm text-slate-500">
-              El checkout con Mercado Pago está en camino. Mientras tanto,
-              escribinos para coordinar.
-            </p>
+          <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Comprar</h2>
+            {canCheckout ? (
+              <StoreBuyButton
+                productId={product.id}
+                productType={product.productType}
+                productName={product.name}
+                disabled={isOutOfStock}
+                defaultEmail={defaultEmail}
+                defaultName={defaultName}
+              />
+            ) : (
+              <p className="text-sm text-slate-500">
+                El pago online no está disponible por ahora. Escribinos para
+                coordinar.
+              </p>
+            )}
             <div className="flex flex-col gap-3 sm:flex-row">
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className={cn(
-                  buttonVariants(),
-                  'inline-flex items-center justify-center gap-2 bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90'
+                  buttonVariants({ variant: 'outline' }),
+                  'inline-flex items-center justify-center gap-2'
                 )}
               >
                 <MessageCircle size={18} aria-hidden="true" />
@@ -177,8 +214,8 @@ export default async function StoreProductDetailPage({
               <a
                 href={mailUrl}
                 className={cn(
-                  buttonVariants(),
-                  'inline-flex items-center justify-center gap-2 bg-mail text-mail-foreground hover:bg-mail/90'
+                  buttonVariants({ variant: 'outline' }),
+                  'inline-flex items-center justify-center gap-2'
                 )}
               >
                 <Mail size={18} aria-hidden="true" />
