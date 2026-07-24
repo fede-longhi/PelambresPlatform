@@ -286,26 +286,3 @@ export async function fetchUserHasPassword(id: string): Promise<boolean> {
   }
 }
 
-export async function requireAdminSessionUserId(): Promise<string> {
-  const { auth } = await import('@/auth');
-  const { canAccessAdmin } = await import('@/lib/auth/permissions');
-
-  const session = await auth();
-  const sessionUser = session?.user;
-
-  if (
-    !sessionUser?.id ||
-    !canAccessAdmin({
-      id: sessionUser.id,
-      email: sessionUser.email ?? '',
-      name: sessionUser.name ?? '',
-      role: sessionUser.role,
-      isActive: sessionUser.isActive,
-      mustChangePassword: sessionUser.mustChangePassword,
-    })
-  ) {
-    throw new Error('Unauthorized');
-  }
-
-  return sessionUser.id;
-}

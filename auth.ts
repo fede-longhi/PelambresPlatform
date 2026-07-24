@@ -89,6 +89,31 @@ export const {
 
       return true;
     },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id!;
+        token.role = user.role;
+        token.isActive = user.isActive;
+        token.mustChangePassword = user.mustChangePassword;
+        token.hasPlatformAccess = user.hasPlatformAccess;
+      } else if (token.id) {
+        if (!token.role) {
+          const dbUser = await fetchUserById(String(token.id));
+
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.isActive = dbUser.is_active;
+            token.mustChangePassword = dbUser.must_change_password;
+          }
+        }
+
+        if (token.hasPlatformAccess === undefined) {
+          token.hasPlatformAccess = await fetchUserCanAccessPlatformById(String(token.id));
+        }
+      }
+
+      return token;
+    },
   },
   providers: [
     Credentials({
