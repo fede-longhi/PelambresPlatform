@@ -5,6 +5,8 @@
  * - MERCADOPAGO_ACCESS_TOKEN — test or production access token
  * - MERCADOPAGO_WEBHOOK_SECRET — Webhooks signing secret from MP panel
  * - NEXT_PUBLIC_APP_URL — public site origin (back_urls + notification_url)
+ * - MERCADOPAGO_SANDBOX=true — force sandbox checkout (needed when test
+ *   credentials also use APP_USR- prefix; ignore in real production)
  *
  * Panel setup: Your integrations → Webhooks → URL
  *   {NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago
@@ -38,6 +40,20 @@ export function getAppBaseUrl() {
 }
 
 export function shouldUseMercadoPagoSandbox() {
+  const sandboxFlag = process.env.MERCADOPAGO_SANDBOX?.trim().toLowerCase();
+  if (sandboxFlag === 'true' || sandboxFlag === '1') {
+    return true;
+  }
+  if (sandboxFlag === 'false' || sandboxFlag === '0') {
+    return false;
+  }
+
+  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN ?? '';
+  // Legacy test tokens. Newer MP test credentials often use APP_USR- too.
+  if (accessToken.startsWith('TEST-')) {
+    return true;
+  }
+
   return process.env.NODE_ENV !== 'production';
 }
 

@@ -4,9 +4,13 @@ import {
   getPortalPathForRole,
   shouldRedirectLoggedInUserFromAuthEntry,
 } from '@/lib/auth/public-routes';
-import { fetchUserById, fetchUserCanAccessPlatformById } from '@/lib/data/user-data';
 import type { UserRole } from '@/types/user-definitions';
 
+/**
+ * Edge-safe Auth.js config used by middleware (`proxy.ts`).
+ * Keep free of Node-only modules (crypto, postgres, bcrypt).
+ * DB-backed JWT enrichment lives in `auth.ts` only.
+ */
 export const authConfig = {
     pages: {
         signIn: '/login',
@@ -98,20 +102,6 @@ export const authConfig = {
                 token.isActive = user.isActive;
                 token.mustChangePassword = user.mustChangePassword;
                 token.hasPlatformAccess = user.hasPlatformAccess;
-            } else if (token.id) {
-                if (!token.role) {
-                    const dbUser = await fetchUserById(String(token.id));
-
-                    if (dbUser) {
-                        token.role = dbUser.role;
-                        token.isActive = dbUser.is_active;
-                        token.mustChangePassword = dbUser.must_change_password;
-                    }
-                }
-
-                if (token.hasPlatformAccess === undefined) {
-                    token.hasPlatformAccess = await fetchUserCanAccessPlatformById(String(token.id));
-                }
             }
 
             return token;

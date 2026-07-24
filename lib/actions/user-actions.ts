@@ -10,8 +10,8 @@ import {
   fetchUserById,
   fetchUserByEmail,
   fetchUserByEmailAndRole,
-  requireAdminSessionUserId,
 } from '@/lib/data/user-data';
+import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
 import { createCustomerRecord } from '@/lib/actions/customer-actions';
 import {
   generateTemporaryPassword,
