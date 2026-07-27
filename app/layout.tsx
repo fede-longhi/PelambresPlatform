@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Analytics } from "@vercel/analytics/next"
+import { EnvDebugBadge } from '@/components/shared/env-debug-badge';
 
 export const metadata: Metadata = {
     title: {
@@ -26,6 +27,7 @@ export default function RootLayout({
                     {children}
                 </TooltipProvider>
                 <Toaster />
+                <EnvDebugBadge />
                 <Analytics/>
             </body>
         </html>
