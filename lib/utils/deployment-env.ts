@@ -22,7 +22,7 @@ export type DeploymentDebugInfo = {
 
 /**
  * Visible debug identity for non-production deploys.
- * Returns null on real production (unless MP sandbox is forced on).
+ * Never shown in production (VERCEL_ENV=production or IS_PRODUCTION=true).
  */
 export function getDeploymentDebugInfo(): DeploymentDebugInfo | null {
   const vercelEnv = process.env.VERCEL_ENV; // production | preview | development
@@ -30,10 +30,7 @@ export function getDeploymentDebugInfo(): DeploymentDebugInfo | null {
   const isMarkedProduction = process.env.IS_PRODUCTION === 'true';
   const mpSandbox = isMercadoPagoSandboxEnabled();
 
-  const isRealProduction =
-    vercelEnv === 'production' && isMarkedProduction && !mpSandbox;
-
-  if (isRealProduction) {
+  if (vercelEnv === 'production' || isMarkedProduction) {
     return null;
   }
 
