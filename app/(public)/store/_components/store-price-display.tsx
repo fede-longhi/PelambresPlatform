@@ -33,7 +33,9 @@ export function StorePriceDisplay({
     return (
       <p
         className={cn(
-          size === 'detail' ? 'text-2xl font-semibold' : 'text-lg font-semibold',
+          size === 'detail'
+            ? 'text-4xl font-bold tracking-tight md:text-5xl'
+            : 'text-lg font-semibold',
           onDark
             ? 'text-primary-foreground'
             : size === 'detail'
@@ -48,11 +50,11 @@ export function StorePriceDisplay({
   }
 
   return (
-    <div className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-1', className)}>
+    <div className={cn('flex flex-wrap items-baseline gap-x-3 gap-y-1', className)}>
       <span
         className={cn(
-          'font-semibold',
-          size === 'detail' ? 'text-2xl' : 'text-lg',
+          'font-bold tracking-tight',
+          size === 'detail' ? 'text-4xl md:text-5xl' : 'text-lg font-semibold',
           onDark
             ? 'text-primary-foreground'
             : size === 'detail'
@@ -65,7 +67,7 @@ export function StorePriceDisplay({
       <span
         className={cn(
           'line-through',
-          size === 'detail' ? 'text-base' : 'text-sm',
+          size === 'detail' ? 'text-lg' : 'text-sm',
           onDark ? 'text-primary-foreground/60' : 'text-muted-foreground'
         )}
       >
@@ -73,7 +75,7 @@ export function StorePriceDisplay({
       </span>
       <span
         className={cn(
-          'rounded-full bg-secondary px-2 py-0.5 font-semibold text-secondary-foreground',
+          'rounded-full bg-secondary px-2.5 py-0.5 font-semibold text-secondary-foreground',
           size === 'detail' ? 'text-sm' : 'text-xs'
         )}
       >

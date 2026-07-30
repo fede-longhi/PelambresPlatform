@@ -13,30 +13,19 @@ import {
 import { fetchCustomerIdForUser } from '@/lib/data/customer-portal-data';
 import { fetchPublishedStoreProductById } from '@/lib/data/store-product-data';
 import { fetchStoreOrderById } from '@/lib/data/store-order-data';
-import { createStoreCheckoutPreference } from '@/lib/payments/mercadopago';
+import { createStoreCheckoutPreference, getMercadoPagoProductionConfigError } from '@/lib/payments/mercadopago';
 
 const CheckoutSchema = z.object({
   productId: z.string().uuid({ message: 'Producto inválido.' }),
   productType: z.enum(['product', 'design'], {
     message: 'Tipo de producto inválido.',
   }),
-  buyerEmail: z
-    .string()
-    .trim()
-    .email({ message: 'Ingresá un email válido.' }),
-  buyerName: z
-    .string()
-    .trim()
-    .min(2, { message: 'Ingresá tu nombre.' })
-    .max(120, { message: 'El nombre es demasiado largo.' }),
 });
 
 export type StoreCheckoutFormState = {
   errors?: {
     productId?: string[];
     productType?: string[];
-    buyerEmail?: string[];
-    buyerName?: string[];
   };
   message?: string | null;
   success?: boolean;
@@ -61,8 +50,6 @@ export async function createStoreCheckout(
   const validated = CheckoutSchema.safeParse({
     productId: formData.get('productId'),
     productType: formData.get('productType'),
-    buyerEmail: formData.get('buyerEmail'),
-    buyerName: formData.get('buyerName'),
   });
 
   if (!validated.success) {
@@ -73,7 +60,7 @@ export async function createStoreCheckout(
     );
   }
 
-  const { productId, productType, buyerEmail, buyerName } = validated.data;
+  const { productId, productType } = validated.data;
 
   const product = await fetchPublishedStoreProductById(productType, productId);
   if (!product || product.productType !== productType) {
@@ -85,6 +72,11 @@ export async function createStoreCheckout(
     (product.stock == null || product.stock <= 0)
   ) {
     return toCheckoutError('Este artículo no tiene stock disponible.', formData);
+  }
+
+  const mercadoPagoConfigError = getMercadoPagoProductionConfigError();
+  if (mercadoPagoConfigError) {
+    return toCheckoutError(mercadoPagoConfigError, formData);
   }
 
   const unitPriceCents = getStoreFinalPriceCents(
@@ -101,6 +93,11 @@ export async function createStoreCheckout(
     customerId = await fetchCustomerIdForUser(sessionUser.id);
   }
 
+  // Buyer identity is collected by Mercado Pago; prefer session when present.
+  const buyerName = sessionUser?.name?.trim() || 'Cliente';
+  const buyerEmail =
+    sessionUser?.email?.trim().toLowerCase() || 'checkout@pelambres.com.ar';
+
   let orderId: string;
   try {
     const orderRows = await sql<{ id: string }[]>`
@@ -114,7 +111,7 @@ export async function createStoreCheckout(
       )
       VALUES (
         ${customerId},
-        ${buyerEmail.toLowerCase()},
+        ${buyerEmail},
         ${buyerName},
         'pending',
         ${product.currency},
@@ -162,8 +159,9 @@ export async function createStoreCheckout(
       quantity,
       unitPrice: unitPriceCents / 100,
       currencyId: product.currency,
-      buyerEmail: buyerEmail.toLowerCase(),
-      buyerName,
+      buyerEmail:
+        sessionUser?.email?.trim().toLowerCase() || undefined,
+      buyerName: sessionUser?.name?.trim() || undefined,
     });
 
     await sql`
@@ -195,10 +193,12 @@ export async function createStoreCheckout(
       WHERE id = ${orderId}
         AND status = 'pending'
     `;
-    return toCheckoutError(
-      'No se pudo conectar con Mercado Pago. Intentá de nuevo.',
-      formData
-    );
+    const message =
+      error instanceof Error &&
+      error.message.startsWith('El pago online')
+        ? error.message
+        : 'No se pudo conectar con Mercado Pago. Intentá de nuevo.';
+    return toCheckoutError(message, formData);
   }
 }
 
