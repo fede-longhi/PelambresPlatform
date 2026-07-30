@@ -2,17 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
-import { auth } from '@/auth';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { fetchPublishedStoreProductById } from '@/lib/data/store-product-data';
-import { fetchLinkedCustomerForUser } from '@/lib/data/customer-portal-data';
 import {
   PRODUCT_FULFILLMENT_MESSAGE,
-  STORE_CONTACT_EMAIL,
+  STORE_WHATSAPP_COORDINATION_LEGEND,
+  buildStoreMailUrl,
   buildStoreWhatsAppUrl,
   getStoreCatalogHref,
+  getStoreProductHref,
   getStoreProductTypeLabel,
   parseStoreTypeFromPath,
 } from '@/lib/consts/store-consts';
@@ -69,32 +69,10 @@ export default async function StoreProductDetailPage({
   const isDesign = product.productType === 'design';
   const isOutOfStock =
     product.productType === 'product' && (product.stock ?? 0) <= 0;
-  const whatsappUrl = buildStoreWhatsAppUrl(product.name);
-  const mailUrl = `mailto:${STORE_CONTACT_EMAIL}?subject=${encodeURIComponent(
-    `Consulta por ${product.name}`
-  )}`;
+  const productHref = getStoreProductHref(product.productType, product.id);
+  const whatsappUrl = buildStoreWhatsAppUrl(product.name, productHref);
+  const mailUrl = buildStoreMailUrl(product.name, productHref);
   const catalogHref = getStoreCatalogHref(productType);
-
-  const session = await auth();
-  let defaultEmail = session?.user?.email ?? '';
-  let defaultName = session?.user?.name ?? '';
-  if (
-    session?.user?.id &&
-    session.user.role === 'customer' &&
-    session.user.isActive !== false
-  ) {
-    const linkedCustomer = await fetchLinkedCustomerForUser(session.user.id);
-    if (linkedCustomer) {
-      defaultEmail = linkedCustomer.email || defaultEmail;
-      const personName = [linkedCustomer.first_name, linkedCustomer.last_name]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      defaultName =
-        personName || linkedCustomer.name || defaultName;
-    }
-  }
-
   const canCheckout = !isOutOfStock;
 
   return (
@@ -189,8 +167,6 @@ export default async function StoreProductDetailPage({
                 productType={product.productType}
                 productName={product.name}
                 disabled={isOutOfStock}
-                defaultEmail={defaultEmail}
-                defaultName={defaultName}
               />
             ) : (
               <p className="text-sm text-slate-500">
@@ -198,14 +174,17 @@ export default async function StoreProductDetailPage({
                 coordinar.
               </p>
             )}
+            <p className="rounded-xl border border-whatsapp/20 bg-whatsapp/10 px-4 py-3 text-sm text-slate-700">
+              {STORE_WHATSAPP_COORDINATION_LEGEND}
+            </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <a
                 href={whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className={cn(
-                  buttonVariants({ variant: 'outline' }),
-                  'inline-flex items-center justify-center gap-2'
+                  buttonVariants({ variant: 'default' }),
+                  'inline-flex items-center justify-center gap-2 border-transparent !bg-[#25D366] !text-white hover:!bg-[#1ebe57]'
                 )}
               >
                 <MessageCircle size={18} aria-hidden="true" />
@@ -214,8 +193,8 @@ export default async function StoreProductDetailPage({
               <a
                 href={mailUrl}
                 className={cn(
-                  buttonVariants({ variant: 'outline' }),
-                  'inline-flex items-center justify-center gap-2'
+                  buttonVariants({ variant: 'default' }),
+                  'inline-flex items-center justify-center gap-2 border-transparent !bg-mail !text-mail-foreground hover:!bg-mail/90'
                 )}
               >
                 <Mail size={18} aria-hidden="true" />

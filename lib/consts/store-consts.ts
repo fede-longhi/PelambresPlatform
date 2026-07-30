@@ -17,6 +17,10 @@ export const STORE_CURRENCIES = [
 export const PRODUCT_FULFILLMENT_MESSAGE =
   'Retiro / coordinación por WhatsApp o mail. No se pide dirección de envío.';
 
+/** Callout above the buy CTAs on product detail. */
+export const STORE_WHATSAPP_COORDINATION_LEGEND =
+  'Para coordinar la compra, el retiro o cualquier consulta, escribinos por WhatsApp.';
+
 /** @deprecated Use PRODUCT_FULFILLMENT_MESSAGE */
 export const READY_PRODUCT_FULFILLMENT_MESSAGE = PRODUCT_FULFILLMENT_MESSAGE;
 
@@ -57,11 +61,52 @@ export function parseStoreTypeFromPath(
   return null;
 }
 
-export function buildStoreWhatsAppUrl(productName: string): string {
+function getPublicStoreOrigin(): string {
+  const explicit =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+    process.env.PUBLIC_APP_URL?.replace(/\/$/, '');
+  if (explicit) {
+    return explicit;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, '')}`;
+  }
+  return 'https://www.pelambres.com.ar';
+}
+
+function resolveStoreProductUrl(productHref: string): string {
+  if (productHref.startsWith('http')) {
+    return productHref;
+  }
+  const origin = getPublicStoreOrigin();
+  return `${origin}${productHref.startsWith('/') ? productHref : `/${productHref}`}`;
+}
+
+function buildStoreContactMessage(productName: string, productUrl: string): string {
+  return `Hola! Quiero coordinar la compra de "${productName}" en la tienda.\n${productUrl}`;
+}
+
+export function buildStoreWhatsAppUrl(
+  productName: string,
+  productHref: string
+): string {
+  const productUrl = resolveStoreProductUrl(productHref);
   const text = encodeURIComponent(
-    `Hola! Quiero coordinar la compra de "${productName}" en la tienda.`
+    buildStoreContactMessage(productName, productUrl)
   );
   return `https://wa.me/${STORE_WHATSAPP_NUMBER}?text=${text}`;
+}
+
+export function buildStoreMailUrl(
+  productName: string,
+  productHref: string
+): string {
+  const productUrl = resolveStoreProductUrl(productHref);
+  const subject = encodeURIComponent(`Consulta por ${productName}`);
+  const body = encodeURIComponent(
+    buildStoreContactMessage(productName, productUrl)
+  );
+  return `mailto:${STORE_CONTACT_EMAIL}?subject=${subject}&body=${body}`;
 }
 
 export const STORE_PRODUCTS_FOLDER = 'store-products';
