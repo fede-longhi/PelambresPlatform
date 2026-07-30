@@ -5,10 +5,10 @@
  * - MERCADOPAGO_ACCESS_TOKEN — production token on Production; test token on Preview
  * - MERCADOPAGO_WEBHOOK_SECRET — Webhooks signing secret from MP panel
  * - NEXT_PUBLIC_APP_URL — public site origin (back_urls + notification_url)
- * - MERCADOPAGO_SANDBOX=true — force sandbox checkout (Preview / test only).
- *   On Production with real buyers this must be false and the access token
- *   must be a production credential — otherwise MP shows
- *   "una de las partes … es de prueba".
+ * - MERCADOPAGO_SANDBOX=true — marks intentional test mode (e.g. Production
+ *   while the store is not public). Does NOT switch to sandbox_init_point:
+ *   that URL is deprecated and causes ERR_TOO_MANY_REDIRECTS. Always use
+ *   init_point; test Access Tokens already open the test checkout.
  *
  * Panel setup: Your integrations → Webhooks → URL
  *   {NEXT_PUBLIC_APP_URL}/api/webhooks/mercadopago
@@ -166,9 +166,10 @@ export async function createStoreCheckoutPreference(
     },
   });
 
-  const checkoutUrl = useSandbox
-    ? result.sandbox_init_point || result.init_point
-    : result.init_point;
+  // Always use init_point. sandbox_init_point is deprecated and causes
+  // ERR_TOO_MANY_REDIRECTS on sandbox.mercadopago.com.ar. With test
+  // credentials (APP_USR- / TEST-), init_point already opens the test flow.
+  const checkoutUrl = result.init_point;
 
   if (!result.id || !checkoutUrl) {
     throw new Error('MercadoPago preference did not return a checkout URL.');
