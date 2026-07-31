@@ -108,12 +108,44 @@ export function getMercadoPagoProductionConfigError(): string | null {
   return null;
 }
 
+/** MP Preference API: items.description max length. */
+const MERCADOPAGO_ITEM_DESCRIPTION_MAX_LENGTH = 256;
+
 export type CreateStorePreferenceItem = {
   id: string;
   title: string;
+  /** Plain-text item description for MP fraud validation (max 256). */
+  description: string;
   quantity: number;
   unitPrice: number;
 };
+
+/**
+ * Builds a Mercado Pago item description (max 256 chars).
+ * Prefer the product description; fall back to a short typed label + title.
+ */
+export function buildMercadoPagoItemDescription(input: {
+  title: string;
+  description?: string | null;
+  productType?: 'product' | 'design';
+}): string {
+  const stripped = (input.description ?? '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (stripped) {
+    return stripped.slice(0, MERCADOPAGO_ITEM_DESCRIPTION_MAX_LENGTH);
+  }
+
+  const title = input.title.trim() || 'Artículo';
+  const prefix =
+    input.productType === 'design'
+      ? 'Diseño digital para impresión 3D'
+      : 'Producto de impresión 3D';
+  const fallback = `${prefix}: ${title}`;
+  return fallback.slice(0, MERCADOPAGO_ITEM_DESCRIPTION_MAX_LENGTH);
+}
 
 export type CreateStorePreferenceInput = {
   orderId: string;
@@ -162,6 +194,10 @@ export async function createStoreCheckoutPreference(
       items: input.items.map((item) => ({
         id: item.id,
         title: item.title,
+        description: buildMercadoPagoItemDescription({
+          title: item.title,
+          description: item.description,
+        }),
         quantity: item.quantity,
         unit_price: item.unitPrice,
         currency_id: input.currencyId,

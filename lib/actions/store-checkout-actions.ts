@@ -13,7 +13,11 @@ import {
 import { fetchCustomerIdForUser } from '@/lib/data/customer-portal-data';
 import { fetchPublishedStoreProductById, fetchPublishedStoreProductsByIds } from '@/lib/data/store-product-data';
 import { fetchStoreOrderById } from '@/lib/data/store-order-data';
-import { createStoreCheckoutPreference, getMercadoPagoProductionConfigError } from '@/lib/payments/mercadopago';
+import {
+  buildMercadoPagoItemDescription,
+  createStoreCheckoutPreference,
+  getMercadoPagoProductionConfigError,
+} from '@/lib/payments/mercadopago';
 
 const CheckoutSchema = z.object({
   productId: z.string().uuid({ message: 'Producto inválido.' }),
@@ -172,6 +176,11 @@ export async function createStoreCheckout(
         {
           id: product.id,
           title: product.name,
+          description: buildMercadoPagoItemDescription({
+            title: product.name,
+            description: product.description,
+            productType: product.productType,
+          }),
           quantity,
           unitPrice: unitPriceCents / 100,
         },
@@ -295,6 +304,7 @@ export async function createStoreCartCheckout(
     productId: string;
     productType: 'product' | 'design';
     name: string;
+    description: string | null;
     unitPriceCents: number;
     discountPercent: number | null;
     quantity: number;
@@ -332,6 +342,7 @@ export async function createStoreCartCheckout(
       productId: product.id,
       productType: product.productType,
       name: product.name,
+      description: product.description,
       unitPriceCents,
       discountPercent: product.discountPercent,
       quantity: line.quantity,
@@ -427,6 +438,11 @@ export async function createStoreCartCheckout(
       items: resolvedLines.map((line) => ({
         id: line.productId,
         title: line.name,
+        description: buildMercadoPagoItemDescription({
+          title: line.name,
+          description: line.description,
+          productType: line.productType,
+        }),
         quantity: line.quantity,
         unitPrice: line.unitPriceCents / 100,
       })),
