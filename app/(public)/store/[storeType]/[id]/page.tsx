@@ -17,7 +17,7 @@ import {
   parseStoreTypeFromPath,
 } from '@/lib/consts/store-consts';
 import { StoreBreadcrumbs } from '../../_components/store-breadcrumbs';
-import { StoreBuyButton } from '../../_components/store-buy-button';
+import { StorePurchaseControls } from '../../_components/store-purchase-controls';
 import { StorePriceDisplay } from '../../_components/store-price-display';
 import { StoreProductGallery } from '../../_components/store-product-gallery';
 import { RichTextContent } from '@/components/shared/rich-text-content';
@@ -162,10 +162,13 @@ export default async function StoreProductDetailPage({
           <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
             <h2 className="text-lg font-semibold text-slate-900">Comprar</h2>
             {canCheckout ? (
-              <StoreBuyButton
+              <StorePurchaseControls
                 productId={product.id}
                 productType={product.productType}
                 productName={product.name}
+                maxQuantity={
+                  product.productType === 'product' ? product.stock : null
+                }
                 disabled={isOutOfStock}
               />
             ) : (

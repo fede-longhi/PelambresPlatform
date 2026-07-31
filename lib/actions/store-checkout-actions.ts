@@ -11,7 +11,7 @@ import {
   getStoreProductHref,
 } from '@/lib/consts/store-consts';
 import { fetchCustomerIdForUser } from '@/lib/data/customer-portal-data';
-import { fetchPublishedStoreProductById } from '@/lib/data/store-product-data';
+import { fetchPublishedStoreProductById, fetchPublishedStoreProductsByIds } from '@/lib/data/store-product-data';
 import { fetchStoreOrderById } from '@/lib/data/store-order-data';
 import { createStoreCheckoutPreference, getMercadoPagoProductionConfigError } from '@/lib/payments/mercadopago';
 
@@ -20,12 +20,19 @@ const CheckoutSchema = z.object({
   productType: z.enum(['product', 'design'], {
     message: 'Tipo de producto inválido.',
   }),
+  quantity: z.coerce
+    .number({ message: 'Cantidad inválida.' })
+    .int({ message: 'Cantidad inválida.' })
+    .min(1, { message: 'La cantidad mínima es 1.' })
+    .max(99, { message: 'La cantidad máxima es 99.' })
+    .default(1),
 });
 
 export type StoreCheckoutFormState = {
   errors?: {
     productId?: string[];
     productType?: string[];
+    quantity?: string[];
   };
   message?: string | null;
   success?: boolean;
@@ -50,6 +57,7 @@ export async function createStoreCheckout(
   const validated = CheckoutSchema.safeParse({
     productId: formData.get('productId'),
     productType: formData.get('productType'),
+    quantity: formData.get('quantity') || 1,
   });
 
   if (!validated.success) {
@@ -60,7 +68,7 @@ export async function createStoreCheckout(
     );
   }
 
-  const { productId, productType } = validated.data;
+  const { productId, productType, quantity } = validated.data;
 
   const product = await fetchPublishedStoreProductById(productType, productId);
   if (!product || product.productType !== productType) {
@@ -69,9 +77,14 @@ export async function createStoreCheckout(
 
   if (
     product.productType === 'product' &&
-    (product.stock == null || product.stock <= 0)
+    (product.stock == null || product.stock < quantity)
   ) {
-    return toCheckoutError('Este artículo no tiene stock disponible.', formData);
+    return toCheckoutError(
+      product.stock == null || product.stock <= 0
+        ? 'Este artículo no tiene stock disponible.'
+        : `Solo hay ${product.stock} unidades disponibles.`,
+      formData
+    );
   }
 
   const mercadoPagoConfigError = getMercadoPagoProductionConfigError();
@@ -83,7 +96,6 @@ export async function createStoreCheckout(
     product.priceCents,
     product.discountPercent
   );
-  const quantity = 1;
   const lineTotalCents = unitPriceCents * quantity;
 
   let customerId: string | null = null;
@@ -155,10 +167,15 @@ export async function createStoreCheckout(
   try {
     const preference = await createStoreCheckoutPreference({
       orderId,
-      title: product.name,
-      quantity,
-      unitPrice: unitPriceCents / 100,
       currencyId: product.currency,
+      items: [
+        {
+          id: product.id,
+          title: product.name,
+          quantity,
+          unitPrice: unitPriceCents / 100,
+        },
+      ],
       buyerEmail:
         sessionUser?.email?.trim().toLowerCase() || undefined,
       buyerName: sessionUser?.name?.trim() || undefined,
@@ -199,6 +216,257 @@ export async function createStoreCheckout(
         ? error.message
         : 'No se pudo conectar con Mercado Pago. Intentá de nuevo.';
     return toCheckoutError(message, formData);
+  }
+}
+
+const CartCheckoutSchema = z.object({
+  itemsJson: z.string().min(2, { message: 'El carrito está vacío.' }),
+});
+
+const CartLineSchema = z.object({
+  productId: z.string().uuid(),
+  productType: z.enum(['product', 'design']),
+  quantity: z.number().int().min(1).max(99),
+});
+
+export type StoreCartCheckoutFormState = {
+  message?: string | null;
+  success?: boolean;
+};
+
+export async function createStoreCartCheckout(
+  _prevState: StoreCartCheckoutFormState,
+  formData: FormData
+): Promise<StoreCartCheckoutFormState> {
+  const validated = CartCheckoutSchema.safeParse({
+    itemsJson: formData.get('itemsJson'),
+  });
+
+  if (!validated.success) {
+    return {
+      message: 'El carrito está vacío o es inválido.',
+      success: false,
+    };
+  }
+
+  let parsedLines: unknown;
+  try {
+    parsedLines = JSON.parse(validated.data.itemsJson);
+  } catch {
+    return { message: 'No se pudo leer el carrito.', success: false };
+  }
+
+  const linesResult = z.array(CartLineSchema).min(1).safeParse(parsedLines);
+  if (!linesResult.success) {
+    return { message: 'El carrito tiene ítems inválidos.', success: false };
+  }
+
+  const mercadoPagoConfigError = getMercadoPagoProductionConfigError();
+  if (mercadoPagoConfigError) {
+    return { message: mercadoPagoConfigError, success: false };
+  }
+
+  const merged = new Map<
+    string,
+    { productId: string; productType: 'product' | 'design'; quantity: number }
+  >();
+  for (const line of linesResult.data) {
+    const key = `${line.productType}:${line.productId}`;
+    const existing = merged.get(key);
+    if (existing) {
+      existing.quantity = Math.min(99, existing.quantity + line.quantity);
+    } else {
+      merged.set(key, { ...line });
+    }
+  }
+  const cartLines = Array.from(merged.values());
+
+  const products = await fetchPublishedStoreProductsByIds(
+    cartLines.map((line) => line.productId)
+  );
+  const productByKey = new Map(
+    products.map((product) => [
+      `${product.productType}:${product.id}`,
+      product,
+    ])
+  );
+
+  type ResolvedLine = {
+    productId: string;
+    productType: 'product' | 'design';
+    name: string;
+    unitPriceCents: number;
+    discountPercent: number | null;
+    quantity: number;
+    lineTotalCents: number;
+    currency: string;
+  };
+
+  const resolvedLines: ResolvedLine[] = [];
+
+  for (const line of cartLines) {
+    const key = `${line.productType}:${line.productId}`;
+    const product = productByKey.get(key);
+    if (!product) {
+      return {
+        message: 'Uno de los artículos ya no está disponible.',
+        success: false,
+      };
+    }
+
+    if (
+      product.productType === 'product' &&
+      (product.stock == null || product.stock < line.quantity)
+    ) {
+      return {
+        message: `No hay stock suficiente de "${product.name}".`,
+        success: false,
+      };
+    }
+
+    const unitPriceCents = getStoreFinalPriceCents(
+      product.priceCents,
+      product.discountPercent
+    );
+    resolvedLines.push({
+      productId: product.id,
+      productType: product.productType,
+      name: product.name,
+      unitPriceCents,
+      discountPercent: product.discountPercent,
+      quantity: line.quantity,
+      lineTotalCents: unitPriceCents * line.quantity,
+      currency: product.currency,
+    });
+  }
+
+  const currencies = new Set(resolvedLines.map((line) => line.currency));
+  if (currencies.size !== 1) {
+    return {
+      message: 'No se pueden combinar monedas distintas en el mismo pedido.',
+      success: false,
+    };
+  }
+  const currency = resolvedLines[0].currency;
+  const totalCents = resolvedLines.reduce(
+    (sum, line) => sum + line.lineTotalCents,
+    0
+  );
+
+  let customerId: string | null = null;
+  const session = await auth();
+  const sessionUser = session?.user;
+  if (sessionUser?.id && sessionUser.role === 'customer') {
+    customerId = await fetchCustomerIdForUser(sessionUser.id);
+  }
+
+  const buyerName = sessionUser?.name?.trim() || 'Cliente';
+  const buyerEmail =
+    sessionUser?.email?.trim().toLowerCase() || 'checkout@pelambres.com.ar';
+
+  let orderId: string;
+  try {
+    const orderRows = await sql<{ id: string }[]>`
+      INSERT INTO store_orders (
+        customer_id,
+        buyer_email,
+        buyer_name,
+        status,
+        currency,
+        total_cents
+      )
+      VALUES (
+        ${customerId},
+        ${buyerEmail},
+        ${buyerName},
+        'pending',
+        ${currency},
+        ${totalCents}
+      )
+      RETURNING id
+    `;
+
+    orderId = orderRows[0]?.id;
+    if (!orderId) {
+      throw new Error('Missing order id');
+    }
+
+    for (const line of resolvedLines) {
+      await sql`
+        INSERT INTO store_order_items (
+          order_id,
+          product_id,
+          product_type,
+          name,
+          unit_price_cents,
+          discount_percent,
+          quantity,
+          line_total_cents
+        )
+        VALUES (
+          ${orderId},
+          ${line.productId},
+          ${line.productType},
+          ${line.name},
+          ${line.unitPriceCents},
+          ${line.discountPercent},
+          ${line.quantity},
+          ${line.lineTotalCents}
+        )
+      `;
+    }
+  } catch (error) {
+    console.error(error);
+    return { message: 'No se pudo iniciar el checkout.', success: false };
+  }
+
+  try {
+    const preference = await createStoreCheckoutPreference({
+      orderId,
+      currencyId: currency,
+      items: resolvedLines.map((line) => ({
+        id: line.productId,
+        title: line.name,
+        quantity: line.quantity,
+        unitPrice: line.unitPriceCents / 100,
+      })),
+      buyerEmail: sessionUser?.email?.trim().toLowerCase() || undefined,
+      buyerName: sessionUser?.name?.trim() || undefined,
+    });
+
+    await sql`
+      UPDATE store_orders
+      SET
+        mp_preference_id = ${preference.preferenceId},
+        updated_at = NOW()
+      WHERE id = ${orderId}
+    `;
+
+    redirect(preference.checkoutUrl);
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'digest' in error &&
+      String((error as { digest?: string }).digest).startsWith('NEXT_REDIRECT')
+    ) {
+      throw error;
+    }
+
+    console.error(error);
+    await sql`
+      UPDATE store_orders
+      SET
+        status = 'failed',
+        updated_at = NOW()
+      WHERE id = ${orderId}
+        AND status = 'pending'
+    `;
+    const message =
+      error instanceof Error && error.message.startsWith('El pago online')
+        ? error.message
+        : 'No se pudo conectar con Mercado Pago. Intentá de nuevo.';
+    return { message, success: false };
   }
 }
 

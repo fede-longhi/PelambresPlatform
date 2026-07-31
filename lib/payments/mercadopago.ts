@@ -4,7 +4,9 @@
  * Required env:
  * - MERCADOPAGO_ACCESS_TOKEN — production token on Production; test token on Preview
  * - MERCADOPAGO_WEBHOOK_SECRET — Webhooks signing secret from MP panel
- * - NEXT_PUBLIC_APP_URL — public site origin (back_urls + notification_url)
+ * - NEXT_PUBLIC_APP_URL / PUBLIC_APP_URL — site origin
+ * - MERCADOPAGO_BACK_URL_BASE — optional public HTTPS origin for back_urls
+ *   and webhooks (use on localhost; MP rejects localhost in back_urls)
  * - MERCADOPAGO_SANDBOX=true — marks intentional test mode (e.g. Production
  *   while the store is not public). Does NOT switch to sandbox_init_point:
  *   that URL is deprecated and causes ERR_TOO_MANY_REDIRECTS. Always use
@@ -30,6 +32,8 @@ export function getMercadoPagoClient() {
 
 export function getAppBaseUrl() {
   const candidates = [
+    // Local/dev: public HTTPS origin for MP back_urls (localhost is rejected by MP).
+    process.env.MERCADOPAGO_BACK_URL_BASE,
     process.env.NEXT_PUBLIC_APP_URL,
     process.env.PUBLIC_APP_URL,
     process.env.VERCEL_URL
@@ -104,11 +108,16 @@ export function getMercadoPagoProductionConfigError(): string | null {
   return null;
 }
 
-export type CreateStorePreferenceInput = {
-  orderId: string;
+export type CreateStorePreferenceItem = {
+  id: string;
   title: string;
   quantity: number;
   unitPrice: number;
+};
+
+export type CreateStorePreferenceInput = {
+  orderId: string;
+  items: CreateStorePreferenceItem[];
   currencyId: string;
   buyerEmail?: string;
   buyerName?: string;
@@ -120,6 +129,10 @@ export async function createStoreCheckoutPreference(
   const productionConfigError = getMercadoPagoProductionConfigError();
   if (productionConfigError) {
     throw new Error(productionConfigError);
+  }
+
+  if (!input.items.length) {
+    throw new Error('La preferencia de pago no tiene ítems.');
   }
 
   const client = getMercadoPagoClient();
@@ -146,19 +159,19 @@ export async function createStoreCheckoutPreference(
   const result = await preference.create({
     body: {
       external_reference: input.orderId,
-      items: [
-        {
-          id: input.orderId,
-          title: input.title,
-          quantity: input.quantity,
-          unit_price: input.unitPrice,
-          currency_id: input.currencyId,
-        },
-      ],
+      items: input.items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        currency_id: input.currencyId,
+      })),
       ...(payer ? { payer } : {}),
       back_urls: backUrls,
       // auto_return requires valid public https back_urls; skip on localhost.
-      ...(baseUrl.startsWith('https://') ? { auto_return: 'approved' as const } : {}),
+      ...(baseUrl.startsWith('https://')
+        ? { auto_return: 'approved' as const }
+        : {}),
       notification_url: `${baseUrl}/api/webhooks/mercadopago?source_news=webhooks`,
       metadata: {
         store_order_id: input.orderId,

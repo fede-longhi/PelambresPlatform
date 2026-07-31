@@ -107,3 +107,10 @@ export type StoreOrderTableRow = {
   paidAt: string | null;
   createdAt: string;
 };
+
+/** Persisted cart line (client-side). Prices resolved at checkout. */
+export type StoreCartLine = {
+  productId: string;
+  productType: StoreProductType;
+  quantity: number;
+};

@@ -9,6 +9,7 @@ import {
 } from '@/lib/consts/store-consts';
 import { fetchStoreOrderById } from '@/lib/data/store-order-data';
 import type { StoreOrderStatus } from '@/types/store-definitions';
+import { StoreCartClearOnSuccess } from './store-cart-clear-on-success';
 
 type CheckoutResultPageProps = {
   searchParams?: Promise<{
@@ -117,6 +118,7 @@ async function CheckoutResult({
 
   return (
     <div className="mx-auto max-w-lg px-6 py-16 text-center">
+      {variant === 'success' || treatAsPaid ? <StoreCartClearOnSuccess /> : null}
       <ResultIcon
         size={48}
         className={`mx-auto ${iconClassName}`}

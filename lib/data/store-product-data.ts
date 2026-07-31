@@ -549,3 +549,47 @@ export async function fetchPublishedStoreProductById(
     throw new Error('Failed to fetch published store product.');
   }
 }
+
+/** Resolve many published products for cart hydration (order not guaranteed). */
+export async function fetchPublishedStoreProductsByIds(productIds: string[]) {
+  const uniqueIds = Array.from(new Set(productIds.filter(Boolean)));
+  if (uniqueIds.length === 0) {
+    return [] as PublishedStoreProduct[];
+  }
+
+  try {
+    const rows = await sql<Omit<PublishedStoreProduct, 'categories' | 'images'>[]>`
+      SELECT
+        p.id,
+        p.name,
+        p.description,
+        p.product_type as "productType",
+        p.tags,
+        p.price_cents as "priceCents",
+        p.discount_percent as "discountPercent",
+        p.currency,
+        p.stock,
+        p.image_url as "imageUrl",
+        p.is_featured as "isFeatured"
+      FROM store_products p
+      WHERE
+        p.id IN ${sql(uniqueIds)}
+        AND p.deleted_at IS NULL
+        AND p.is_published = true
+    `;
+
+    const ids = rows.map((row) => row.id);
+    const [categoriesByProductId, imagesByProductId] = await Promise.all([
+      fetchCategoriesByProductIds(ids),
+      fetchImagesByProductIds(ids),
+    ]);
+
+    return withImages(
+      withCategories(rows, categoriesByProductId),
+      imagesByProductId
+    );
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch published store products.');
+  }
+}
