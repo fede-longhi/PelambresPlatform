@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { DollarSign, ArrowRight, Menu, X } from 'lucide-react';
 import { HeaderUserMenu } from '@/components/layout/header-user-menu';
+import { StoreCartBadge } from '@/components/store/store-cart-badge';
 import {
   isHrefAllowedForFeatures,
   type FeatureKey,
@@ -167,6 +168,9 @@ export default function MainHeader({
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+            {isHrefAllowedForFeatures('/store', accessibleFeatures) ? (
+              <StoreCartBadge />
+            ) : null}
             <Button
               asChild
               variant="secondary"
@@ -247,6 +251,16 @@ export default function MainHeader({
           ))}
 
           <hr className="my-4 border-gray-200" />
+
+          {isHrefAllowedForFeatures('/store', accessibleFeatures) ? (
+            <Link
+              href="/store/cart"
+              className="block rounded p-3 text-lg font-medium text-gray-700 transition hover:bg-gray-100"
+              onClick={closeMenu}
+            >
+              Carrito
+            </Link>
+          ) : null}
 
           <Button asChild className="mt-2 w-full">
             <Link href="/quote-request" onClick={closeMenu}>
