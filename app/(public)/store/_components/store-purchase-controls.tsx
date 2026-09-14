@@ -5,13 +5,19 @@ import Link from 'next/link';
 import { useActionState } from 'react';
 import { Check, Loader2, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useStoreCart } from '@/components/store/store-cart-provider';
+import { StorePaymentMethodSelector } from './store-payment-method-selector';
 import {
   createStoreCheckout,
   type StoreCheckoutFormState,
 } from '@/lib/actions/store-checkout-actions';
 import { getStoreCartHref } from '@/lib/consts/store-cart-consts';
-import type { StoreProductType } from '@/types/store-definitions';
+import type {
+  StorePaymentMethod,
+  StoreProductType,
+} from '@/types/store-definitions';
 
 type StorePurchaseControlsProps = {
   productId: string;
@@ -20,6 +26,9 @@ type StorePurchaseControlsProps = {
   /** Max quantity for physical products; omit/null for unlimited (designs). */
   maxQuantity?: number | null;
   disabled?: boolean;
+  transferAvailable?: boolean;
+  defaultBuyerName?: string;
+  defaultBuyerEmail?: string;
 };
 
 export function StorePurchaseControls({
@@ -28,10 +37,15 @@ export function StorePurchaseControls({
   productName,
   maxQuantity = null,
   disabled,
+  transferAvailable = false,
+  defaultBuyerName = '',
+  defaultBuyerEmail = '',
 }: StorePurchaseControlsProps) {
   const { addItem } = useStoreCart();
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
+  const [paymentMethod, setPaymentMethod] =
+    useState<StorePaymentMethod>('mercadopago');
 
   const initialState: StoreCheckoutFormState = { message: null, errors: {} };
   const [state, formAction, isPending] = useActionState(
@@ -45,6 +59,7 @@ export function StorePurchaseControls({
       : 99;
   const canDecrease = quantity > 1;
   const canIncrease = quantity < maxAllowed;
+  const needsBuyerContact = paymentMethod === 'transfer';
 
   const handleAddToCart = () => {
     addItem({ productId, productType, quantity });
@@ -139,13 +154,57 @@ export function StorePurchaseControls({
       </div>
 
       <div className="border-t border-slate-100 pt-4">
-        <p className="mb-2 text-sm text-muted-foreground">
+        <p className="mb-3 text-sm text-muted-foreground">
           ¿Solo este artículo?
         </p>
-        <form action={formAction} className="space-y-3">
+        <form action={formAction} className="space-y-4">
           <input type="hidden" name="productId" value={productId} />
           <input type="hidden" name="productType" value={productType} />
           <input type="hidden" name="quantity" value={quantity} />
+          <input type="hidden" name="paymentMethod" value={paymentMethod} />
+
+          <StorePaymentMethodSelector
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            transferAvailable={transferAvailable}
+            disabled={disabled || isPending}
+          />
+
+          {needsBuyerContact ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="buyerName">Nombre</Label>
+                <Input
+                  id="buyerName"
+                  name="buyerName"
+                  defaultValue={defaultBuyerName}
+                  required
+                  autoComplete="name"
+                  disabled={disabled || isPending}
+                />
+                {state.errors?.buyerName?.[0] ? (
+                  <p className="text-xs text-red-600">{state.errors.buyerName[0]}</p>
+                ) : null}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="buyerEmail">Email</Label>
+                <Input
+                  id="buyerEmail"
+                  name="buyerEmail"
+                  type="email"
+                  defaultValue={defaultBuyerEmail}
+                  required
+                  autoComplete="email"
+                  disabled={disabled || isPending}
+                />
+                {state.errors?.buyerEmail?.[0] ? (
+                  <p className="text-xs text-red-600">
+                    {state.errors.buyerEmail[0]}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           {state.message ? (
             <p className="text-sm text-red-600" role="alert">
@@ -166,12 +225,18 @@ export function StorePurchaseControls({
                   size={18}
                   aria-hidden="true"
                 />
-                Redirigiendo a Mercado Pago…
+                {paymentMethod === 'transfer'
+                  ? 'Preparando transferencia…'
+                  : 'Redirigiendo a Mercado Pago…'}
               </>
-            ) : (
+            ) : paymentMethod === 'transfer' ? (
               quantity > 1
-                ? `Comprar ${quantity} × ${productName}`
-                : `Comprar ${productName}`
+                ? `Pagar ${quantity} × ${productName} por transferencia`
+                : `Pagar ${productName} por transferencia`
+            ) : quantity > 1 ? (
+              `Comprar ${quantity} × ${productName}`
+            ) : (
+              `Comprar ${productName}`
             )}
           </Button>
         </form>

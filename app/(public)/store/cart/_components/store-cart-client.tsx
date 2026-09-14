@@ -1,11 +1,14 @@
 'use client';
 
-import { useActionState, useEffect, useMemo } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Loader2, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useStoreCart } from '@/components/store/store-cart-provider';
+import { StorePaymentMethodSelector } from '../../_components/store-payment-method-selector';
 import {
   createStoreCartCheckout,
   type StoreCartCheckoutFormState,
@@ -18,14 +21,27 @@ import {
 } from '@/lib/consts/store-consts';
 import { getStoreCartLineKey } from '@/lib/consts/store-cart-consts';
 import type { PublishedStoreProduct } from '@/lib/data/store-product-data';
-import type { StoreCartLine } from '@/types/store-definitions';
+import type {
+  StoreCartLine,
+  StorePaymentMethod,
+} from '@/types/store-definitions';
 
 type StoreCartClientProps = {
   products: PublishedStoreProduct[];
+  transferAvailable?: boolean;
+  defaultBuyerName?: string;
+  defaultBuyerEmail?: string;
 };
 
-export function StoreCartClient({ products }: StoreCartClientProps) {
+export function StoreCartClient({
+  products,
+  transferAvailable = false,
+  defaultBuyerName = '',
+  defaultBuyerEmail = '',
+}: StoreCartClientProps) {
   const { lines, isReady, setQuantity, removeItem, clearCart } = useStoreCart();
+  const [paymentMethod, setPaymentMethod] =
+    useState<StorePaymentMethod>('mercadopago');
   const initialState: StoreCartCheckoutFormState = {
     message: null,
     success: false,
@@ -71,7 +87,6 @@ export function StoreCartClient({ products }: StoreCartClientProps) {
     }>;
   }, [lines, productByKey]);
 
-  // Drop lines that are no longer published.
   useEffect(() => {
     if (!isReady) {
       return;
@@ -96,6 +111,7 @@ export function StoreCartClient({ products }: StoreCartClientProps) {
       quantity: line.quantity,
     }))
   );
+  const needsBuyerContact = paymentMethod === 'transfer';
 
   if (!isReady) {
     return (
@@ -238,8 +254,53 @@ export function StoreCartClient({ products }: StoreCartClientProps) {
           </span>
         </div>
 
-        <form action={formAction} className="mt-6 space-y-3">
+        <form action={formAction} className="mt-6 space-y-4">
           <input type="hidden" name="itemsJson" value={checkoutPayload} />
+          <input type="hidden" name="paymentMethod" value={paymentMethod} />
+
+          <StorePaymentMethodSelector
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            transferAvailable={transferAvailable}
+            disabled={isPending}
+          />
+
+          {needsBuyerContact ? (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="cart-buyer-name">Nombre</Label>
+                <Input
+                  id="cart-buyer-name"
+                  name="buyerName"
+                  defaultValue={defaultBuyerName}
+                  required
+                  autoComplete="name"
+                  disabled={isPending}
+                />
+                {state.errors?.buyerName?.[0] ? (
+                  <p className="text-xs text-red-600">{state.errors.buyerName[0]}</p>
+                ) : null}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cart-buyer-email">Email</Label>
+                <Input
+                  id="cart-buyer-email"
+                  name="buyerEmail"
+                  type="email"
+                  defaultValue={defaultBuyerEmail}
+                  required
+                  autoComplete="email"
+                  disabled={isPending}
+                />
+                {state.errors?.buyerEmail?.[0] ? (
+                  <p className="text-xs text-red-600">
+                    {state.errors.buyerEmail[0]}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           {state.message ? (
             <p className="text-sm text-red-600" role="alert">
               {state.message}
@@ -249,8 +310,12 @@ export function StoreCartClient({ products }: StoreCartClientProps) {
             {isPending ? (
               <>
                 <Loader2 className="mr-2 animate-spin" size={18} aria-hidden="true" />
-                Redirigiendo a Mercado Pago…
+                {paymentMethod === 'transfer'
+                  ? 'Preparando transferencia…'
+                  : 'Redirigiendo a Mercado Pago…'}
               </>
+            ) : paymentMethod === 'transfer' ? (
+              'Pagar por transferencia'
             ) : (
               'Pagar con Mercado Pago'
             )}

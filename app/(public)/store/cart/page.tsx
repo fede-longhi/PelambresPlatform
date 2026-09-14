@@ -1,13 +1,18 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { auth } from '@/auth';
+import { isStoreTransferConfigured } from '@/lib/consts/store-transfer-consts';
 import { StoreCartPageClient } from './_components/store-cart-page-client';
 
 export const metadata: Metadata = {
   title: 'Carrito',
 };
 
-export default function StoreCartPage() {
+export default async function StoreCartPage() {
+  const session = await auth();
+  const transferAvailable = isStoreTransferConfigured();
+
   return (
     <div className="min-h-screen bg-muted pb-24 font-sans">
       <div className="bg-background px-6 py-10 md:py-14">
@@ -23,13 +28,17 @@ export default function StoreCartPage() {
             Carrito
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Revisá tu pedido y pagá con Mercado Pago.
+            Revisá tu pedido y elegí cómo pagar.
           </p>
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl px-6 py-10">
-        <StoreCartPageClient />
+        <StoreCartPageClient
+          transferAvailable={transferAvailable}
+          defaultBuyerName={session?.user?.name ?? ''}
+          defaultBuyerEmail={session?.user?.email ?? ''}
+        />
       </div>
     </div>
   );

@@ -17,10 +17,14 @@ export async function fetchStoreOrderById(
         buyer_email as "buyerEmail",
         buyer_name as "buyerName",
         status,
+        payment_method as "paymentMethod",
         currency,
         total_cents as "totalCents",
         mp_preference_id as "mpPreferenceId",
         mp_payment_id as "mpPaymentId",
+        transfer_receipt_url as "transferReceiptUrl",
+        transfer_receipt_uploaded_at as "transferReceiptUploadedAt",
+        transfer_reference as "transferReference",
         paid_at as "paidAt",
         created_at as "createdAt",
         updated_at as "updatedAt"
@@ -72,6 +76,7 @@ export async function fetchFilteredStoreOrders(
         o.buyer_email as "buyerEmail",
         o.buyer_name as "buyerName",
         o.status,
+        o.payment_method as "paymentMethod",
         o.currency,
         o.total_cents as "totalCents",
         i.name as "itemName",
@@ -91,8 +96,10 @@ export async function fetchFilteredStoreOrders(
         o.buyer_email ILIKE ${search}
         OR o.buyer_name ILIKE ${search}
         OR o.status ILIKE ${search}
+        OR o.payment_method ILIKE ${search}
         OR COALESCE(i.name, '') ILIKE ${search}
         OR COALESCE(o.mp_payment_id, '') ILIKE ${search}
+        OR COALESCE(o.transfer_reference, '') ILIKE ${search}
         OR o.id::text ILIKE ${search}
       ORDER BY o.created_at DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
@@ -121,8 +128,10 @@ export async function fetchStoreOrderPages(query: string) {
         o.buyer_email ILIKE ${search}
         OR o.buyer_name ILIKE ${search}
         OR o.status ILIKE ${search}
+        OR o.payment_method ILIKE ${search}
         OR COALESCE(i.name, '') ILIKE ${search}
         OR COALESCE(o.mp_payment_id, '') ILIKE ${search}
+        OR COALESCE(o.transfer_reference, '') ILIKE ${search}
         OR o.id::text ILIKE ${search}
     `;
 
