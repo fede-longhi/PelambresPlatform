@@ -2,20 +2,24 @@ import { useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import ItemPriceCalculator, { ItemPriceCalculatorHandle } from '@/components/calculator/ItemPriceCalculator';
+import { QuoteItemCalculatorParams } from '@/types/quote';
 
 type CalculatorModalProps = {
     isOpen: boolean;
+    itemId?: string | null;
+    initialParams?: QuoteItemCalculatorParams;
     onClose: () => void;
-    onApply: (calculatedPrice: number) => void;
+    onApply: (calculatedPrice: number, params: QuoteItemCalculatorParams) => void;
 };
 
-export function CalculatorModal({ isOpen, onClose, onApply }: CalculatorModalProps) {
+export function CalculatorModal({ isOpen, itemId, initialParams, onClose, onApply }: CalculatorModalProps) {
     const calculatorRef = useRef<ItemPriceCalculatorHandle>(null);
 
     const handleApply = () => {
         if (calculatorRef.current) {
             const results = calculatorRef.current.getResults();
-            onApply(results.totalCost);
+            const params = calculatorRef.current.getParams();
+            onApply(results.totalCost, params);
             onClose();
         }
     };
@@ -28,10 +32,14 @@ export function CalculatorModal({ isOpen, onClose, onApply }: CalculatorModalPro
                 </DialogHeader>
                 
                 <div className="py-4 max-h-[70vh] overflow-y-auto pr-2">
-                    <ItemPriceCalculator 
-                        ref={calculatorRef} 
-                        showDiscount={false}
-                    />
+                    {isOpen && (
+                        <ItemPriceCalculator 
+                            key={itemId ?? 'calculator'}
+                            ref={calculatorRef} 
+                            showDiscount={false}
+                            initialValues={initialParams}
+                        />
+                    )}
                 </div>
                 
                 <DialogFooter className="mt-2">

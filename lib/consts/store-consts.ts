@@ -1,5 +1,6 @@
 import type {
   StoreOrderStatus,
+  StorePaymentMethod,
   StoreProductType,
 } from '@/types/store-definitions';
 
@@ -204,16 +205,31 @@ export function formatStoreDiscountLabel(discountPercent: number): string {
 
 export const STORE_ORDER_STATUSES = [
   { value: 'pending' as const, label: 'Pendiente' },
+  { value: 'payment_review' as const, label: 'Comprobante en revisión' },
   { value: 'paid' as const, label: 'Pagado' },
   { value: 'failed' as const, label: 'Fallido' },
   { value: 'cancelled' as const, label: 'Cancelado' },
   { value: 'refunded' as const, label: 'Reembolsado' },
 ] as const;
 
+export const STORE_PAYMENT_METHODS = [
+  { value: 'mercadopago' as const, label: 'Mercado Pago' },
+  { value: 'transfer' as const, label: 'Transferencia bancaria' },
+] as const;
+
 export function getStoreOrderStatusLabel(status: StoreOrderStatus): string {
   return (
     STORE_ORDER_STATUSES.find((entry) => entry.value === status)?.label ??
     status
+  );
+}
+
+export function getStorePaymentMethodLabel(
+  paymentMethod: StorePaymentMethod
+): string {
+  return (
+    STORE_PAYMENT_METHODS.find((entry) => entry.value === paymentMethod)
+      ?.label ?? paymentMethod
   );
 }
 

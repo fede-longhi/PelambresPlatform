@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {
   formatStorePrice,
   getStoreOrderStatusLabel,
+  getStorePaymentMethodLabel,
   getStoreProductTypeLabel,
 } from '@/lib/consts/store-consts';
 import { fetchFilteredStoreOrders } from '@/lib/data/store-order-data';
@@ -14,6 +15,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+
+function statusBadgeClass(status: string): string | undefined {
+  if (status === 'paid') {
+    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+  }
+  if (status === 'payment_review') {
+    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+  }
+  return undefined;
+}
 
 export default async function StoreOrdersTable({
   query,
@@ -41,6 +52,7 @@ export default async function StoreOrdersTable({
             <TableHead className="px-4 py-5 font-medium">Comprador</TableHead>
             <TableHead className="px-4 py-5 font-medium">Artículo</TableHead>
             <TableHead className="px-4 py-5 font-medium">Total</TableHead>
+            <TableHead className="px-4 py-5 font-medium">Método</TableHead>
             <TableHead className="px-4 py-5 font-medium">Estado</TableHead>
           </TableRow>
         </TableHeader>
@@ -72,14 +84,13 @@ export default async function StoreOrdersTable({
               <TableCell className="px-4 py-4 align-middle text-sm">
                 {formatStorePrice(order.totalCents, order.currency)}
               </TableCell>
+              <TableCell className="px-4 py-4 align-middle text-sm">
+                {getStorePaymentMethodLabel(order.paymentMethod)}
+              </TableCell>
               <TableCell className="px-4 py-4 align-middle">
                 <Badge
                   variant={order.status === 'paid' ? 'default' : 'secondary'}
-                  className={
-                    order.status === 'paid'
-                      ? 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100'
-                      : undefined
-                  }
+                  className={statusBadgeClass(order.status)}
                 >
                   {getStoreOrderStatusLabel(order.status)}
                 </Badge>

@@ -21,10 +21,13 @@ export function useQuote() {
 
     const [globalDiscount, setGlobalDiscount] = useState<number>(0);
 
-    const addItem = () => setItems([...items, { id: crypto.randomUUID(), description: '', quantity: 1, price: 0, discount: 0 }]);
-    const removeItem = (id: string) => setItems(items.filter(item => item.id !== id));
-    const updateItem = (id: string, field: keyof QuoteItem, value: string | number) => {
-        setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item));
+    const addItem = () => setItems((currentItems) => [...currentItems, { id: crypto.randomUUID(), description: '', quantity: 1, price: 0, discount: 0 }]);
+    const removeItem = (id: string) => setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+    const updateItem = (id: string, field: keyof QuoteItem, value: QuoteItem[keyof QuoteItem]) => {
+        setItems((currentItems) => currentItems.map((item) => item.id === id ? { ...item, [field]: value } : item));
+    };
+    const patchItem = (id: string, patch: Partial<QuoteItem>) => {
+        setItems((currentItems) => currentItems.map((item) => item.id === id ? { ...item, ...patch } : item));
     };
 
     const addTax = () => setTaxes([...taxes, { id: crypto.randomUUID(), name: 'Nuevo Impuesto', percentage: 0 }]);
@@ -52,7 +55,7 @@ export function useQuote() {
 
     return {
         meta, setMeta,
-        items, addItem, removeItem, updateItem,
+        items, addItem, removeItem, updateItem, patchItem,
         taxes, addTax, removeTax, updateTax,
         globalDiscount, setGlobalDiscount,
         math

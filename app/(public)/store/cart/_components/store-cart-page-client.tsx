@@ -6,7 +6,17 @@ import { StoreCartClient } from './store-cart-client';
 import { loadStoreCartProducts } from '@/lib/actions/store-cart-actions';
 import type { PublishedStoreProduct } from '@/lib/data/store-product-data';
 
-export function StoreCartPageClient() {
+type StoreCartPageClientProps = {
+  transferAvailable: boolean;
+  defaultBuyerName?: string;
+  defaultBuyerEmail?: string;
+};
+
+export function StoreCartPageClient({
+  transferAvailable,
+  defaultBuyerName = '',
+  defaultBuyerEmail = '',
+}: StoreCartPageClientProps) {
   const { lines, isReady } = useStoreCart();
   const [products, setProducts] = useState<PublishedStoreProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -56,5 +66,12 @@ export function StoreCartPageClient() {
     return <p className="text-sm text-muted-foreground">Cargando carrito…</p>;
   }
 
-  return <StoreCartClient products={products} />;
+  return (
+    <StoreCartClient
+      products={products}
+      transferAvailable={transferAvailable}
+      defaultBuyerName={defaultBuyerName}
+      defaultBuyerEmail={defaultBuyerEmail}
+    />
+  );
 }

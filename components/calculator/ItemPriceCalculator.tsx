@@ -3,7 +3,8 @@
 import React, { useMemo, useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Printer, User, Box, TrendingUp, PackagePlus } from 'lucide-react'; 
+import { Printer, User, Box, TrendingUp, PackagePlus } from 'lucide-react';
+import { QuoteItemCalculatorParams } from '@/types/quote';
 
 export type ItemPriceCalculatorResults = {
     totalMaterialCost: number;
@@ -18,8 +19,11 @@ export type ItemPriceCalculatorResults = {
     totalPriceAfterDiscount: number;
 };
 
+export type ItemPriceCalculatorParams = QuoteItemCalculatorParams;
+
 export interface ItemPriceCalculatorHandle {
     getResults: () => ItemPriceCalculatorResults;
+    getParams: () => ItemPriceCalculatorParams;
     reset: () => void;
 }
 
@@ -30,7 +34,36 @@ type ItemPriceCalculatorProps = {
     defaultMachineCostPerHour?: number;
     defaultLaborCostPerHour?: number;
     defaultMarkup?: number;
+    initialValues?: Partial<ItemPriceCalculatorParams>;
 };
+
+const parseCalculatorNumber = (value: string) => parseFloat(value) || 0;
+
+const buildDefaultParams = ({
+    defaultMaterialCost,
+    defaultMachineCostPerHour,
+    defaultLaborCostPerHour,
+    defaultMarkup,
+    initialValues,
+}: {
+    defaultMaterialCost: number;
+    defaultMachineCostPerHour: number;
+    defaultLaborCostPerHour: number;
+    defaultMarkup: number;
+    initialValues?: Partial<ItemPriceCalculatorParams>;
+}): ItemPriceCalculatorParams => ({
+    materialCostPerKg: initialValues?.materialCostPerKg ?? defaultMaterialCost,
+    partWeightGrams: initialValues?.partWeightGrams ?? 0,
+    machineCostPerHour: initialValues?.machineCostPerHour ?? defaultMachineCostPerHour,
+    printTimeH: initialValues?.printTimeH ?? 0,
+    printTimeM: initialValues?.printTimeM ?? 0,
+    laborCostPerHour: initialValues?.laborCostPerHour ?? defaultLaborCostPerHour,
+    laborTimeH: initialValues?.laborTimeH ?? 0,
+    laborTimeM: initialValues?.laborTimeM ?? 0,
+    extraMaterialsCost: initialValues?.extraMaterialsCost ?? 0,
+    markupPercentage: initialValues?.markupPercentage ?? defaultMarkup,
+    discountPercentage: initialValues?.discountPercentage ?? 0,
+});
 
 const ItemPriceCalculator = forwardRef<ItemPriceCalculatorHandle, ItemPriceCalculatorProps>(
     ({
@@ -39,47 +72,71 @@ const ItemPriceCalculator = forwardRef<ItemPriceCalculatorHandle, ItemPriceCalcu
         defaultMaterialCost = 20000,
         defaultMachineCostPerHour = 500, 
         defaultLaborCostPerHour = 5000,  
-        defaultMarkup = 150
+        defaultMarkup = 150,
+        initialValues,
     }: ItemPriceCalculatorProps, ref) => {
+        const defaultParams = buildDefaultParams({
+            defaultMaterialCost,
+            defaultMachineCostPerHour,
+            defaultLaborCostPerHour,
+            defaultMarkup,
+            initialValues,
+        });
         
         // 1. MATERIAL
-        const [materialCostPerKg, setMaterialCostPerKg] = useState(defaultMaterialCost.toString());
-        const [partWeightGrams, setPartWeightGrams] = useState('0');
+        const [materialCostPerKg, setMaterialCostPerKg] = useState(defaultParams.materialCostPerKg.toString());
+        const [partWeightGrams, setPartWeightGrams] = useState(defaultParams.partWeightGrams.toString());
         
         // 2. MÁQUINA
-        const [machineCostPerHour, setMachineCostPerHour] = useState(defaultMachineCostPerHour.toString());
-        const [printTimeH, setPrintTimeH] = useState('0');
-        const [printTimeM, setPrintTimeM] = useState('0');
+        const [machineCostPerHour, setMachineCostPerHour] = useState(defaultParams.machineCostPerHour.toString());
+        const [printTimeH, setPrintTimeH] = useState(defaultParams.printTimeH.toString());
+        const [printTimeM, setPrintTimeM] = useState(defaultParams.printTimeM.toString());
         
         // 3. MANO DE OBRA
-        const [laborCostPerHour, setLaborCostPerHour] = useState(defaultLaborCostPerHour.toString());
-        const [laborTimeH, setLaborTimeH] = useState('0'); 
-        const [laborTimeM, setLaborTimeM] = useState('0'); 
+        const [laborCostPerHour, setLaborCostPerHour] = useState(defaultParams.laborCostPerHour.toString());
+        const [laborTimeH, setLaborTimeH] = useState(defaultParams.laborTimeH.toString()); 
+        const [laborTimeM, setLaborTimeM] = useState(defaultParams.laborTimeM.toString()); 
 
         // 4. EXTRAS
-        const [extraMaterialsCost, setExtraMaterialsCost] = useState('0');
+        const [extraMaterialsCost, setExtraMaterialsCost] = useState(defaultParams.extraMaterialsCost.toString());
         
         // 5. NEGOCIO
-        const [markupPercentage, setMarkupPercentage] = useState(defaultMarkup.toString());
-        const [discountPercentage, setDiscountPercentage] = useState('0');
+        const [markupPercentage, setMarkupPercentage] = useState(defaultParams.markupPercentage.toString());
+        const [discountPercentage, setDiscountPercentage] = useState(defaultParams.discountPercentage.toString());
+
+        const currentParams = useMemo<ItemPriceCalculatorParams>(() => ({
+            materialCostPerKg: parseCalculatorNumber(materialCostPerKg),
+            partWeightGrams: parseCalculatorNumber(partWeightGrams),
+            machineCostPerHour: parseCalculatorNumber(machineCostPerHour),
+            printTimeH: parseCalculatorNumber(printTimeH),
+            printTimeM: parseCalculatorNumber(printTimeM),
+            laborCostPerHour: parseCalculatorNumber(laborCostPerHour),
+            laborTimeH: parseCalculatorNumber(laborTimeH),
+            laborTimeM: parseCalculatorNumber(laborTimeM),
+            extraMaterialsCost: parseCalculatorNumber(extraMaterialsCost),
+            markupPercentage: parseCalculatorNumber(markupPercentage),
+            discountPercentage: parseCalculatorNumber(discountPercentage),
+        }), [
+            materialCostPerKg, partWeightGrams, machineCostPerHour,
+            printTimeH, printTimeM, laborCostPerHour, laborTimeH, laborTimeM,
+            extraMaterialsCost, markupPercentage, discountPercentage,
+        ]);
 
         const results = useMemo(() => {
-            const val = (str: string) => parseFloat(str) || 0;
+            const totalPrintTimeDecimal = currentParams.printTimeH + (currentParams.printTimeM / 60);
+            const totalLaborTimeDecimal = currentParams.laborTimeH + (currentParams.laborTimeM / 60);
 
-            const totalPrintTimeDecimal = val(printTimeH) + (val(printTimeM) / 60);
-            const totalLaborTimeDecimal = val(laborTimeH) + (val(laborTimeM) / 60);
-
-            const materialCost = (val(materialCostPerKg) / 1000) * val(partWeightGrams);
-            const machineCost = val(machineCostPerHour) * totalPrintTimeDecimal;
-            const laborCost = val(laborCostPerHour) * totalLaborTimeDecimal;
-            const extraCost = val(extraMaterialsCost);
+            const materialCost = (currentParams.materialCostPerKg / 1000) * currentParams.partWeightGrams;
+            const machineCost = currentParams.machineCostPerHour * totalPrintTimeDecimal;
+            const laborCost = currentParams.laborCostPerHour * totalLaborTimeDecimal;
+            const extraCost = currentParams.extraMaterialsCost;
 
             const baseCost = materialCost + machineCost + laborCost + extraCost;
             
-            const totalCost = baseCost * (1 + val(markupPercentage) / 100);
+            const totalCost = baseCost * (1 + currentParams.markupPercentage / 100);
             const gain = totalCost - baseCost;
             
-            const discountValue = showDiscount ? totalCost * (val(discountPercentage) / 100) : 0;
+            const discountValue = showDiscount ? totalCost * (currentParams.discountPercentage / 100) : 0;
             const totalPriceAfterDiscount = totalCost - discountValue;
 
             return {
@@ -91,16 +148,10 @@ const ItemPriceCalculator = forwardRef<ItemPriceCalculatorHandle, ItemPriceCalcu
                 gain,
                 totalCost,
                 discountValue,
-                discountPercentage: showDiscount ? val(discountPercentage) : 0,
+                discountPercentage: showDiscount ? currentParams.discountPercentage : 0,
                 totalPriceAfterDiscount,
             };
-        }, [
-            materialCostPerKg, partWeightGrams, machineCostPerHour, 
-            printTimeH, printTimeM, 
-            laborCostPerHour, 
-            laborTimeH, laborTimeM, 
-            extraMaterialsCost, markupPercentage, discountPercentage, showDiscount
-        ]);
+        }, [currentParams, showDiscount]);
         
         useEffect(() => {
             if (onResultsChange) onResultsChange(results);
@@ -110,21 +161,28 @@ const ItemPriceCalculator = forwardRef<ItemPriceCalculatorHandle, ItemPriceCalcu
             ref,
             () => ({
                 getResults: () => results,
+                getParams: () => currentParams,
                 reset: () => {
-                    setMaterialCostPerKg(defaultMaterialCost.toString());
-                    setPartWeightGrams('0');
-                    setMachineCostPerHour(defaultMachineCostPerHour.toString());
-                    setPrintTimeH('0');
-                    setPrintTimeM('0');
-                    setLaborCostPerHour(defaultLaborCostPerHour.toString());
-                    setLaborTimeH('0');
-                    setLaborTimeM('0');
-                    setExtraMaterialsCost('0');
-                    setMarkupPercentage(defaultMarkup.toString());
-                    setDiscountPercentage('0');
+                    const resetParams = buildDefaultParams({
+                        defaultMaterialCost,
+                        defaultMachineCostPerHour,
+                        defaultLaborCostPerHour,
+                        defaultMarkup,
+                    });
+                    setMaterialCostPerKg(resetParams.materialCostPerKg.toString());
+                    setPartWeightGrams(resetParams.partWeightGrams.toString());
+                    setMachineCostPerHour(resetParams.machineCostPerHour.toString());
+                    setPrintTimeH(resetParams.printTimeH.toString());
+                    setPrintTimeM(resetParams.printTimeM.toString());
+                    setLaborCostPerHour(resetParams.laborCostPerHour.toString());
+                    setLaborTimeH(resetParams.laborTimeH.toString());
+                    setLaborTimeM(resetParams.laborTimeM.toString());
+                    setExtraMaterialsCost(resetParams.extraMaterialsCost.toString());
+                    setMarkupPercentage(resetParams.markupPercentage.toString());
+                    setDiscountPercentage(resetParams.discountPercentage.toString());
                 },
             }),
-            [results, defaultMaterialCost, defaultMachineCostPerHour, defaultLaborCostPerHour, defaultMarkup]
+            [results, currentParams, defaultMaterialCost, defaultMachineCostPerHour, defaultLaborCostPerHour, defaultMarkup]
         );
 
         const { 

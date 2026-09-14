@@ -60,10 +60,13 @@ export type StoreProductTableRow = {
 
 export type StoreOrderStatus =
   | 'pending'
+  | 'payment_review'
   | 'paid'
   | 'failed'
   | 'cancelled'
   | 'refunded';
+
+export type StorePaymentMethod = 'mercadopago' | 'transfer';
 
 export type StoreOrderItem = {
   id: string;
@@ -84,10 +87,14 @@ export type StoreOrder = {
   buyerEmail: string;
   buyerName: string;
   status: StoreOrderStatus;
+  paymentMethod: StorePaymentMethod;
   currency: string;
   totalCents: number;
   mpPreferenceId: string | null;
   mpPaymentId: string | null;
+  transferReceiptUrl: string | null;
+  transferReceiptUploadedAt: string | null;
+  transferReference: string | null;
   paidAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -99,6 +106,7 @@ export type StoreOrderTableRow = {
   buyerEmail: string;
   buyerName: string;
   status: StoreOrderStatus;
+  paymentMethod: StorePaymentMethod;
   currency: string;
   totalCents: number;
   itemName: string | null;

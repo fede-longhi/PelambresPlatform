@@ -7,9 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import {
   formatStorePrice,
   getStoreOrderStatusLabel,
+  getStorePaymentMethodLabel,
   getStoreProductTypeLabel,
 } from '@/lib/consts/store-consts';
 import { fetchStoreOrderById } from '@/lib/data/store-order-data';
+import { StoreOrderAdminActions } from '../_components/store-order-admin-actions';
 
 export const metadata: Metadata = {
   title: 'Detalle pedido de tienda',
@@ -18,6 +20,16 @@ export const metadata: Metadata = {
 type PageProps = {
   params: Promise<{ id: string }>;
 };
+
+function statusBadgeClass(status: string): string | undefined {
+  if (status === 'paid') {
+    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+  }
+  if (status === 'payment_review') {
+    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+  }
+  return undefined;
+}
 
 export default async function StoreOrderDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -40,11 +52,7 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
             <h1 className="text-3xl font-bold text-slate-900">Pedido</h1>
             <Badge
               variant={order.status === 'paid' ? 'default' : 'secondary'}
-              className={
-                order.status === 'paid'
-                  ? 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100'
-                  : undefined
-              }
+              className={statusBadgeClass(order.status)}
             >
               {getStoreOrderStatusLabel(order.status)}
             </Badge>
@@ -54,6 +62,8 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
           </p>
         </div>
       </div>
+
+      <StoreOrderAdminActions orderId={order.id} status={order.status} />
 
       <dl className="grid gap-4 rounded-xl border border-border bg-card p-6 text-sm sm:grid-cols-2">
         <div>
@@ -65,6 +75,12 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
           <dt className="text-muted-foreground">Total</dt>
           <dd className="mt-1 font-medium">
             {formatStorePrice(order.totalCents, order.currency)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Método de pago</dt>
+          <dd className="mt-1 font-medium">
+            {getStorePaymentMethodLabel(order.paymentMethod)}
           </dd>
         </div>
         <div>
@@ -81,18 +97,70 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
               : '—'}
           </dd>
         </div>
-        <div>
-          <dt className="text-muted-foreground">Preference ID</dt>
-          <dd className="mt-1 break-all font-mono text-xs">
-            {order.mpPreferenceId ?? '—'}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Payment ID</dt>
-          <dd className="mt-1 break-all font-mono text-xs">
-            {order.mpPaymentId ?? '—'}
-          </dd>
-        </div>
+
+        {order.paymentMethod === 'transfer' ? (
+          <>
+            <div>
+              <dt className="text-muted-foreground">Referencia transferencia</dt>
+              <dd className="mt-1 font-mono text-sm">
+                {order.transferReference ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Comprobante</dt>
+              <dd className="mt-1">
+                {order.transferReceiptUrl ? (
+                  <a
+                    href={order.transferReceiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Ver comprobante
+                    {order.transferReceiptUploadedAt
+                      ? ` · ${new Date(order.transferReceiptUploadedAt).toLocaleString('es-AR')}`
+                      : ''}
+                  </a>
+                ) : (
+                  'Sin comprobante'
+                )}
+              </dd>
+            </div>
+            {order.transferReceiptUrl ? (
+              <div className="sm:col-span-2">
+                {order.transferReceiptUrl.toLowerCase().includes('.pdf') ? (
+                  <iframe
+                    title="Comprobante de transferencia"
+                    src={order.transferReceiptUrl}
+                    className="h-96 w-full rounded-lg border border-border"
+                  />
+                ) : (
+                  <img
+                    src={order.transferReceiptUrl}
+                    alt="Comprobante de transferencia"
+                    className="max-h-96 rounded-lg border border-border object-contain"
+                  />
+                )}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <div>
+              <dt className="text-muted-foreground">Preference ID</dt>
+              <dd className="mt-1 break-all font-mono text-xs">
+                {order.mpPreferenceId ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Payment ID</dt>
+              <dd className="mt-1 break-all font-mono text-xs">
+                {order.mpPaymentId ?? '—'}
+              </dd>
+            </div>
+          </>
+        )}
+
         {order.customerId ? (
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">Cliente CRM</dt>

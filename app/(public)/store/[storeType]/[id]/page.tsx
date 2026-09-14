@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Mail, MessageCircle } from 'lucide-react';
+import { auth } from '@/auth';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import {
   getStoreProductTypeLabel,
   parseStoreTypeFromPath,
 } from '@/lib/consts/store-consts';
+import { isStoreTransferConfigured } from '@/lib/consts/store-transfer-consts';
 import { StoreBreadcrumbs } from '../../_components/store-breadcrumbs';
 import { StorePurchaseControls } from '../../_components/store-purchase-controls';
 import { StorePriceDisplay } from '../../_components/store-price-display';
@@ -74,6 +76,8 @@ export default async function StoreProductDetailPage({
   const mailUrl = buildStoreMailUrl(product.name, productHref);
   const catalogHref = getStoreCatalogHref(productType);
   const canCheckout = !isOutOfStock;
+  const session = await auth();
+  const transferAvailable = isStoreTransferConfigured();
 
   return (
     <div className="min-h-screen bg-muted pb-24 font-sans">
@@ -170,6 +174,9 @@ export default async function StoreProductDetailPage({
                   product.productType === 'product' ? product.stock : null
                 }
                 disabled={isOutOfStock}
+                transferAvailable={transferAvailable}
+                defaultBuyerName={session?.user?.name ?? ''}
+                defaultBuyerEmail={session?.user?.email ?? ''}
               />
             ) : (
               <p className="text-sm text-slate-500">
