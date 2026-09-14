@@ -2,7 +2,7 @@ import { FileText, Calculator, Building, User, Plus, Trash2, BadgePercent, Perce
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QuoteData, QuoteItem, TaxItem } from '@/types/quote';
+import { QuoteData, QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
 import { CalculatorModal } from '@/components/quote-builder/CalculatorModal';
 import { useState } from 'react';
 
@@ -12,7 +12,8 @@ type QuoteEditorProps = {
     items: QuoteItem[];
     addItem: () => void;
     removeItem: (id: string) => void;
-    updateItem: (id: string, field: keyof QuoteItem, value: string | number) => void;
+    updateItem: (id: string, field: keyof QuoteItem, value: QuoteItem[keyof QuoteItem]) => void;
+    patchItem: (id: string, patch: Partial<QuoteItem>) => void;
     taxes: TaxItem[];
     addTax: () => void;
     removeTax: (id: string) => void;
@@ -22,12 +23,16 @@ type QuoteEditorProps = {
 };
 
 export function QuoteEditor(props: QuoteEditorProps) {
-    const { meta, setMeta, items, addItem, removeItem, updateItem, taxes, addTax, removeTax, updateTax, globalDiscount, setGlobalDiscount } = props;
+    const { meta, setMeta, items, addItem, removeItem, updateItem, patchItem, taxes, addTax, removeTax, updateTax, globalDiscount, setGlobalDiscount } = props;
     const [activeCalcItemId, setActiveCalcItemId] = useState<string | null>(null);
+    const activeCalculatorItem = items.find((item) => item.id === activeCalcItemId);
 
-    const handleApplyCalculation = (totalCost: number) => {
+    const handleApplyCalculation = (totalCost: number, calculatorParams: QuoteItemCalculatorParams) => {
         if (activeCalcItemId) {
-            updateItem(activeCalcItemId, 'price', totalCost);
+            patchItem(activeCalcItemId, {
+                price: Math.round(totalCost * 100) / 100,
+                calculatorParams,
+            });
         }
         setActiveCalcItemId(null);
     };
@@ -121,7 +126,9 @@ export function QuoteEditor(props: QuoteEditorProps) {
             </div>
 
             <CalculatorModal 
-                isOpen={activeCalcItemId !== null} 
+                isOpen={activeCalcItemId !== null}
+                itemId={activeCalcItemId}
+                initialParams={activeCalculatorItem?.calculatorParams}
                 onClose={() => setActiveCalcItemId(null)} 
                 onApply={handleApplyCalculation} 
             />

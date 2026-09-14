@@ -1,9 +1,24 @@
+export type QuoteItemCalculatorParams = {
+    materialCostPerKg: number;
+    partWeightGrams: number;
+    machineCostPerHour: number;
+    printTimeH: number;
+    printTimeM: number;
+    laborCostPerHour: number;
+    laborTimeH: number;
+    laborTimeM: number;
+    extraMaterialsCost: number;
+    markupPercentage: number;
+    discountPercentage: number;
+};
+
 export type QuoteItem = {
     id: string;
     description: string;
     quantity: number;
     price: number;
     discount: number;
+    calculatorParams?: QuoteItemCalculatorParams;
 };
 
 export type TaxItem = {
