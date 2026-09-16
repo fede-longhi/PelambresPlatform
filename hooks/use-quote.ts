@@ -4,6 +4,7 @@ import { QuoteData, QuoteItem, TaxItem, QuoteMath } from '@/types/quote';
 export function useQuote() {
     const [meta, setMeta] = useState<QuoteData>({
         quoteNumber: '0000001',
+        showQuoteNumber: true,
         date: new Date().toISOString().split('T')[0],
         companyName: 'Pelambres 3D',
         clientName: '',

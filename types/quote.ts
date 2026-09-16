@@ -29,6 +29,7 @@ export type TaxItem = {
 
 export type QuoteData = {
     quoteNumber: string;
+    showQuoteNumber: boolean;
     date: string;
     companyName: string;
     clientName: string;
