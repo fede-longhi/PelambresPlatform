@@ -20,15 +20,23 @@ export default async function CustomersTable ({
 }) {
     const customers = await fetchFilteredCustomers(query, currentPage);
 
+    if (customers.length === 0) {
+        return (
+            <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+                No se encontraron clientes.
+            </div>
+        );
+    }
+
     return (
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
             <Table className="min-w-full text-secondary-foreground">
                 <TableHeader className="[&_tr]:border-0">
                     <TableRow className="border-0">
-                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Name</TableHead>
-                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Type</TableHead>
+                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Nombre</TableHead>
+                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Tipo</TableHead>
                         <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Email</TableHead>
-                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Phone</TableHead>
+                        <TableHead className="px-4 py-5 font-medium text-secondary-foreground">Teléfono</TableHead>
                         <TableHead></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -46,7 +54,7 @@ export default async function CustomersTable ({
                                         }
                                     </Link>
                                 </TableCell>
-                                <TableCell className="p-3">{customer.type}</TableCell>
+                                <TableCell className="p-3">{customer.type === 'business' ? 'Empresa' : 'Persona'}</TableCell>
                                 <TableCell className="p-3">{customer.email}</TableCell>
                                 <TableCell className="p-3">{customer.phone}</TableCell>
                                 <TableCell className="flex flex-row space-x-4">

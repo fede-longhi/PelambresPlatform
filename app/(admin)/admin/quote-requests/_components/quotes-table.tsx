@@ -1,6 +1,8 @@
 import { fetchFilteredQuotes } from '@/lib/data/quote-data';
 import { formatDateToLocal } from '@/lib/utils';
 import Link from 'next/link';
+import type { QuoteRequestListFilter } from '@/lib/consts/quote-request-consts';
+import { getQuoteRequestStatusLabel } from '@/lib/consts/quote-request-consts';
 
 function quoteDisplayName(quote: {
   first_name: string | null;
@@ -16,18 +18,30 @@ function quoteDisplayName(quote: {
 export default async function QuotesTable({
   query,
   currentPage,
+  filter,
 }: {
   query: string;
   currentPage: number;
+  filter: QuoteRequestListFilter;
 }) {
-  const quotes = await fetchFilteredQuotes(query, currentPage);
+  const quotes = await fetchFilteredQuotes(query, currentPage, filter);
+
+  if (quotes.length === 0) {
+    return (
+      <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+        {filter === 'open'
+          ? 'No hay solicitudes abiertas.'
+          : 'No se encontraron solicitudes con esos filtros.'}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
-            {quotes?.map((quote) => (
+            {quotes.map((quote) => (
               <Link
                 key={quote.id}
                 href={`/admin/quote-requests/${quote.id}`}
@@ -38,6 +52,9 @@ export default async function QuotesTable({
                     <p className="mb-2 font-medium">{quoteDisplayName(quote)}</p>
                     <p className="text-sm text-gray-500">{quote.email}</p>
                   </div>
+                  <span className="text-xs text-muted-foreground">
+                    {getQuoteRequestStatusLabel(quote.status)}
+                  </span>
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <p className="text-sm">{formatDateToLocal(quote.date)}</p>
@@ -66,12 +83,15 @@ export default async function QuotesTable({
                   Fecha
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
+                  Estado
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
                   Cliente
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {quotes?.map((quote) => (
+              {quotes.map((quote) => (
                 <tr
                   key={quote.id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:first-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:first-child]:rounded-br-lg"
@@ -88,6 +108,9 @@ export default async function QuotesTable({
                   <td className="whitespace-nowrap px-3 py-3">{quote.phone || '—'}</td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {formatDateToLocal(quote.date)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3">
+                    {getQuoteRequestStatusLabel(quote.status)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {quote.customer_id ? (

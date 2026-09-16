@@ -14,13 +14,16 @@ export function CreateConfigurationButton() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button> <Plus />Add Configuration</Button>
+                <Button>
+                    <Plus className="mr-2 size-4" aria-hidden="true" />
+                    Agregar variable
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                <DialogTitle>Add Variable</DialogTitle>
+                <DialogTitle>Nueva variable</DialogTitle>
                 <DialogDescription>
-                    Add a new configuration variable.
+                    Agregue una variable de configuración.
                 </DialogDescription>
                 </DialogHeader>
 
@@ -37,13 +40,21 @@ export function EditValueButton({configuration} : {configuration: ConfigurationV
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="icon"><Pencil/></Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 size-11 md:size-9"
+                  aria-label="Editar variable"
+                >
+                    <Pencil aria-hidden="true" />
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                <DialogTitle>Edit {configuration.key} Value</DialogTitle>
+                <DialogTitle>Editar {configuration.key}</DialogTitle>
                 <DialogDescription>
-                    Change the value of the configuration
+                    Cambie el valor de la variable de configuración.
                 </DialogDescription>
                 </DialogHeader>
 

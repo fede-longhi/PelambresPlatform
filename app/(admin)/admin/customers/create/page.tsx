@@ -6,9 +6,9 @@ export default function Page() {
         <main>
             <Breadcrumbs
                 breadcrumbs={[
-                { label: 'Customers', href: '/admin/customers' },
+                { label: 'Clientes', href: '/admin/customers' },
                 {
-                    label: 'Create Customer',
+                    label: 'Nuevo cliente',
                     href: '/admin/customers/create',
                     active: true,
                 },

@@ -193,10 +193,10 @@ export default function CustomerForm({
 
             <div className="flex justify-center pt-8 space-x-2">
                 <Button type="button" disabled={isPending} variant="outline" onClick={handleCancel}>
-                    Cancel
+                    Cancelar
                 </Button>
                 <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground">
-                    {isPending ? 'Guardando...' : 'Crear Cliente'}
+                    {isPending ? 'Guardando...' : 'Crear cliente'}
                 </Button>
             </div>
         </form>

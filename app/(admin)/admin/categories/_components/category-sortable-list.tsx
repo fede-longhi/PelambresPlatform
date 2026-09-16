@@ -28,6 +28,7 @@ import {
 } from '@/lib/actions/store-category-actions';
 import { getStoreProductTypeLabel } from '@/lib/consts/store-consts';
 import type { StoreCategory, StoreProductType } from '@/types/store-definitions';
+import { ConfirmDeleteButton } from '@/components/ui/confirm-delete-button';
 
 type CategorySortableListProps = {
   productType: StoreProductType;
@@ -37,11 +38,9 @@ type CategorySortableListProps = {
 function SortableCategoryRow({
   category,
   onDelete,
-  isDeleting,
 }: {
   category: StoreCategory;
-  onDelete: (id: string, name: string) => void;
-  isDeleting: boolean;
+  onDelete: (id: string) => void;
 }) {
   const {
     attributes,
@@ -86,23 +85,21 @@ function SortableCategoryRow({
         <Badge variant="secondary">Inactiva</Badge>
       )}
 
-      <Button variant="ghost" size="icon" asChild title="Editar categoría">
-        <Link href={`/admin/categories/${category.id}/edit`}>
-          <Pencil size={16} />
+      <Button variant="ghost" size="icon" asChild className="size-11 md:size-9">
+        <Link href={`/admin/categories/${category.id}/edit`} aria-label={`Editar ${category.name}`}>
+          <Pencil size={16} aria-hidden="true" />
         </Link>
       </Button>
 
-      <Button
+      <ConfirmDeleteButton
         variant="ghost"
-        size="icon"
-        type="button"
+        className="text-muted-foreground hover:text-destructive"
+        ariaLabel={`Eliminar ${category.name}`}
         title="Eliminar categoría"
-        disabled={isDeleting}
-        className="text-slate-400 hover:text-red-600"
-        onClick={() => onDelete(category.id, category.name)}
-      >
-        <Trash2 size={16} />
-      </Button>
+        description={`Los artículos asociados a "${category.name}" quedarán sin categoría.`}
+        onConfirm={() => onDelete(category.id)}
+        icon={<Trash2 size={16} aria-hidden="true" />}
+      />
     </li>
   );
 }
@@ -167,14 +164,7 @@ export function CategorySortableList({
     });
   };
 
-  const handleDelete = (id: string, name: string) => {
-    const confirmed = window.confirm(
-      `¿Eliminar la categoría "${name}"? Los artículos asociados quedarán sin categoría.`
-    );
-    if (!confirmed) {
-      return;
-    }
-
+  const handleDelete = (id: string) => {
     startTransition(async () => {
       try {
         await deleteStoreCategory(id);
@@ -224,7 +214,6 @@ export function CategorySortableList({
                   key={category.id}
                   category={category}
                   onDelete={handleDelete}
-                  isDeleting={isPending}
                 />
               ))}
             </ul>

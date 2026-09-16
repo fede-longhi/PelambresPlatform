@@ -29,8 +29,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
           <Link href="/admin/products">
-            <Button variant="outline" size="icon" className="shrink-0">
-              <ArrowLeft size={18} />
+            <Button variant="outline" size="icon" className="size-11 shrink-0 md:size-9" aria-label="Volver al listado">
+              <ArrowLeft size={18} aria-hidden="true" />
             </Button>
           </Link>
           <div>

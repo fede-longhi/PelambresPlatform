@@ -11,9 +11,9 @@ export function CreatePrinterButton () {
 
     return (
         <DialogButton
-            title="Add Printer"
-            description="Add a new printer to your collection."
-            label="Add Printer"
+            title="Agregar impresora"
+            description="Registre una impresora del taller."
+            label="Agregar impresora"
             icon={<Plus/>}
             open={open}
             onOpenChange={setOpen}

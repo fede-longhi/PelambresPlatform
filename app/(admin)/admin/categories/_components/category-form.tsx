@@ -63,11 +63,12 @@ export default function CategoryForm({ mode, category }: CategoryFormProps) {
           <Button
             variant="outline"
             size="icon"
-            className="shrink-0"
+            className="size-11 shrink-0 md:size-9"
             disabled={isPending}
             type="button"
+            aria-label="Volver al listado"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={18} aria-hidden="true" />
           </Button>
         </Link>
         <div>

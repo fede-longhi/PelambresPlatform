@@ -158,6 +158,7 @@ export async function createQuote(
         first_name: null,
         last_name: null,
         customer_id: customerId,
+        status: 'new',
       } as QuoteTable,
       uploadedUrls
     );
@@ -212,7 +213,12 @@ export async function linkQuoteRequestToCustomer(
 
     const updated = await sql<{ id: string }[]>`
       UPDATE quote_requests
-      SET customer_id = ${customerId}
+      SET
+        customer_id = ${customerId},
+        status = CASE
+          WHEN status = 'new' THEN 'in_progress'
+          ELSE status
+        END
       WHERE id = ${quoteRequestId}
       RETURNING id
     `;
@@ -233,8 +239,66 @@ export async function linkQuoteRequestToCustomer(
 
   revalidatePath(`/admin/quote-requests/${quoteRequestId}`);
   revalidatePath('/admin/quote-requests');
+  revalidatePath('/admin');
   revalidatePath('/customer');
   return { message: 'success', success: true };
+}
+
+export type QuoteStatusFormState = {
+  errors?: {
+    status?: string[];
+  };
+  message?: string | null;
+  success?: boolean;
+};
+
+export async function updateQuoteRequestStatus(
+  quoteRequestId: string,
+  _prevState: QuoteStatusFormState,
+  formData: FormData
+): Promise<QuoteStatusFormState> {
+  await assertAdminAccess();
+
+  const parsed = z
+    .enum(['new', 'in_progress', 'quoted', 'closed'], {
+      errorMap: () => ({ message: 'Seleccione un estado válido.' }),
+    })
+    .safeParse(formData.get('status'));
+
+  if (!parsed.success) {
+    return {
+      errors: { status: ['Seleccione un estado válido.'] },
+      message: 'No se pudo actualizar el estado.',
+      success: false,
+    };
+  }
+
+  try {
+    const updated = await sql<{ id: string }[]>`
+      UPDATE quote_requests
+      SET status = ${parsed.data}
+      WHERE id = ${quoteRequestId}
+      RETURNING id
+    `;
+
+    if (!updated[0]) {
+      return {
+        message: 'No se encontró la solicitud de presupuesto.',
+        success: false,
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      message: 'No se pudo actualizar el estado.',
+      success: false,
+    };
+  }
+
+  revalidatePath(`/admin/quote-requests/${quoteRequestId}`);
+  revalidatePath('/admin/quote-requests');
+  revalidatePath('/admin');
+  return { success: true, message: 'Estado actualizado.' };
 }
 
 async function sendQuoteEmail(

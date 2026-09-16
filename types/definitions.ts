@@ -94,6 +94,7 @@ export type QuoteTable = {
     detail: string;
     date: string;
     customer_id: string | null;
+    status: string;
 }
 
 export type CustomerPortalQuote = {
@@ -169,19 +170,35 @@ export type PrintJob = {
     finished_at: string,
 }
 
+export type PrintJobTableRow = {
+    id: string;
+    name: string;
+    status: PrintJobStatus;
+    estimated_printing_time: number | null;
+    order_id: string;
+    tracking_code: string | null;
+    customer_name: string | null;
+};
+
+export type PrintJobOrderOption = {
+    id: string;
+    trackingCode: string;
+    customerName: string;
+};
+
 export type PrintJobWithGcode = {
     id: string,
     name: string,
     status: PrintJobStatus,
-    estimated_printing_time: number,
-    order_id: string,
-    started_at: string,
-    finished_at: string,
-    gcode_filename: string,
-    gcode_path: string,
-    gcode_mime_type: string,
-    gcode_size: number,
-    gcode_uploaded_at: string
+    estimated_printing_time: number | null,
+    order_id: string | null,
+    started_at: string | null,
+    finished_at: string | null,
+    gcode_filename: string | null,
+    gcode_path: string | null,
+    gcode_mime_type: string | null,
+    gcode_size: number | null,
+    gcode_uploaded_at: string | null
 }
 
 export type GCodeInfo = {

@@ -1,5 +1,3 @@
-'use server';
-
 import sql from '@/lib/db';
 import { Filament } from '@/types/definitions';
 import { ITEMS_PER_PAGE } from '@/lib/consts';

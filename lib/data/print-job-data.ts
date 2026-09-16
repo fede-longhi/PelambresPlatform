@@ -1,7 +1,31 @@
 import sql from '@/lib/db';
-import { PrintJob, PrintJobWithGcode } from '@/types/definitions';
+import { ITEMS_PER_PAGE } from '@/lib/consts';
+import {
+  DEFAULT_PRINT_JOB_LIST_FILTER,
+  parsePrintJobListFilter,
+  type PrintJobListFilter,
+} from '@/lib/consts/print-job-consts';
+import {
+  PrintJob,
+  PrintJobTableRow,
+  PrintJobWithGcode,
+} from '@/types/definitions';
 
-export async function fetchPrintJob(id: string) {
+export { parsePrintJobListFilter, DEFAULT_PRINT_JOB_LIST_FILTER };
+export type { PrintJobListFilter };
+
+function buildPrintJobFilterSql(filter: PrintJobListFilter) {
+  switch (filter) {
+    case 'active':
+      return sql`AND print_jobs.status IN ('pending', 'printing', 'postprocess')`;
+    case 'all':
+      return sql``;
+    default:
+      return sql`AND print_jobs.status = ${filter}`;
+  }
+}
+
+export async function fetchPrintJob(id: string): Promise<PrintJobWithGcode | undefined> {
     try {
         const data = await sql<PrintJobWithGcode[]>`
         SELECT
@@ -49,4 +73,86 @@ export async function fetchOrderPrintJobs(orderId: string) {
         console.error(error);
         throw new Error('Failed to fetch print job data.');
     }
+}
+
+export async function fetchFilteredPrintJobs(
+  query: string,
+  currentPage: number,
+  filter: PrintJobListFilter = DEFAULT_PRINT_JOB_LIST_FILTER
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const search = `%${query}%`;
+  const filterSql = buildPrintJobFilterSql(filter);
+
+  try {
+    return await sql<PrintJobTableRow[]>`
+      SELECT
+        print_jobs.id,
+        print_jobs.name,
+        print_jobs.status,
+        print_jobs.estimated_printing_time,
+        print_jobs.order_id,
+        orders.tracking_code,
+        CASE
+          WHEN customers.type = 'person'
+            THEN TRIM(CONCAT(COALESCE(customers.last_name, ''), ', ', COALESCE(customers.first_name, '')))
+          ELSE customers.name
+        END AS customer_name
+      FROM print_jobs
+      LEFT JOIN orders ON orders.id = print_jobs.order_id
+      LEFT JOIN customers ON customers.id = orders.customer_id
+      WHERE (
+        print_jobs.name ILIKE ${search}
+        OR COALESCE(orders.tracking_code, '') ILIKE ${search}
+        OR COALESCE(customers.first_name, '') ILIKE ${search}
+        OR COALESCE(customers.last_name, '') ILIKE ${search}
+        OR COALESCE(customers.name, '') ILIKE ${search}
+      )
+      ${filterSql}
+      ORDER BY
+        CASE print_jobs.status
+          WHEN 'printing' THEN 1
+          WHEN 'postprocess' THEN 2
+          WHEN 'pending' THEN 3
+          WHEN 'finished' THEN 4
+          WHEN 'failed' THEN 5
+          ELSE 6
+        END,
+        print_jobs.name
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch print jobs.');
+  }
+}
+
+export async function fetchPrintJobsPages(
+  query: string,
+  filter: PrintJobListFilter = DEFAULT_PRINT_JOB_LIST_FILTER
+) {
+  const search = `%${query}%`;
+  const filterSql = buildPrintJobFilterSql(filter);
+
+  try {
+    const data = await sql`
+      SELECT COUNT(*)
+      FROM print_jobs
+      LEFT JOIN orders ON orders.id = print_jobs.order_id
+      LEFT JOIN customers ON customers.id = orders.customer_id
+      WHERE (
+        print_jobs.name ILIKE ${search}
+        OR COALESCE(orders.tracking_code, '') ILIKE ${search}
+        OR COALESCE(customers.first_name, '') ILIKE ${search}
+        OR COALESCE(customers.last_name, '') ILIKE ${search}
+        OR COALESCE(customers.name, '') ILIKE ${search}
+      )
+      ${filterSql}
+    `;
+
+    return Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+  } catch (error) {
+    console.error(error);
+    throw new Error('Failed to fetch print job pages.');
+  }
 }

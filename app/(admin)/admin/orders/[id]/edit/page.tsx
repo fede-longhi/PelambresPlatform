@@ -11,13 +11,13 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <main>
             <Breadcrumbs
             breadcrumbs={[
-                { label: 'Orders', href: '/admin/orders' },
+                { label: 'Pedidos', href: '/admin/orders' },
                 {
-                    label: `${id}`,
+                    label: `${order.tracking_code ?? id}`,
                     href: `/admin/orders/${id}`,
                 },
                 {
-                    label: 'Edit Order',
+                    label: 'Editar pedido',
                     href: `/admin/orders/${id}/edit`,
                     active: true,
                 },

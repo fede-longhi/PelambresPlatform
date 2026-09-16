@@ -1,52 +1,63 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { lusitana } from '@/app/fonts';
 import { Suspense } from 'react';
-import { InvoicesTableSkeleton } from '@/components/shared/skeletons';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/ui/page-header';
 import Search from '@/app/(admin)/admin/_components/search';
-import OrdersTable from '@/app/(admin)/admin/orders/_components/orders-table';
 import Pagination from '@/components/ui/pagination';
-import { fetchOrdersPages } from '@/lib/data/order-data';
-import { PlusIcon } from 'lucide-react';
+import { InvoicesTableSkeleton } from '@/components/shared/skeletons';
+import { fetchOrdersPages, parseOrderListFilter } from '@/lib/data/order-data';
+import OrdersFilter from '@/app/(admin)/admin/orders/_components/orders-filter';
+import OrdersTable from '@/app/(admin)/admin/orders/_components/orders-table';
 
 export const metadata: Metadata = {
-    title: 'Orders',
+  title: 'Pedidos',
 };
 
 export default async function Page(props: {
-    searchParams?: Promise<{
-        query?:string;
-        page?:string;
-    }>;
+  searchParams?: Promise<{
+    query?: string;
+    page?: string;
+    filter?: string;
+  }>;
 }) {
-    const searchParams = await props.searchParams;
-    const query = searchParams?.query || '';
-    const currentPage = Number(searchParams?.page) || 1;
-    const totalPages = await fetchOrdersPages(query);
+  const searchParams = await props.searchParams;
+  const query = searchParams?.query || '';
+  const currentPage = Number(searchParams?.page) || 1;
+  const filter = parseOrderListFilter(searchParams?.filter);
+  const totalPages = await fetchOrdersPages(query, filter);
 
-    return (
-        <div className="w-full">
-            <div className="flex w-full items-center justify-between">
-                <h1 className={`${lusitana.className} text-2xl`}>Orders</h1>
-            </div>
-            <div className="mt-4">
-                <Link
-                href="/admin/orders/create"
-                className="flex h-10 w-40 items-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-                >
-                    <span>Create Order</span>
-                    <PlusIcon className="h-5 md:ml-4" />
-                </Link>
-            </div>
-            <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-                <Search placeholder="Search orders..." />
-            </div>
-                <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-                    <OrdersTable query={query} currentPage={currentPage} />
-                </Suspense>
-            <div className="mt-5 flex w-full justify-center">
-                <Pagination totalPages={totalPages} />
-            </div>
-        </div>
-    )
+  return (
+    <div className="w-full">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader title="Pedidos" />
+        <Button asChild>
+          <Link href="/admin/orders/create">
+            <Plus className="mr-2 size-4" aria-hidden="true" />
+            Nuevo pedido
+          </Link>
+        </Button>
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Pedidos a medida. El filtro En curso muestra pendientes y en producción.
+      </p>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Search placeholder="Buscar por código, cliente o estado…" />
+        <OrdersFilter />
+      </div>
+
+      <Suspense
+        key={query + currentPage + filter}
+        fallback={<InvoicesTableSkeleton />}
+      >
+        <OrdersTable query={query} currentPage={currentPage} filter={filter} />
+      </Suspense>
+
+      <div className="mt-5 flex w-full justify-center">
+        <Pagination totalPages={totalPages} />
+      </div>
+    </div>
+  );
 }

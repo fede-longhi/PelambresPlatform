@@ -63,15 +63,15 @@ export const FILAMENT_TYPES = [
 export const CONFIGURATION_VARIABLE_DATA_TYPES = [
     {
         name: "number",
-        label: "number"
+        label: "Número"
     },
     {
         name: "text",
-        label: "text"
+        label: "Texto"
     },
     {
         name: "boolean",
-        label: "boolean"
+        label: "Booleano"
     }
 ];
 

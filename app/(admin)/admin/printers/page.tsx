@@ -4,11 +4,12 @@ import Search from "@/app/(admin)/admin/_components/search";
 import { CreatePrinterButton } from "@/app/(admin)/admin/printers/_components/buttons";
 import PrintersTable from "@/app/(admin)/admin/printers/_components/printers-table";
 import PageHeader from "@/components/ui/page-header";
+import { InvoicesTableSkeleton } from "@/components/shared/skeletons";
 import { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-    title: 'Printers',
+    title: 'Impresoras',
 };
 
 export default async function Page(props: {
@@ -25,14 +26,21 @@ export default async function Page(props: {
 
     return (
         <div>
-            <PageHeader title="Printers" />
-            <CreatePrinterButton />
-            <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">
-                <Search placeholder="Search printers..." />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <PageHeader title="Impresoras" />
+                <CreatePrinterButton />
             </div>
-            <Suspense key={query + currentPage} fallback={null}>
-                <PrintersTable query={query} currentPage={currentPage} />
-            </Suspense>
+            <p className="mt-2 text-sm text-muted-foreground">
+                Equipos del taller y su estado operativo.
+            </p>
+            <div className="mt-6 flex items-center justify-between gap-2">
+                <Search placeholder="Buscar impresoras…" />
+            </div>
+            <div className="mt-6">
+                <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+                    <PrintersTable query={query} currentPage={currentPage} />
+                </Suspense>
+            </div>
             <div className="mt-5 flex w-full justify-center">
                 <Pagination totalPages={totalPages} />
             </div>

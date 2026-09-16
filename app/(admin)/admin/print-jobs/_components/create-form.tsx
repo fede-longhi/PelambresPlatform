@@ -7,19 +7,20 @@ import FileDropZone from "@/components/ui/drop-files";
 import FieldErrorDisplay from "@/components/ui/field-error-display";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { secondsToTime, getGcodeInfo } from "@/lib/utils";
 import { CircleX, File, Plus, Trash } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { FILAMENT_TYPES } from "@/lib/consts";
+import type { PrintJobOrderOption } from "@/types/definitions";
 
 interface PrintJobCreateForm {
     orderId?:string,
+    orders?: PrintJobOrderOption[],
     handleCancel?: ()=>void
 }
 
-export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobCreateForm) {
+export default function PrintJobCreateForm({ orderId, orders, handleCancel } : PrintJobCreateForm) {
     const initialState: PrintJobFormState = { message: null, errors: {}, success: false };
     const [state, formAction, isPending] = useActionState(createPrintJob, initialState);
     const [models, setModels] = useState<Array<File>>([]);
@@ -32,7 +33,7 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
         if (state.success) {
         toast({
             title: 'Éxito',
-            description: 'Print job creado correctamente.',
+            description: 'Trabajo creado correctamente.',
             variant: 'success'
         });
         }
@@ -80,17 +81,44 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
 
                 <div className="flex flex-col space-y-2 w-fit">
                     {
-                        orderId &&
+                        orderId ?
                         <input type="hidden" name="order_id" value={orderId} />
+                        :
+                        <div>
+                            <Label htmlFor="order_id">Pedido</Label>
+                            {orders && orders.length > 0 ? (
+                                <select
+                                    id="order_id"
+                                    name="order_id"
+                                    required
+                                    defaultValue=""
+                                    className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                                >
+                                    <option value="" disabled>
+                                        Elegir un pedido
+                                    </option>
+                                    {orders.map((order) => (
+                                        <option key={order.id} value={order.id}>
+                                            {order.trackingCode} · {order.customerName}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    No hay pedidos activos para asociar un trabajo.
+                                </p>
+                            )}
+                            <FieldErrorDisplay errors={state.errors?.order_id} id="order-id-error" />
+                        </div>
                     }
 
                     <div>
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">Nombre</Label>
                         <Input
                             id="name"
                             name="name"
                             defaultValue={state.payload?.get('name') as string || ''}
-                            placeholder="Enter name"
+                            placeholder="Nombre del trabajo"
                             aria-describedby="name-error"
                         />
                         <div id="name-error" aria-live="polite">
@@ -99,15 +127,15 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                     </div>
 
                     <div>
-                        <Label htmlFor="gcode_file">Gcode</Label>
+                        <Label htmlFor="gcode_file">G-code</Label>
                         {
                             gcodeFile ? 
                             <div className="flex flex-row items-center rounded border p-1 text-xs bg-white">
                                 <File className="mr-2"/>
                                     <p>{gcodeFile.name}</p>
                                     <span className="flex-1"/>
-                                    <Button className="rounded-full" variant="ghost" size="icon" type="button" onClick={() => setGcodeFile(undefined)}>
-                                        <Trash />
+                                    <Button className="rounded-full" variant="ghost" size="icon" type="button" aria-label="Quitar G-code" onClick={() => setGcodeFile(undefined)}>
+                                        <Trash aria-hidden="true" />
                                     </Button>
                             </div>
                             :
@@ -128,14 +156,14 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                     {
                         gcodeInfo.estimatedTimeSec &&
                         <div className="flex flex-col">
-                            <Label>Estimated printing time</Label>
+                            <Label>Tiempo estimado de impresión</Label>
                             <span className="font-gra text-sm border rounded-md m-2 p-2 w-fit">{secondsToTime(gcodeInfo.estimatedTimeSec)}</span>
                         </div>
                     }
 
 
                     <div className="flex flex-col">
-                        <Label htmlFor="model-file" className="mb-2">Models</Label>
+                        <Label htmlFor="model-file" className="mb-2">Modelos</Label>
                         <Input type="file" name="model-file" className="hidden" ref={fileInputRef} onChange={addFile}/>
                         <div>
                             {
@@ -149,8 +177,8 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                                                         <File className="mr-2"/>
                                                         <p>{model.name}</p>
                                                         <span className="flex-1"/>
-                                                        <Button className="rounded-full" variant="ghost" size="icon" type="button" onClick={() => removeFile(i)}>
-                                                            <Trash />
+                                                        <Button className="rounded-full" variant="ghost" size="icon" type="button" aria-label={`Quitar ${model.name}`} onClick={() => removeFile(i)}>
+                                                            <Trash aria-hidden="true" />
                                                         </Button>
                                                     </li>
                                                 )
@@ -176,30 +204,29 @@ export default function PrintJobCreateForm({ orderId, handleCancel } : PrintJobC
                     </div>
 
                     <div>
-                        <Label htmlFor="filament">Filament</Label>
-                        <Select name="filament"> 
-                            <SelectTrigger className="bg-white">
-                                <SelectValue placeholder="Select a filament" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {
-                                    FILAMENT_TYPES.map((filament) => (
-                                        <SelectItem key={filament.name} value={filament.name}>{filament.label}</SelectItem>
-                                    ))
-                                }
-                            </SelectContent>
-                        </Select>
-                        
-                        <FieldErrorDisplay id="filament-error" errors={state.errors?.estimated_printing_time} />
+                        <Label htmlFor="filament_type">Filamento</Label>
+                        <select
+                            id="filament_type"
+                            name="filament_type"
+                            defaultValue="pla"
+                            className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                        >
+                            {FILAMENT_TYPES.map((filament) => (
+                                <option key={filament.name} value={filament.name}>
+                                    {filament.label}
+                                </option>
+                            ))}
+                        </select>
+                        <FieldErrorDisplay id="filament-error" errors={state.errors?.filament_type} />
                     </div>
                 </div>
 
                 <div className="flex justify-center pt-8 space-x-2">
                     <Button type="button" disabled={isPending} variant="outline" onClick={()=>{handleCancel?.()}}>
-                        Cancel
+                        Cancelar
                     </Button>
                     <Button type="submit" disabled={isPending} className="bg-primary text-primary-foreground">
-                        {isPending ? 'Creando...' : 'Crear Print Job'}
+                        {isPending ? 'Creando...' : 'Crear trabajo'}
                     </Button>
                 </div>
             </div>

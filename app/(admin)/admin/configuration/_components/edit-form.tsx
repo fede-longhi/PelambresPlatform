@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import FieldErrorDisplay from "@/components/ui/field-error-display";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfigurationVariable } from "@/types/definitions";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CONFIGURATION_VARIABLE_DATA_TYPES } from "@/lib/consts";
 
 export default function EditConfigurationForm({configuration, onSuccess} : {configuration: ConfigurationVariable, onSuccess?: () => void}) {
@@ -21,17 +20,15 @@ export default function EditConfigurationForm({configuration, onSuccess} : {conf
     const [state, formAction, isPending] = useActionState(updateConfigurationWithId, initialState);
 
     useEffect(() => {
-        console.log(state);
-        console.log(JSON.stringify(state.errors));
         if (state.success) {
             onSuccess?.();
         }
-    },[state?.success])
+    },[state?.success, onSuccess])
 
     return (
         <form action={formAction} className="space-y-4 max-w-md">
             <div>
-                <Label htmlFor="value">Value</Label>
+                <Label htmlFor="value">Valor</Label>
                 <Input
                     className="w-full"
                     type="text"
@@ -44,41 +41,36 @@ export default function EditConfigurationForm({configuration, onSuccess} : {conf
             </div>
     
             <div>
-                <Label htmlFor="data_type" className="block font-medium">Data Type</Label>
-                <Select name="data_type" defaultValue={(state.payload?.get("data_type") || (configuration.data_type??'')) as string}>
-                    <SelectTrigger>
-                        <SelectValue
-                            placeholder="Select a data type"
-                            aria-describedby="data_type-error"
-                            
-                        />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {
-                            CONFIGURATION_VARIABLE_DATA_TYPES.map((dataType) => (
-                                <SelectItem key={dataType.name} value={dataType.name}>
-                                    {dataType.label}
-                                </SelectItem>
-                            ))
-                        }
-                    </SelectContent>
-                </Select>
+                <Label htmlFor="data_type">Tipo de dato</Label>
+                <select
+                    id="data_type"
+                    name="data_type"
+                    defaultValue={(state.payload?.get("data_type") || (configuration.data_type??'text')) as string}
+                    className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    aria-describedby="data_type-error"
+                >
+                    {CONFIGURATION_VARIABLE_DATA_TYPES.map((dataType) => (
+                        <option key={dataType.name} value={dataType.name}>
+                            {dataType.label}
+                        </option>
+                    ))}
+                </select>
                 <FieldErrorDisplay id="data_type-error" errors={state?.errors?.data_type} />
             </div>
     
             <div>
-                <Label htmlFor="category" className="block font-medium">Category</Label>
+                <Label htmlFor="category">Categoría</Label>
                 <Input
                     type="text"
                     name="category"
                     id="category"
                     defaultValue={(state.payload?.get("category") || (configuration.category??'')) as string}
                     className="w-full" />
-                <FieldErrorDisplay id="data_type-error" errors={state?.errors?.data_type} />
+                <FieldErrorDisplay id="category-error" errors={state?.errors?.category} />
             </div>
     
             <div>
-                <Label htmlFor="description" className="block font-medium">Description</Label>
+                <Label htmlFor="description">Descripción</Label>
                 <Textarea
                     className="w-full"
                     name="description"
@@ -91,7 +83,7 @@ export default function EditConfigurationForm({configuration, onSuccess} : {conf
             </div>
     
             <div className="flex flex-row justify-end">
-            <Button type="submit" disabled={isPending}>{isPending ? 'Saving...' : 'Save Changes'}</Button>
+            <Button type="submit" disabled={isPending}>{isPending ? 'Guardando...' : 'Guardar cambios'}</Button>
             </div>
         </form>
     );

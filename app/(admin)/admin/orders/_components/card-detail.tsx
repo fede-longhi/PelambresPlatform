@@ -10,7 +10,7 @@ function OrderDetailCard ({order} : {order: OrderTable}) {
     <Card>
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex">
-            <h2>Order # {order.id}</h2>
+            <h2>Pedido {order.tracking_code}</h2>
             <span className="flex-1" />
             <div className="ml-2 h-fit flex ">
               <EditOrder id={order.id} />
@@ -22,16 +22,16 @@ function OrderDetailCard ({order} : {order: OrderTable}) {
             <OrderStatusEditField id={order.id} status={order.status}/>
         </div>
         <p className="text-sm text-gray-600">
-          <span className="font-medium">Tracking Code:</span> {order.tracking_code}
+          <span className="font-medium">Código:</span> {order.tracking_code}
         </p>
         <p className="text-sm text-gray-600">
-          <span className="font-medium">Estimated Delivery:</span> {format(new Date(order.estimated_date), "PPP")}
+          <span className="font-medium">Entrega estimada:</span> {format(new Date(order.estimated_date), "PPP")}
         </p>
         <p className="text-sm text-gray-600">
-          <span className="font-medium">Total Amount:</span> ${order.amount}
+          <span className="font-medium">Importe:</span> ${order.amount}
         </p>
         <p className="text-sm text-gray-600">
-          <span className="font-medium">Created:</span> {formatDateToLocal(order.created_date, 'es-AR')}
+          <span className="font-medium">Creado:</span> {formatDateToLocal(order.created_date, 'es-AR')}
         </p>
       </CardContent>
     </Card>

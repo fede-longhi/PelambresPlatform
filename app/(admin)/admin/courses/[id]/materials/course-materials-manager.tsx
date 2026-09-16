@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, useTransition, startTransition } from 'react';
+import { useActionState, useEffect, useState, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import {
   COURSE_MATERIAL_MAX_SIZE_BYTES,
   COURSE_MATERIAL_MIME_BY_EXTENSION,
 } from '@/lib/consts/course-material-consts';
+import { ConfirmDeleteButton } from '@/components/ui/confirm-delete-button';
 import { formatFileSize } from '@/lib/utils';
 
 type CourseMaterialsManagerProps = {
@@ -33,7 +34,6 @@ export function CourseMaterialsManager({
   const addMaterialWithCourseId = addCourseMaterial.bind(null, courseId);
   const initialState: CourseMaterialFormState = { message: null, success: false };
   const [state, formAction, isPending] = useActionState(addMaterialWithCourseId, initialState);
-  const [isDeleting, startDeleteTransition] = useTransition();
   const router = useRouter();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileValidationErrors, setFileValidationErrors] = useState<string[]>([]);
@@ -54,7 +54,7 @@ export function CourseMaterialsManager({
     const selectedFile = selectedFiles[0];
 
     if (!selectedFile) {
-      setClientFileError('Seleccioná un archivo.');
+      setClientFileError('Seleccione un archivo.');
       return;
     }
 
@@ -66,28 +66,15 @@ export function CourseMaterialsManager({
     });
   }
 
-  function handleDelete(materialId: string) {
-    if (!window.confirm('¿Eliminar este material? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
-    startDeleteTransition(async () => {
-      const result = await deleteCourseMaterial(courseId, materialId);
-      if (result.success) {
-        router.refresh();
-      }
-    });
-  }
-
   return (
     <div className="space-y-8">
       <form
         action={handleSubmit}
-        className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="space-y-4 rounded-lg border bg-card p-6"
       >
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Subir material</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-lg font-semibold">Subir material</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Formatos permitidos: {allowedExtensionsLabel}. Máximo{' '}
             {formatFileSize(COURSE_MATERIAL_MAX_SIZE_BYTES)}.
           </p>
@@ -138,49 +125,53 @@ export function CourseMaterialsManager({
         />
 
         <Button type="submit" disabled={isPending}>
-          <Upload size={16} className="mr-2" />
+          <Upload size={16} className="mr-2" aria-hidden="true" />
           {isPending ? 'Subiendo...' : 'Agregar material'}
         </Button>
       </form>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-bold text-slate-900">
+      <section className="rounded-lg border bg-card p-6">
+        <h2 className="mb-4 text-lg font-semibold">
           Materiales del curso ({initialMaterials.length})
         </h2>
 
         {initialMaterials.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Todavía no hay materiales. Los alumnos los verán en el aula cuando tengan acceso.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y">
             {initialMaterials.map((material) => (
               <li
                 key={material.id}
                 className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="rounded-lg bg-slate-100 p-2 text-slate-600">
-                    <FileText size={18} />
+                  <div className="rounded-lg bg-muted p-2 text-muted-foreground">
+                    <FileText size={18} aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-slate-900">{material.title}</p>
-                    <p className="truncate text-sm text-slate-500">{material.filename}</p>
-                    <p className="text-xs text-slate-400">{formatFileSize(material.size)}</p>
+                    <p className="font-medium">{material.title}</p>
+                    <p className="truncate text-sm text-muted-foreground">{material.filename}</p>
+                    <p className="text-xs text-muted-foreground">{formatFileSize(material.size)}</p>
                   </div>
                 </div>
 
-                <Button
-                  type="button"
+                <ConfirmDeleteButton
                   variant="outline"
-                  size="sm"
-                  className="shrink-0 border-red-200 text-red-600 hover:bg-red-50"
-                  disabled={isDeleting}
-                  onClick={() => handleDelete(material.id)}
-                >
-                  <Trash2 size={14} className="mr-1" />
-                  Eliminar
-                </Button>
+                  className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
+                  ariaLabel={`Eliminar ${material.title}`}
+                  title="Eliminar material"
+                  description="Esta acción no se puede deshacer."
+                  label="Eliminar"
+                  icon={<Trash2 size={14} className="mr-1" aria-hidden="true" />}
+                  onConfirm={async () => {
+                    const result = await deleteCourseMaterial(courseId, material.id);
+                    if (result.success) {
+                      router.refresh();
+                    }
+                  }}
+                />
               </li>
             ))}
           </ul>

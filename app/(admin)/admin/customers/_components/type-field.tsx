@@ -7,7 +7,7 @@ export default function CustomerTypeField({type} : {type: CustomerType}) {
         <Badge variant="secondary" className="flex mt-1 capitalize w-fit">
             {type === 'person' && <User className="h-4 w-4"/>}
             {type === 'business' && <Building2 className="h-4 w-4"/>}
-            {type}
+            {type === 'person' ? 'Persona' : 'Empresa'}
         </Badge>
     );
 }

@@ -12,7 +12,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     const customerId = params.id;
     const customer = await fetchCustomerById(customerId);
     const breadcrumbs = [
-        { label: 'Customers', href: '/admin/customers' },
+        { label: 'Clientes', href: '/admin/customers' },
         {
             label: `${getCustomerName(customer)}`,
             href: `/admin/customers/${customerId}`,
