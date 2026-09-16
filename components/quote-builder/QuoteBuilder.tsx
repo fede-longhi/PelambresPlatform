@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { Download, Eye, ArrowLeft } from 'lucide-react';
+import { Download, Eye, ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuote } from '@/hooks/use-quote';
 import { QuoteEditor } from './QuoteEditor';
@@ -12,19 +13,57 @@ import {
     QUOTE_PREVIEW_MIN_HEIGHT_PX,
     QUOTE_PREVIEW_WIDTH_PX,
 } from './QuotePreview';
+import CustomerSelectField from '@/components/shared/customer-select-field';
+import { saveQuoteDocument } from '@/lib/actions/quote-document-actions';
+import { formatQuoteNumber, getQuoteClientDisplayName } from '@/lib/consts/quote-document-consts';
+import { useToast } from '@/hooks/use-toast';
+import type { Customer, CustomerType } from '@/types/definitions';
+import type { QuoteBuilderState } from '@/types/quote';
 
 /** Leave side breathing room when scaling the A4 preview on narrow screens. */
 const MOBILE_PREVIEW_SIDE_GAP_PX = 16;
 
-export default function QuoteBuilder() {
-    const quote = useQuote();
+export type QuoteBuilderProps = {
+    mode?: 'public' | 'admin';
+    quoteId?: string;
+    quoteRequestId?: string | null;
+    initialQuote?: Partial<QuoteBuilderState>;
+    initialCustomer?: {
+        id: string;
+        label: string;
+        type: CustomerType;
+    };
+    editorTitle?: string;
+};
+
+export default function QuoteBuilder({
+    mode = 'public',
+    quoteId,
+    quoteRequestId = null,
+    initialQuote,
+    initialCustomer,
+    editorTitle,
+}: QuoteBuilderProps) {
+    const isAdmin = mode === 'admin';
+    const quote = useQuote({
+        initial: initialQuote,
+        emptyItems: isAdmin && !initialQuote?.items,
+    });
     const pdfSourceRef = useRef<HTMLDivElement>(null);
     const displayPreviewRef = useRef<HTMLDivElement>(null);
     const previewViewportRef = useRef<HTMLDivElement>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const [showMobilePreview, setShowMobilePreview] = useState(false);
     const [previewScale, setPreviewScale] = useState(1);
     const [previewHeight, setPreviewHeight] = useState(QUOTE_PREVIEW_MIN_HEIGHT_PX);
+    const [customerId, setCustomerId] = useState(initialCustomer?.id ?? '');
+    const [customerType, setCustomerType] = useState<CustomerType>(
+        initialCustomer?.type ?? 'person'
+    );
+    const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         const viewport = previewViewportRef.current;
@@ -65,13 +104,24 @@ export default function QuoteBuilder() {
         return () => resizeObserver.disconnect();
     }, [showMobilePreview, quote.items, quote.meta, quote.globalDiscount, quote.taxes]);
 
+    const applyCustomerSnapshot = (customer: Customer) => {
+        setCustomerId(customer.id);
+        setCustomerType(customer.type);
+        quote.setMeta({
+            ...quote.meta,
+            clientName: getQuoteClientDisplayName(customer),
+            clientEmail: customer.email ?? '',
+            clientPhone: customer.phone ?? '',
+            clientAddress: customer.address ?? '',
+        });
+    };
+
     const generatePDF = async () => {
         const source = pdfSourceRef.current;
         if (!source) return;
         setIsGeneratingPdf(true);
 
         try {
-            // Capture the offscreen, unscaled document — never the CSS-scaled preview.
             const canvas = await html2canvas(source, {
                 scale: 2,
                 useCORS: true,
@@ -87,7 +137,6 @@ export default function QuoteBuilder() {
             const imgWidth = pageWidth;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-            // Ignore sub-mm overflow from rounding / A4 aspect mismatch — avoids a blank trailing page.
             const overflowToleranceMm = 2;
             let heightLeft = imgHeight;
             let position = 0;
@@ -102,11 +151,88 @@ export default function QuoteBuilder() {
                 heightLeft -= pageHeight;
             }
 
-            pdf.save(`Presupuesto_${quote.meta.quoteNumber}.pdf`);
+            const fileNumber = quote.meta.quoteNumber.trim() || 'borrador';
+            pdf.save(`Presupuesto_${fileNumber}.pdf`);
         } catch (error) {
             console.error('Error generando PDF:', error);
         } finally {
             setIsGeneratingPdf(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!isAdmin) {
+            return;
+        }
+
+        if (!customerId) {
+            setSaveError('Seleccioná un cliente para guardar el presupuesto.');
+            return;
+        }
+
+        if (!quote.meta.clientName.trim()) {
+            setSaveError('El nombre del cliente es obligatorio.');
+            return;
+        }
+
+        setIsSaving(true);
+        setSaveError(null);
+
+        try {
+            const result = await saveQuoteDocument({
+                id: quoteId,
+                customerId,
+                quoteRequestId,
+                date: quote.meta.date,
+                companyName: quote.meta.companyName,
+                clientName: quote.meta.clientName.trim(),
+                clientEmail: quote.meta.clientEmail.trim(),
+                clientPhone: quote.meta.clientPhone.trim(),
+                clientAddress: quote.meta.clientAddress.trim(),
+                clientType: customerType,
+                notes: quote.meta.notes,
+                globalDiscount: quote.globalDiscount,
+                showQuoteNumber: quote.meta.showQuoteNumber,
+                items: quote.items.map((item) => ({
+                    description: item.description,
+                    quantity: item.quantity,
+                    price: item.price,
+                    discount: item.discount,
+                    calculatorParams: item.calculatorParams,
+                })),
+                taxes: quote.taxes.map((tax) => ({
+                    name: tax.name,
+                    percentage: tax.percentage,
+                })),
+            });
+
+            if (!result.success || !result.id || result.quoteNumber == null) {
+                setSaveError(result.message ?? 'No se pudo guardar el presupuesto.');
+                return;
+            }
+
+            toast({
+                title: 'Presupuesto guardado',
+                description: `Quedó registrado como Nº ${formatQuoteNumber(result.quoteNumber)}.`,
+                variant: 'success',
+            });
+
+            if (!quoteId) {
+                router.push(`/admin/quotes/${result.id}/edit`);
+                router.refresh();
+                return;
+            }
+
+            quote.setMeta({
+                ...quote.meta,
+                quoteNumber: formatQuoteNumber(result.quoteNumber),
+            });
+            router.refresh();
+        } catch (error) {
+            console.error(error);
+            setSaveError('No se pudo guardar el presupuesto.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -122,7 +248,6 @@ export default function QuoteBuilder() {
 
     return (
         <div className="flex w-full h-full overflow-hidden bg-slate-100 font-sans relative">
-            {/* Offscreen full-size source for PDF (no CSS transform). Keep visible to html2canvas. */}
             <div
                 className="pointer-events-none absolute -z-10"
                 aria-hidden="true"
@@ -132,15 +257,56 @@ export default function QuoteBuilder() {
             </div>
 
             <div className={`h-full w-full xl:w-auto relative ${showMobilePreview ? 'hidden xl:block' : 'block'}`}>
-                <QuoteEditor {...quote} />
+                <QuoteEditor
+                    {...quote}
+                    title={editorTitle}
+                    quoteNumberReadOnly={isAdmin}
+                    onSave={isAdmin ? handleSave : undefined}
+                    isSaving={isSaving}
+                    saveError={saveError}
+                    customerPicker={
+                        isAdmin ? (
+                            <CustomerSelectField
+                                defaultValue={
+                                    initialCustomer
+                                        ? { value: initialCustomer.id, label: initialCustomer.label }
+                                        : undefined
+                                }
+                                onCustomerChange={applyCustomerSnapshot}
+                            />
+                        ) : undefined
+                    }
+                />
 
                 <div className="xl:hidden fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t border-slate-200 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-20">
-                    <Button
-                        className="w-full text-md h-12 shadow-md"
-                        onClick={() => setShowMobilePreview(true)}
-                    >
-                        <Eye className="mr-2" size={20} /> Ver PDF y Exportar
-                    </Button>
+                    {isAdmin ? (
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-12"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                <Save className="mr-2" size={18} />
+                                {isSaving ? 'Guardando...' : 'Guardar'}
+                            </Button>
+                            <Button
+                                type="button"
+                                className="h-12 shadow-md"
+                                onClick={() => setShowMobilePreview(true)}
+                            >
+                                <Eye className="mr-2" size={18} /> Ver PDF
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            className="w-full text-md h-12 shadow-md"
+                            onClick={() => setShowMobilePreview(true)}
+                        >
+                            <Eye className="mr-2" size={20} /> Ver PDF y Exportar
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -159,6 +325,21 @@ export default function QuoteBuilder() {
                         <ArrowLeft size={18} className="mr-1 sm:mr-2" /> Volver
                     </Button>
 
+                    {isAdmin ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-white"
+                        >
+                            <Save size={18} className="sm:mr-2" />
+                            <span className="hidden sm:inline">
+                                {isSaving ? 'Guardando...' : 'Guardar'}
+                            </span>
+                        </Button>
+                    ) : null}
+
                     <Button
                         onClick={generatePDF}
                         disabled={isGeneratingPdf}
@@ -175,6 +356,10 @@ export default function QuoteBuilder() {
                         )}
                     </Button>
                 </div>
+
+                {isAdmin && saveError ? (
+                    <p className="mb-4 w-full max-w-[800px] text-sm text-destructive">{saveError}</p>
+                ) : null}
 
                 <div
                     ref={previewViewportRef}

@@ -10,16 +10,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/admin/quotes',
-        destination: '/admin/quote-requests',
-        permanent: true,
-      },
-      {
-        source: '/admin/quotes/:path*',
-        destination: '/admin/quote-requests/:path*',
-        permanent: true,
-      },
-      {
         source: '/admin/prints',
         destination: '/admin/print-jobs',
         permanent: true,

@@ -44,6 +44,12 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(({ met
                     {meta.clientEmail.trim() && (
                         <p className="text-slate-600">{meta.clientEmail}</p>
                     )}
+                    {meta.clientPhone.trim() && (
+                        <p className="text-slate-600">Tel: {meta.clientPhone}</p>
+                    )}
+                    {meta.clientAddress.trim() && (
+                        <p className="text-slate-600">{meta.clientAddress}</p>
+                    )}
                 </div>
 
                 <table className="w-full table-fixed text-left border-collapse">

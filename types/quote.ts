@@ -34,7 +34,16 @@ export type QuoteData = {
     companyName: string;
     clientName: string;
     clientEmail: string;
+    clientPhone: string;
+    clientAddress: string;
     notes: string;
+};
+
+export type QuoteBuilderState = {
+    meta: QuoteData;
+    items: QuoteItem[];
+    taxes: TaxItem[];
+    globalDiscount: number;
 };
 
 export type QuoteMath = {

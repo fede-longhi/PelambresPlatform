@@ -1,11 +1,12 @@
-import { FileText, Calculator, Building, User, Plus, Trash2, BadgePercent, Percent } from 'lucide-react';
+import { FileText, Calculator, Building, User, Plus, Trash2, BadgePercent, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { QuoteData, QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
 import { CalculatorModal } from '@/components/quote-builder/CalculatorModal';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 type QuoteEditorProps = {
     meta: QuoteData;
@@ -21,10 +22,36 @@ type QuoteEditorProps = {
     updateTax: (id: string, field: keyof TaxItem, value: string | number) => void;
     globalDiscount: number;
     setGlobalDiscount: (val: number) => void;
+    title?: string;
+    quoteNumberReadOnly?: boolean;
+    customerPicker?: ReactNode;
+    onSave?: () => void;
+    isSaving?: boolean;
+    saveError?: string | null;
 };
 
 export function QuoteEditor(props: QuoteEditorProps) {
-    const { meta, setMeta, items, addItem, removeItem, updateItem, patchItem, taxes, addTax, removeTax, updateTax, globalDiscount, setGlobalDiscount } = props;
+    const {
+        meta,
+        setMeta,
+        items,
+        addItem,
+        removeItem,
+        updateItem,
+        patchItem,
+        taxes,
+        addTax,
+        removeTax,
+        updateTax,
+        globalDiscount,
+        setGlobalDiscount,
+        title = 'Crear Cotización',
+        quoteNumberReadOnly = false,
+        customerPicker,
+        onSave,
+        isSaving = false,
+        saveError,
+    } = props;
     const [activeCalcItemId, setActiveCalcItemId] = useState<string | null>(null);
     const activeCalculatorItem = items.find((item) => item.id === activeCalcItemId);
 
@@ -42,7 +69,7 @@ export function QuoteEditor(props: QuoteEditorProps) {
         <div className="w-full xl:w-[450px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-200 p-6 pb-28 xl:pb-6 flex flex-col gap-8 shadow-xl z-10">
             <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-6">
-                    <FileText className="text-primary" /> Crear Cotización
+                    <FileText className="text-primary" /> {title}
                 </h2>
                 <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
@@ -54,8 +81,14 @@ export function QuoteEditor(props: QuoteEditorProps) {
                             <Input
                                 id="quote-number"
                                 value={meta.quoteNumber}
-                                onChange={(e) => setMeta({...meta, quoteNumber: e.target.value})}
-                                className="bg-white"
+                                readOnly={quoteNumberReadOnly}
+                                placeholder={quoteNumberReadOnly ? 'Se asignará al guardar' : undefined}
+                                onChange={
+                                    quoteNumberReadOnly
+                                        ? undefined
+                                        : (event) => setMeta({ ...meta, quoteNumber: event.target.value })
+                                }
+                                className={cn('bg-white', quoteNumberReadOnly && 'bg-slate-100')}
                             />
                             <div className="flex items-center gap-2 mt-2">
                                 <Switch
@@ -85,13 +118,49 @@ export function QuoteEditor(props: QuoteEditorProps) {
                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                     <User size={16} /> Cliente
                 </h3>
+                {customerPicker}
                 <div>
-                    <Label>Nombre del Cliente</Label>
-                    <Input placeholder="Ej: Juan Pérez" value={meta.clientName} onChange={(e) => setMeta({...meta, clientName: e.target.value})} className="bg-white" />
+                    <Label htmlFor="client-name">Nombre del Cliente</Label>
+                    <Input
+                        id="client-name"
+                        placeholder="Ej: Juan Pérez"
+                        value={meta.clientName}
+                        onChange={(event) => setMeta({ ...meta, clientName: event.target.value })}
+                        className="bg-white"
+                    />
                 </div>
                 <div>
-                    <Label>Email</Label>
-                    <Input type="email" placeholder="juan@ejemplo.com" value={meta.clientEmail} onChange={(e) => setMeta({...meta, clientEmail: e.target.value})} className="bg-white" />
+                    <Label htmlFor="client-email">Email</Label>
+                    <Input
+                        id="client-email"
+                        type="email"
+                        placeholder="juan@ejemplo.com"
+                        value={meta.clientEmail}
+                        onChange={(event) => setMeta({ ...meta, clientEmail: event.target.value })}
+                        className="bg-white"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="client-phone">Teléfono</Label>
+                    <Input
+                        id="client-phone"
+                        type="text"
+                        placeholder="11 1234-5678"
+                        value={meta.clientPhone}
+                        onChange={(event) => setMeta({ ...meta, clientPhone: event.target.value })}
+                        className="bg-white"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="client-address">Dirección</Label>
+                    <Input
+                        id="client-address"
+                        type="text"
+                        placeholder="Calle, localidad"
+                        value={meta.clientAddress}
+                        onChange={(event) => setMeta({ ...meta, clientAddress: event.target.value })}
+                        className="bg-white"
+                    />
                 </div>
             </div>
 
@@ -185,9 +254,31 @@ export function QuoteEditor(props: QuoteEditorProps) {
 
             {/* Notas */}
             <div className="space-y-2 mt-4">
-                <Label>Notas y Condiciones</Label>
-                <textarea className="w-full min-h-[100px] p-3 text-sm rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" value={meta.notes} onChange={(e) => setMeta({...meta, notes: e.target.value})} />
+                <Label htmlFor="quote-notes">Notas y Condiciones</Label>
+                <textarea
+                    id="quote-notes"
+                    className="w-full min-h-[100px] p-3 text-sm rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={meta.notes}
+                    onChange={(event) => setMeta({ ...meta, notes: event.target.value })}
+                />
             </div>
+
+            {onSave ? (
+                <div className="space-y-2">
+                    {saveError ? (
+                        <p className="text-sm text-destructive">{saveError}</p>
+                    ) : null}
+                    <Button
+                        type="button"
+                        onClick={onSave}
+                        disabled={isSaving}
+                        className="hidden w-full xl:inline-flex"
+                    >
+                        <Save size={16} className="mr-2" />
+                        {isSaving ? 'Guardando...' : 'Guardar presupuesto'}
+                    </Button>
+                </div>
+            ) : null}
         </div>
     );
 }

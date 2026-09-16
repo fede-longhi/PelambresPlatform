@@ -4,6 +4,7 @@ import {
   Calculator,
   FileBox,
   FileInput,
+  FileText,
   Flag,
   Hammer,
   House,
@@ -36,6 +37,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     label: 'Operación',
     links: [
       { name: 'Solicitudes', href: '/admin/quote-requests', icon: FileInput },
+      { name: 'Presupuestos', href: '/admin/quotes', icon: FileText },
       { name: 'Pedidos', href: '/admin/orders', icon: FileBox },
       { name: 'Trabajos', href: '/admin/print-jobs', icon: Hammer },
       { name: 'Clientes', href: '/admin/customers', icon: BookUser },
