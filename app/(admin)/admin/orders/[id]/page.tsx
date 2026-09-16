@@ -16,9 +16,9 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         fetchOrderPrintJobs(id)
     ]);
     const breadcrumbs = [
-        { label: 'Orders', href: '/admin/orders' },
+        { label: 'Pedidos', href: '/admin/orders' },
         {
-            label: `${order.id}`,
+            label: `${order.tracking_code ?? id}`,
             href: `/admin/orders/${id}`,
             active: true,
         },

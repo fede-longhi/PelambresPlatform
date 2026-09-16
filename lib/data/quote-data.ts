@@ -5,11 +5,36 @@ import {
 } from '@/types/definitions';
 import { fetchCustomerById } from '@/lib/data/customer-data';
 import sql from '@/lib/db';
+import {
+  DEFAULT_QUOTE_REQUEST_LIST_FILTER,
+  parseQuoteRequestListFilter,
+  type QuoteRequestListFilter,
+} from '@/lib/consts/quote-request-consts';
+
+export { parseQuoteRequestListFilter, DEFAULT_QUOTE_REQUEST_LIST_FILTER };
+export type { QuoteRequestListFilter };
 
 const ITEMS_PER_PAGE = 6;
 
-export async function fetchFilteredQuotes(query: string, currentPage: number) {
+function buildQuoteRequestFilterSql(filter: QuoteRequestListFilter) {
+  switch (filter) {
+    case 'open':
+      return sql`AND status IN ('new', 'in_progress')`;
+    case 'all':
+      return sql``;
+    default:
+      return sql`AND status = ${filter}`;
+  }
+}
+
+export async function fetchFilteredQuotes(
+  query: string,
+  currentPage: number,
+  filter: QuoteRequestListFilter = DEFAULT_QUOTE_REQUEST_LIST_FILTER
+) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const search = `%${query}%`;
+  const filterSql = buildQuoteRequestFilterSql(filter);
 
   try {
     return await sql<QuoteTable[]>`
@@ -22,14 +47,17 @@ export async function fetchFilteredQuotes(query: string, currentPage: number) {
         email,
         phone,
         detail,
-        customer_id
+        customer_id,
+        status
       FROM quote_requests
-      WHERE
-        COALESCE(first_name, '') ILIKE ${`%${query}%`} OR
-        COALESCE(last_name, '') ILIKE ${`%${query}%`} OR
-        COALESCE(name, '') ILIKE ${`%${query}%`} OR
-        email ILIKE ${`%${query}%`} OR
-        COALESCE(phone, '') ILIKE ${`%${query}%`}
+      WHERE (
+        COALESCE(first_name, '') ILIKE ${search} OR
+        COALESCE(last_name, '') ILIKE ${search} OR
+        COALESCE(name, '') ILIKE ${search} OR
+        email ILIKE ${search} OR
+        COALESCE(phone, '') ILIKE ${search}
+      )
+      ${filterSql}
       ORDER BY date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -39,17 +67,25 @@ export async function fetchFilteredQuotes(query: string, currentPage: number) {
   }
 }
 
-export async function fetchQuotesPages(query: string) {
+export async function fetchQuotesPages(
+  query: string,
+  filter: QuoteRequestListFilter = DEFAULT_QUOTE_REQUEST_LIST_FILTER
+) {
+  const search = `%${query}%`;
+  const filterSql = buildQuoteRequestFilterSql(filter);
+
   try {
     const data = await sql`
       SELECT COUNT(*)
       FROM quote_requests
-      WHERE
-        COALESCE(first_name, '') ILIKE ${`%${query}%`} OR
-        COALESCE(last_name, '') ILIKE ${`%${query}%`} OR
-        COALESCE(name, '') ILIKE ${`%${query}%`} OR
-        email ILIKE ${`%${query}%`} OR
-        COALESCE(phone, '') ILIKE ${`%${query}%`}
+      WHERE (
+        COALESCE(first_name, '') ILIKE ${search} OR
+        COALESCE(last_name, '') ILIKE ${search} OR
+        COALESCE(name, '') ILIKE ${search} OR
+        email ILIKE ${search} OR
+        COALESCE(phone, '') ILIKE ${search}
+      )
+      ${filterSql}
     `;
 
     return Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
@@ -71,7 +107,8 @@ export async function fetchQuoteById(id: string): Promise<QuoteRequestDetail | u
         email,
         phone,
         detail,
-        customer_id
+        customer_id,
+        status
       FROM quote_requests
       WHERE id = ${id}
       LIMIT 1

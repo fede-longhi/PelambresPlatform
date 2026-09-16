@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { PrintJobModelFile, PrintJobWithGcode } from "@/types/definitions";
 import { fetchPrintJob } from "@/lib/data/print-job-data";
 import Breadcrumbs from "@/app/(admin)/admin/_components/breadcrumbs";
@@ -20,10 +21,14 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         fetchPrintJobModels(id)
     ]);
 
+    if (!printJob) {
+        notFound();
+    }
+
     const breadcrumbs = [
-        { label: 'Print Jobs', href: '/admin/print-jobs' },
+        { label: 'Trabajos', href: '/admin/print-jobs' },
         {
-            label: `${id}`,
+            label: printJob.name || id,
             href: `/admin/print-jobs/${id}`,
             active: true,
         },
@@ -56,7 +61,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>General Information</CardTitle>
+                    <CardTitle>Información general</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <ul className="text-sm text-gray-700 space-y-1">
@@ -68,28 +73,50 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                             job.finished_at &&
                             <li><strong>Terminado:</strong> {new Date(job.finished_at).toLocaleString()}</li>
                         }
-                        <li><Link href={`/admin/orders/${job.order_id}`}>ORDER</Link></li>
-                        <li><strong>Nombre:</strong> {job.gcode_filename}</li>
-                        <li><strong>Tamaño:</strong> {(job.gcode_size / 1024).toFixed(2)} KB</li>
-                        <li><strong>Tiempo de impresión:</strong> {secondsToTime(job.estimated_printing_time)}</li>
-                        <li><strong>Subido:</strong> {new Date(job.gcode_uploaded_at).toLocaleString()}</li>
+                        {job.order_id ? (
+                            <li>
+                                <Link href={`/admin/orders/${job.order_id}`} className="text-primary hover:underline">
+                                    Ver pedido
+                                </Link>
+                            </li>
+                        ) : null}
+                        {job.gcode_filename ? (
+                            <li><strong>Nombre:</strong> {job.gcode_filename}</li>
+                        ) : (
+                            <li className="text-muted-foreground">Sin archivo G-code.</li>
+                        )}
+                        {job.gcode_size != null ? (
+                            <li><strong>Tamaño:</strong> {(job.gcode_size / 1024).toFixed(2)} KB</li>
+                        ) : null}
+                        {job.estimated_printing_time != null ? (
+                            <li><strong>Tiempo de impresión:</strong> {secondsToTime(job.estimated_printing_time)}</li>
+                        ) : null}
+                        {job.gcode_uploaded_at ? (
+                            <li><strong>Subido:</strong> {new Date(job.gcode_uploaded_at).toLocaleString()}</li>
+                        ) : null}
                     </ul>
                 </CardContent>
             </Card>
     
-            {job.gcode_filename && (
+            {job.gcode_filename && job.gcode_path ? (
             <section>
                 <h2 className="text-lg font-medium">G-code</h2>
                 <div className="flex items-center bg-primary/20 p-2 rounded space-x-4">
                     <FileBox />
-                    <span>{job.gcode_filename} ({(job.gcode_size / 1024).toFixed(2)} KB)</span>
+                    <span>
+                        {job.gcode_filename}
+                        {job.gcode_size != null ? ` (${(job.gcode_size / 1024).toFixed(2)} KB)` : ''}
+                    </span>
                     <Link href={job.gcode_path} className="flex flex-row items-center rounded p-2 bg-yellow-200 text-secondary-foreground">Descargar<Download className="ml-2" /></Link>
                 </div>
             </section>
-            )}
+            ) : null}
 
             <section>
-                <h2 className="text-lg font-medium">Models</h2>
+                <h2 className="text-lg font-medium">Modelos</h2>
+                {models.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No hay modelos asociados.</p>
+                ) : (
                 <div className="flex flex-col space-y-2 w-fit">
                     {
                         models.map((model) => (
@@ -98,12 +125,13 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
                                     <Box className="mr-2"/>
                                     {model.filename}
                                 </div>
-                                <STLViewer modelUrl={model.path}/>
+                                {model.path ? <STLViewer modelUrl={model.path}/> : null}
                             </div>
                         ))
                     }
 
                 </div>
+                )}
             </section>
         </div>
     );

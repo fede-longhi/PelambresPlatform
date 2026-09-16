@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { PrintJob } from '@/types/definitions';
 import { FAIL_REASONS, GCODE_FOLDER, MODELS_FOLDER } from '@/lib/consts';
 import { insertFormFiles, insertSingleFormFile } from '@/lib/actions/file-storage';
+import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
 
 const FormSchema = z.object({
     id: z.string().optional(),
@@ -38,6 +39,7 @@ export type PrintJobFormState = {
         started_at?: string[];
         finished_at?: string[];
         status?: string[];
+        filament_type?: string[];
     };
     message?: string | null;
     success?: boolean;
@@ -60,12 +62,15 @@ export async function createPrintJob(
     _prevState: PrintJobFormState,
     formData: FormData
 ): Promise<PrintJobFormState> {
+    await requireAdminSessionUserId();
+
     const validatedFields = CreatePrintJob.safeParse({
         name: formData.get('name'),
         order_id: formData.get('order_id'),
         estimated_printing_time: formData.get('estimated_printing_time'),
         started_at: formData.get('started_at'),
         finished_at: formData.get('finished_at'),
+        filament_type: formData.get('filament_type') || 'pla',
     });
 
     if (!validatedFields.success) {
@@ -89,7 +94,7 @@ export async function createPrintJob(
     const insertedGcodeResult = await insertSingleFormFile('gcodeFile', GCODE_FOLDER, formData);
     if (!insertedGcodeResult.success || !insertedGcodeResult.insertedFile) {
         return {
-            errors: {gcode_file: ["Please provide a gcode file"]},
+            errors: {gcode_file: ['Adjuntar un archivo G-code.']},
             message: 'Faltan completar algunos campos.',
             payload: formData,
             success: false,
@@ -126,34 +131,38 @@ export async function createPrintJob(
     }
 
     revalidatePath(`/admin/orders/${order_id}`);
+    revalidatePath('/admin/print-jobs');
     redirect(`/admin/orders/${order_id}`);
 }
 
 export async function startPrintJob(id: string, pathToRevalidate?: string) {
+    await requireAdminSessionUserId();
     const now = new Date().toISOString();
-    console.log(now);
     await sql`UPDATE print_jobs
     SET status='printing', started_at=${now}
     WHERE id = ${id}`;
+    revalidatePath('/admin/print-jobs');
     if (pathToRevalidate) {
         revalidatePath(pathToRevalidate);
     }
 }
 
 export async function deletePrintJob(id: string, pathToRevalidate?: string) {
+    await requireAdminSessionUserId();
     await sql`DELETE FROM print_jobs WHERE id = ${id}`;
-    
+    revalidatePath('/admin/print-jobs');
     if (pathToRevalidate) {
         revalidatePath(pathToRevalidate);
     }
 }
 
 export async function finishPrintJob(id: string, pathToRevalidate?: string) {
+    await requireAdminSessionUserId();
     const now = new Date().toISOString();
     await sql`UPDATE print_jobs
                 SET status='finished', finished_at=${now}
                 WHERE id = ${id}`;
-    
+    revalidatePath('/admin/print-jobs');
     if (pathToRevalidate) {
         revalidatePath(pathToRevalidate);
     }
@@ -164,6 +173,8 @@ export async function failPrintJob(
     prevState: FailPrintJobFormState,
     formData: FormData
 ):Promise<FailPrintJobFormState> {
+    await requireAdminSessionUserId();
+
     const validatedFields = FailPrintJob.safeParse({
         failReason: formData.get('failReason'),
     });
@@ -183,6 +194,7 @@ export async function failPrintJob(
                 SET status='failed', finished_at=${now}, fail_reason=${failReason ?? null}
                 WHERE id = ${id}`;
     
+    revalidatePath('/admin/print-jobs');
     if (prevState.pathToRevalidate) {
         revalidatePath(prevState.pathToRevalidate);
         if (prevState.redirect) {

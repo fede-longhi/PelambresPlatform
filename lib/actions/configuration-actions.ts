@@ -6,9 +6,10 @@ import { ConfigurationVariable } from "@/types/definitions";
 import { revalidatePath } from 'next/cache';
 
 import sql from '@/lib/db';
+import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
 
 const CreateConfigurationVariable = z.object({
-    key: z.string().min(1, "El campo 'key' es obligatorio."),
+    key: z.string().min(1, "La clave es obligatoria."),
     value: z.string().optional().nullable(),
     data_type: z.string().optional().nullable(),
     category: z.string().optional().nullable(),
@@ -41,6 +42,8 @@ export async function createConfigurationVariableFromForm(
     _prevState: ConfigurationVariableFormState,
     formData: FormData
 ): Promise<ConfigurationVariableFormState> {
+    await requireAdminSessionUserId();
+
     const validatedFields = CreateConfigurationVariable.safeParse({
         key: formData.get("key"),
         value: formData.get("value"),
@@ -91,18 +94,16 @@ export async function updateConfigurationVariableFromForm(
     _prevState: ConfigurationVariableFormState,
     formData: FormData
 ): Promise<ConfigurationVariableFormState> {
+    await requireAdminSessionUserId();
+
     const validatedFields = UpdateConfigurationVariable.safeParse({
         value: formData.get("value"),
         data_type: formData.get("data_type"),
         category: formData.get("category"),
         description: formData.get("description"),
     });
-    
-    console.log('after validate insert');
-    
+  
     if (!validatedFields.success) {
-        console.log('not valid');
-        console.log(validatedFields.error.flatten().fieldErrors);
         return {
             errors: validatedFields.error.flatten().fieldErrors,
             message: "Faltan completar algunos campos.",
@@ -110,7 +111,6 @@ export async function updateConfigurationVariableFromForm(
             success: false,
         };
     }
-    console.log('before getting data');
   
     const { value, data_type, category, description } = validatedFields.data;  
     const now = new Date().toISOString();
@@ -140,6 +140,7 @@ export async function updateConfigurationVariableFromForm(
 }
 
 export async function deleteConfiguration(id: string) {
+    await requireAdminSessionUserId();
     await sql`DELETE FROM configuration WHERE id = ${id}`;
     revalidatePath('/admin/configuration');
 }

@@ -1,20 +1,23 @@
-import Dashboard from "@/app/(admin)/admin/_components/dashboard";
-import { CreateOrder } from "@/app/(admin)/admin/orders/_components/buttons";
-import PageHeader from "@/components/ui/page-header";
-import { Metadata } from "next";
+import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import Dashboard from '@/app/(admin)/admin/_components/dashboard';
+import PageHeader from '@/components/ui/page-header';
+import { CardsSkeleton } from '@/components/shared/skeletons';
 
 export const metadata: Metadata = {
-    title: 'Home',
+  title: 'Inicio',
 };
 
 export default function Page() {
-    return (
-        <div>
-            <PageHeader title="Home" className="mb-6 md:mb-12"/>
-            <div className="mb-2">
-                <CreateOrder />
-            </div>
-            <Dashboard />
-        </div>
-    )
-}       
+  return (
+    <div>
+      <PageHeader title="Inicio" />
+      <p className="mt-2 mb-6 text-sm text-muted-foreground">
+        Lo que hay que atender hoy en el taller, la tienda y las solicitudes.
+      </p>
+      <Suspense fallback={<CardsSkeleton />}>
+        <Dashboard />
+      </Suspense>
+    </div>
+  );
+}

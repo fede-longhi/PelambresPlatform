@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { lusitana } from '@/app/fonts';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createCourse, CourseFormState } from '@/lib/actions/course-actions';
@@ -32,21 +33,20 @@ export default function NewCoursePage() {
     };
 
     return (
-        <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
-            
+        <div className="mx-auto max-w-3xl space-y-8">
             <div className="flex items-center gap-4">
-                <Link href="/admin/courses">
-                    <Button variant="outline" size="icon" className="shrink-0" disabled={isPending}>
-                        <ArrowLeft size={18} />
-                    </Button>
-                </Link>
+                <Button variant="outline" size="icon" asChild className="size-11 shrink-0 md:size-9">
+                    <Link href="/admin/courses" aria-label="Volver al listado">
+                        <ArrowLeft size={18} aria-hidden="true" />
+                    </Link>
+                </Button>
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Crear Nuevo Curso</h1>
-                    <p className="text-slate-500 mt-1">Completa los detalles para publicar una nueva capacitación.</p>
+                    <h1 className={`${lusitana.className} text-2xl font-semibold`}>Nuevo curso</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">Detalles para publicar una nueva capacitación.</p>
                 </div>
             </div>
 
-            <form action={formAction} className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8 space-y-6" aria-busy={isPending}>
+            <form action={formAction} className="space-y-6 rounded-lg border bg-card p-6 md:p-8" aria-busy={isPending}>
                 
                 {/* Mensaje de error general */}
                 <div aria-live="polite" aria-atomic="true">
@@ -83,7 +83,7 @@ export default function NewCoursePage() {
                             name="slug" 
                             value={slug}
                             onChange={(e) => setSlug(e.target.value)}
-                            className="bg-slate-50 font-mono text-sm text-slate-600"
+                            className="bg-muted/40 font-mono text-sm"
                             disabled={isPending}
                             aria-describedby="slug-error"
                         />
@@ -140,7 +140,7 @@ export default function NewCoursePage() {
                             name="shortDescription" 
                             rows={3}
                             defaultValue={state.payload?.get('shortDescription') as string || ''}
-                            className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             disabled={isPending}
                             aria-describedby="shortDescription-error"
                         ></textarea>
@@ -151,14 +151,14 @@ export default function NewCoursePage() {
                         </div>
                     </div>
 
-                    <div className="space-y-2 md:col-span-2 pt-4 border-t border-slate-100">
+                    <div className="space-y-2 border-t pt-4 md:col-span-2">
                         <Label htmlFor="learningObjective">Párrafo Introductorio (Opcional)</Label>
                         <textarea 
                             id="learningObjective" 
                             name="learningObjective" 
                             rows={3}
                             defaultValue={state.payload?.get('learningObjective') as string || ''}
-                            className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                             disabled={isPending}
                         ></textarea>
                     </div>
@@ -170,14 +170,14 @@ export default function NewCoursePage() {
                             name="learningOutcomes" 
                             rows={5}
                             defaultValue={state.payload?.get('learningOutcomes') as string || ''}
-                            className="flex min-h-[120px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                             disabled={isPending}
                         ></textarea>
                     </div>
 
                     {/* --- NUEVA SECCIÓN: LOGÍSTICA Y COMERCIALIZACIÓN --- */}
-                    <div className="md:col-span-2 pt-6 pb-2 border-t border-slate-100">
-                        <h3 className="text-lg font-bold text-slate-900 mb-4">Logística y Comercialización</h3>
+                    <div className="border-t pb-2 pt-6 md:col-span-2">
+                        <h3 className="mb-4 text-lg font-semibold">Logística y comercialización</h3>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
@@ -306,7 +306,7 @@ export default function NewCoursePage() {
                                     rows={2}
                                     placeholder="Ej: Requiere conocimientos básicos de laminado."
                                     defaultValue={state.payload?.get('notes') as string || ''}
-                                    className="flex min-h-[60px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                                    className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                                     disabled={isPending}
                                 ></textarea>
                             </div>
@@ -315,27 +315,25 @@ export default function NewCoursePage() {
                     </div>
                     {/* --- FIN SECCIÓN: LOGÍSTICA --- */}
 
-                    <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100 flex items-center gap-3">
+                    <div className="flex items-center gap-3 space-y-2 border-t pt-2 md:col-span-2">
                         <input 
                             type="checkbox" 
                             id="isPublished" 
                             name="isPublished"
                             defaultChecked={state.payload ? state.payload.get('isPublished') === 'on' : false}
-                            className="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            className="size-5 rounded border-input text-primary focus:ring-ring"
                             disabled={isPending}
                         />
                         <Label htmlFor="isPublished" className="cursor-pointer">Publicar curso inmediatamente</Label>
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                    <Link href="/admin/courses">
-                        <Button type="button" variant="outline" disabled={isPending}>
-                            Cancelar
-                        </Button>
-                    </Link>
-                    <Button type="submit" disabled={isPending} className="bg-slate-900 text-white">
-                        {isPending ? 'Guardando...' : <><Save size={18} className="mr-2" /> Guardar Curso</>}
+                <div className="flex justify-end gap-3 border-t pt-6">
+                    <Button type="button" variant="outline" asChild disabled={isPending}>
+                        <Link href="/admin/courses">Cancelar</Link>
+                    </Button>
+                    <Button type="submit" disabled={isPending}>
+                        {isPending ? 'Guardando...' : <><Save size={18} className="mr-2" aria-hidden="true" /> Guardar curso</>}
                     </Button>
                 </div>
             </form>

@@ -43,8 +43,8 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
     <div className="mx-auto max-w-3xl space-y-8 p-6 md:p-10">
       <div className="flex items-start gap-4">
         <Link href="/admin/store-orders">
-          <Button variant="outline" size="icon" className="shrink-0">
-            <ArrowLeft size={18} />
+          <Button variant="outline" size="icon" className="size-11 shrink-0 md:size-9" aria-label="Volver al listado">
+            <ArrowLeft size={18} aria-hidden="true" />
           </Button>
         </Link>
         <div>

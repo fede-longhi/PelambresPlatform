@@ -16,7 +16,7 @@ export default async function CourseBroadcastPage({ params }: PageProps) {
     const registrants = await fetchBroadcastRegistrants(courseId);
 
     return (
-        <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
+        <div className="mx-auto max-w-5xl space-y-8">
             <BroadcastEmailForm 
                 courseId={courseId} 
                 courseTitle={courseTitle} 

@@ -56,7 +56,7 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
     };
 
     return (
-        <form action={formAction} className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8 space-y-6" aria-busy={isPending}>
+        <form action={formAction} className="space-y-6 rounded-lg border bg-card p-6 md:p-8" aria-busy={isPending}>
             
             <div aria-live="polite" aria-atomic="true">
                 {state.success === false && state.message && (
@@ -92,7 +92,7 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                         name="slug" 
                         value={slug}
                         onChange={(e) => setSlug(e.target.value)}
-                        className="bg-slate-50 font-mono text-sm text-slate-600"
+                        className="bg-muted/40 font-mono text-sm"
                         disabled={isPending}
                         aria-describedby="slug-error"
                     />
@@ -149,7 +149,7 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                         name="shortDescription" 
                         rows={3}
                         defaultValue={(state.payload?.get('shortDescription') as string) ?? initialData.shortDescription}
-                        className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isPending}
                         aria-describedby="shortDescription-error"
                     ></textarea>
@@ -160,14 +160,14 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                     </div>
                 </div>
 
-                <div className="space-y-2 md:col-span-2 pt-4 border-t border-slate-100">
+                <div className="space-y-2 border-t pt-4 md:col-span-2">
                     <Label htmlFor="learningObjective">Párrafo Introductorio (Opcional)</Label>
                     <textarea 
                         id="learningObjective" 
                         name="learningObjective" 
                         rows={3}
                         defaultValue={(state.payload?.get('learningObjective') as string) ?? (initialData.learningObjective || '')}
-                        className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                         disabled={isPending}
                     ></textarea>
                 </div>
@@ -179,14 +179,14 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                         name="learningOutcomes" 
                         rows={5}
                         defaultValue={(state.payload?.get('learningOutcomes') as string) ?? (initialData.learningOutcomes || '')}
-                        className="flex min-h-[120px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                        className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                         disabled={isPending}
                     ></textarea>
                 </div>
 
                 {/* --- NUEVA SECCIÓN: LOGÍSTICA Y COMERCIALIZACIÓN --- */}
-                <div className="md:col-span-2 pt-6 pb-2 border-t border-slate-100">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Logística y Comercialización</h3>
+                <div className="border-t pb-2 pt-6 md:col-span-2">
+                    <h3 className="mb-4 text-lg font-semibold">Logística y comercialización</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
@@ -316,7 +316,7 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                                 rows={2}
                                 placeholder="Ej: Requiere conocimientos básicos de laminado."
                                 defaultValue={(state.payload?.get('notes') as string) ?? (initialData.notes || '')}
-                                className="flex min-h-[60px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm disabled:opacity-50"
+                                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
                                 disabled={isPending}
                             ></textarea>
                         </div>
@@ -325,27 +325,25 @@ export function EditCourseForm({ initialData }: EditCourseFormProps) {
                 </div>
                 {/* --- FIN SECCIÓN: LOGÍSTICA --- */}
 
-                <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100 flex items-center gap-3">
+                <div className="flex items-center gap-3 space-y-2 border-t pt-2 md:col-span-2">
                     <input 
                         type="checkbox" 
                         id="isPublished" 
                         name="isPublished"
                         defaultChecked={state.payload ? state.payload.get('isPublished') === 'on' : initialData.isPublished}
-                        className="h-5 w-5 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                        className="size-5 rounded border-input text-primary focus:ring-ring"
                         disabled={isPending}
                     />
                     <Label htmlFor="isPublished" className="cursor-pointer">Publicar curso inmediatamente</Label>
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                <Link href="/admin/courses">
-                    <Button type="button" variant="outline" disabled={isPending}>
-                        Cancelar
-                    </Button>
-                </Link>
-                <Button type="submit" disabled={isPending} className="bg-slate-900 text-white">
-                    {isPending ? 'Guardando...' : <><Save size={18} className="mr-2" /> Guardar Cambios</>}
+            <div className="flex justify-end gap-3 border-t pt-6">
+                <Button type="button" variant="outline" asChild disabled={isPending}>
+                    <Link href={`/admin/courses/${initialData.id}`}>Cancelar</Link>
+                </Button>
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? 'Guardando...' : <><Save size={18} className="mr-2" aria-hidden="true" /> Guardar cambios</>}
                 </Button>
             </div>
         </form>

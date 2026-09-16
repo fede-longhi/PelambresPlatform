@@ -2,8 +2,7 @@ import { ConfigurationVariable } from "@/types/definitions";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTimeToLocal } from "@/lib/utils";
 import { EditValueButton } from "./buttons";
-import { ActionButton } from "@/components/ui/action-button";
-import { Trash } from "lucide-react";
+import { ConfirmDeleteButton } from "@/components/ui/confirm-delete-button";
 import { deleteConfiguration } from "@/lib/actions/configuration-actions";
 
 export default function ConfigurationTable({configurations, className} : {configurations: ConfigurationVariable[], className?: string}) {
@@ -11,11 +10,11 @@ export default function ConfigurationTable({configurations, className} : {config
         <Table className={className}>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[200px]">Key</TableHead>
-                    <TableHead className="w-[200px]">Value</TableHead>
-                    <TableHead>Data Type</TableHead>
-                    <TableHead>Created at</TableHead>
-                    <TableHead>Last modified at</TableHead>
+                    <TableHead className="w-[200px]">Clave</TableHead>
+                    <TableHead className="w-[200px]">Valor</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Creada</TableHead>
+                    <TableHead>Última modificación</TableHead>
                     <TableHead></TableHead>
                 </TableRow>
             </TableHeader>
@@ -31,7 +30,12 @@ export default function ConfigurationTable({configurations, className} : {config
                                 <TableCell>{formatDateTimeToLocal(configuration.last_modified, 'es-AR')}</TableCell>
                                 <TableCell className="flex flex-row space-x-2">
                                     <EditValueButton configuration={configuration} />
-                                    <ActionButton id={configuration.id} action={deleteConfiguration}> <Trash /> </ActionButton>
+                                    <ConfirmDeleteButton
+                                        ariaLabel={`Eliminar ${configuration.key}`}
+                                        title="Eliminar variable"
+                                        description={`Se eliminará la variable ${configuration.key}.`}
+                                        action={deleteConfiguration.bind(null, configuration.id)}
+                                    />
                                 </TableCell>
                             </TableRow>
                         );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { ADMIN_NAV_SECTIONS } from '@/lib/admin-consts';
+import type { AdminNavBadgeCounts } from '@/lib/data/admin-dashboard-data';
 
 function isNavLinkActive(pathname: string, href: string): boolean {
   if (href === '/admin') {
@@ -13,7 +14,11 @@ function isNavLinkActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function NavLinks() {
+export default function NavLinks({
+  badges,
+}: {
+  badges?: Partial<AdminNavBadgeCounts>;
+}) {
   const pathname = usePathname();
 
   return (
@@ -29,20 +34,27 @@ export default function NavLinks() {
           {section.links.map((link) => {
             const LinkIcon = link.icon;
             const isActive = isNavLinkActive(pathname, link.href);
+            const badgeCount = badges?.[link.href as keyof AdminNavBadgeCounts] ?? 0;
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={clsx(
-                  'flex h-[48px] w-full items-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-primary md:flex-none md:justify-start md:p-2 md:px-3',
+                  'flex h-12 w-full items-center gap-2 rounded-md bg-muted/60 p-3 text-sm font-medium hover:bg-primary/10 hover:text-primary md:flex-none md:justify-start md:p-2 md:px-3',
                   {
-                    'bg-sky-100 text-primary': isActive,
+                    'bg-primary/10 text-primary': isActive,
                   }
                 )}
               >
                 <LinkIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                <span>{link.name}</span>
+                <span className="min-w-0 flex-1 truncate">{link.name}</span>
+                {badgeCount > 0 ? (
+                  <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-primary-foreground">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                ) : null}
               </Link>
             );
           })}

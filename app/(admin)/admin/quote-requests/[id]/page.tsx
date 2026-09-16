@@ -6,7 +6,9 @@ import { fetchQuoteById } from '@/lib/data/quote-data';
 import { formatDateToLocal, getCustomerName } from '@/lib/utils';
 import { lusitana } from '@/app/fonts';
 import QuoteCustomerLinkForm from '../_components/quote-customer-link-form';
+import QuoteStatusForm from '../_components/quote-status-form';
 import { Paperclip } from 'lucide-react';
+import type { QuoteRequestStatus } from '@/lib/consts/quote-request-consts';
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -66,6 +68,12 @@ export default async function Page({ params }: PageProps) {
             <DetailRow label="Email" value={quote.email} />
             <DetailRow label="Teléfono" value={quote.phone} />
             <DetailRow label="Fecha" value={formatDateToLocal(quote.date, 'es-AR')} />
+            <div className="border-t pt-4">
+              <QuoteStatusForm
+                quoteRequestId={quote.id}
+                status={quote.status as QuoteRequestStatus}
+              />
+            </div>
             <div className="space-y-1">
               <dt className="text-sm font-medium text-muted-foreground">Detalle</dt>
               <dd className="whitespace-pre-wrap rounded-md bg-muted/40 p-3 text-sm">

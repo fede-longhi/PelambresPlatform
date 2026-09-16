@@ -26,7 +26,7 @@ export default function CreateForm() {
 
                 <div className="mt-4">
                     <Label htmlFor="amount" className="mb-2">
-                        Amount
+                        Importe
                     </Label>
                     <Input
                         id="amount"
@@ -41,7 +41,7 @@ export default function CreateForm() {
 
                 <div className="mt-4 flex flex-col">
                     <Label htmlFor="estimated-date" className="mb-2">
-                        Estimated Date
+                        Fecha estimada
                     </Label>
                     <Input
                         type="date"
@@ -53,9 +53,9 @@ export default function CreateForm() {
 
                 <div className="flex flex-row space-x-2">
                     <span className="flex-1" />
-                    <Button className="mt-4" type="button" variant="outline" disabled={isPending} onClick={() =>{router.back()}}>Cancel</Button>
+                    <Button className="mt-4" type="button" variant="outline" disabled={isPending} onClick={() =>{router.back()}}>Cancelar</Button>
                     <Button className="mt-4" type="submit" disabled={isPending}>
-                        {isPending ? 'Saving...' : 'Create Order'}
+                        {isPending ? 'Guardando...' : 'Crear pedido'}
                     </Button>
                 </div>
             </div>

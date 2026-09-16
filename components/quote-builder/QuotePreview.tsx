@@ -31,7 +31,9 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(({ met
                         <p className="text-slate-500 mt-2">Presupuesto Comercial</p>
                     </div>
                     <div className="shrink-0 text-right">
-                        <p className="text-xl md:text-2xl font-bold text-slate-800">{meta.quoteNumber}</p>
+                        {meta.showQuoteNumber && meta.quoteNumber.trim() && (
+                            <p className="text-xl md:text-2xl font-bold text-slate-800">{meta.quoteNumber}</p>
+                        )}
                         <p className="text-slate-500 whitespace-nowrap">Fecha: {meta.date}</p>
                     </div>
                 </div>
@@ -39,7 +41,9 @@ export const QuotePreview = forwardRef<HTMLDivElement, QuotePreviewProps>(({ met
                 <div className="mb-12">
                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-2">Preparado para:</h3>
                     <p className="text-lg font-semibold text-slate-800">{meta.clientName || 'Nombre del Cliente'}</p>
-                    <p className="text-slate-600">{meta.clientEmail || 'email@cliente.com'}</p>
+                    {meta.clientEmail.trim() && (
+                        <p className="text-slate-600">{meta.clientEmail}</p>
+                    )}
                 </div>
 
                 <table className="w-full table-fixed text-left border-collapse">

@@ -1,12 +1,35 @@
-import { Order, OrdersSummary, OrderTable } from "@/types/definitions";
+import { Order, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
 import sql from '@/lib/db';
+import {
+  DEFAULT_ORDER_LIST_FILTER,
+  parseOrderListFilter,
+  type OrderListFilter,
+} from '@/lib/consts/order-list-consts';
+
+export { parseOrderListFilter, DEFAULT_ORDER_LIST_FILTER };
+export type { OrderListFilter };
 
 const ITEMS_PER_PAGE = 6;
+
+function buildOrderFilterSql(filter: OrderListFilter) {
+  switch (filter) {
+    case 'open':
+      return sql`AND orders.status IN ('pending', 'in progress')`;
+    case 'all':
+      return sql``;
+    default:
+      return sql`AND orders.status = ${filter}`;
+  }
+}
+
 export async function fetchFilteredOrders(
   query: string,
   currentPage: number,
+  filter: OrderListFilter = DEFAULT_ORDER_LIST_FILTER
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const search = `%${query}%`;
+  const filterSql = buildOrderFilterSql(filter);
 
   try {
     const orders = await sql<OrderTable[]>`
@@ -23,13 +46,15 @@ export async function fetchFilteredOrders(
         customers.type as customer_type
       FROM orders
       JOIN customers ON orders.customer_id = customers.id
-      WHERE
-        orders.status ILIKE ${`%${query}%`} OR
-        orders.tracking_code ILIKE ${`%${query}%`} OR
-        customers.first_name ILIKE ${`%${query}%`} OR
-        customers.last_name ILIKE ${`%${query}%`} OR
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
+      WHERE (
+        orders.status ILIKE ${search} OR
+        orders.tracking_code ILIKE ${search} OR
+        customers.first_name ILIKE ${search} OR
+        customers.last_name ILIKE ${search} OR
+        customers.name ILIKE ${search} OR
+        customers.email ILIKE ${search}
+      )
+      ${filterSql}
       ORDER BY orders.created_date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -41,18 +66,26 @@ export async function fetchFilteredOrders(
   }
 }
 
-export async function fetchOrdersPages(query: string) {
+export async function fetchOrdersPages(
+  query: string,
+  filter: OrderListFilter = DEFAULT_ORDER_LIST_FILTER
+) {
+  const search = `%${query}%`;
+  const filterSql = buildOrderFilterSql(filter);
+
   try {
     const data = await sql`SELECT COUNT(*)
     FROM orders
     JOIN customers ON orders.customer_id = customers.id
-    WHERE
-        orders.status ILIKE ${`%${query}%`} OR
-        orders.tracking_code ILIKE ${`%${query}%`} OR
-        customers.first_name ILIKE ${`%${query}%`} OR
-        customers.last_name ILIKE ${`%${query}%`} OR
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`}
+    WHERE (
+        orders.status ILIKE ${search} OR
+        orders.tracking_code ILIKE ${search} OR
+        customers.first_name ILIKE ${search} OR
+        customers.last_name ILIKE ${search} OR
+        customers.name ILIKE ${search} OR
+        customers.email ILIKE ${search}
+    )
+    ${filterSql}
   `;
 
     const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
@@ -112,6 +145,29 @@ export async function fetchLastOrderDetail() {
     } catch (error) {
         console.error('Database Error: ', error);
         throw new Error('Failed to fetch order.');
+    }
+}
+
+export async function fetchOrdersForPrintJobSelect() {
+    try {
+        return await sql<PrintJobOrderOption[]>`
+            SELECT
+                orders.id,
+                orders.tracking_code AS "trackingCode",
+                CASE
+                    WHEN customers.type = 'person'
+                        THEN TRIM(CONCAT(COALESCE(customers.last_name, ''), ', ', COALESCE(customers.first_name, '')))
+                    ELSE customers.name
+                END AS "customerName"
+            FROM orders
+            JOIN customers ON orders.customer_id = customers.id
+            WHERE orders.status IN ('pending', 'in progress', 'finished')
+            ORDER BY orders.created_date DESC
+            LIMIT 40
+        `;
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch orders for print jobs.');
     }
 }
 

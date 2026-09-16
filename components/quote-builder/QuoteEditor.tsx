@@ -2,6 +2,7 @@ import { FileText, Calculator, Building, User, Plus, Trash2, BadgePercent, Perce
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { QuoteData, QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
 import { CalculatorModal } from '@/components/quote-builder/CalculatorModal';
 import { useState } from 'react';
@@ -49,12 +50,27 @@ export function QuoteEditor(props: QuoteEditorProps) {
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <Label>N° Presupuesto</Label>
-                            <Input value={meta.quoteNumber} onChange={(e) => setMeta({...meta, quoteNumber: e.target.value})} className="bg-white" />
+                            <Label htmlFor="quote-number">N° Presupuesto</Label>
+                            <Input
+                                id="quote-number"
+                                value={meta.quoteNumber}
+                                onChange={(e) => setMeta({...meta, quoteNumber: e.target.value})}
+                                className="bg-white"
+                            />
+                            <div className="flex items-center gap-2 mt-2">
+                                <Switch
+                                    id="show-quote-number"
+                                    checked={meta.showQuoteNumber}
+                                    onCheckedChange={(checked) => setMeta({ ...meta, showQuoteNumber: checked })}
+                                />
+                                <Label htmlFor="show-quote-number" className="text-xs font-normal text-slate-500">
+                                    Mostrar en el PDF
+                                </Label>
+                            </div>
                         </div>
                         <div>
-                            <Label>Fecha</Label>
-                            <Input type="date" value={meta.date} onChange={(e) => setMeta({...meta, date: e.target.value})} className="bg-white" />
+                            <Label htmlFor="quote-date">Fecha</Label>
+                            <Input id="quote-date" type="date" value={meta.date} onChange={(e) => setMeta({...meta, date: e.target.value})} className="bg-white" />
                         </div>
                     </div>
                     <div>

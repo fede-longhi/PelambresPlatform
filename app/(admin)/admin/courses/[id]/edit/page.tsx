@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { lusitana } from '@/app/fonts';
 import { fetchCourseForEdit } from '@/lib/data/course-data';
 import { EditCourseForm } from './edit-course-form';
 
@@ -26,22 +27,22 @@ export default async function EditCoursePage({ params }: EditCoursePageProps) {
     }
 
     return (
-        <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
-            
+        <div className="mx-auto max-w-3xl space-y-8">
             <div className="flex items-center gap-4">
-                <Link href="/admin/courses">
-                    <Button variant="outline" size="icon" className="shrink-0">
-                        <ArrowLeft size={18} />
-                    </Button>
-                </Link>
+                <Button variant="outline" size="icon" asChild className="size-11 shrink-0 md:size-9">
+                    <Link href={`/admin/courses/${courseId}`} aria-label="Volver al curso">
+                        <ArrowLeft size={18} aria-hidden="true" />
+                    </Link>
+                </Button>
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Editar Curso</h1>
-                    <p className="text-slate-500 mt-1">Modifica los detalles de la capacitación.</p>
+                    <h1 className={`${lusitana.className} text-2xl font-semibold`}>Editar curso</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Detalles de la capacitación.
+                    </p>
                 </div>
             </div>
 
             <EditCourseForm initialData={course} />
-            
         </div>
     );
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { Filament } from '@/types/definitions';
+import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
 
 const FilamentSchema = z.object({
     id: z.string().uuid(),
@@ -33,6 +34,8 @@ export async function createFilament(
     prevState: FilamentFormState,
     formData: FormData
 ) {
+    await requireAdminSessionUserId();
+
     const validatedFields = CreateFilament.safeParse({
         type: formData.get('type'),
         brand: formData.get('brand'),
@@ -79,6 +82,7 @@ export async function createFilament(
 }
 
 export async function deleteFilament(id: string, path: string) {
+    await requireAdminSessionUserId();
     await sql`DELETE FROM filaments WHERE id = ${id}`;
     revalidatePath(path);
     redirect(path);
@@ -90,6 +94,8 @@ export async function updateFilament(
     prevState: FilamentFormState,
     formData: FormData
 ) {
+    await requireAdminSessionUserId();
+
     const validatedFields = UpdateFilament.safeParse({
         type: formData.get('type'),
         brand: formData.get('brand'),

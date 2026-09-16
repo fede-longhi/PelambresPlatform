@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MessageCircle } from 'lucide-react';
+import { ArrowLeft, MessageCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -63,7 +63,14 @@ export default async function StoreTransferCheckoutPage({
 
       <div className="bg-background px-6 py-10 md:py-14">
         <div className="mx-auto max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/store"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+            Volver a la tienda
+          </Link>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold text-heading-foreground md:text-4xl">
               Transferencia bancaria
             </h1>
@@ -219,18 +226,26 @@ export default async function StoreTransferCheckoutPage({
                 Si tenés alguna duda o el archivo no sube, escribinos por
                 WhatsApp con el monto y la referencia del pedido.
               </p>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={cn(
-                  buttonVariants({ variant: 'default' }),
-                  'mt-4 inline-flex items-center justify-center gap-2 border-transparent !bg-[#25D366] !text-white hover:!bg-[#1ebe57]'
-                )}
-              >
-                <MessageCircle size={18} aria-hidden="true" />
-                WhatsApp
-              </a>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(
+                    buttonVariants({ variant: 'default' }),
+                    'inline-flex items-center justify-center gap-2 border-transparent !bg-[#25D366] !text-white hover:!bg-[#1ebe57]'
+                  )}
+                >
+                  <MessageCircle size={18} aria-hidden="true" />
+                  WhatsApp
+                </a>
+                <Button asChild variant="ghost">
+                  <Link href="/store" className="inline-flex items-center gap-2">
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    Volver a la tienda
+                  </Link>
+                </Button>
+              </div>
             </section>
           </>
         ) : null}

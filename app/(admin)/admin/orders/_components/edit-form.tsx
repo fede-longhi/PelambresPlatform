@@ -27,7 +27,7 @@ export default function OrderEditForm({ order }: OrderEditFormProps) {
             <TrackingCodeInput defaultValue={order.tracking_code}/>
 
             <div>
-                <Label htmlFor="estimated_date">Estimated Date</Label>
+                <Label htmlFor="estimated_date">Fecha estimada</Label>
                 <Input type="date" id="estimated_date" name="estimated_date" defaultValue={estimatedDate} className="w-auto"/>
             </div>
 
@@ -38,15 +38,15 @@ export default function OrderEditForm({ order }: OrderEditFormProps) {
             <CustomerSelectField defaultValue={{value: order.customer_id, label: getOrderCustomerName(order)}} />
 
             <div>
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">Importe</Label>
                 <div className="flex items-center">
                     $ <Input type="number" id="amount" name="amount" defaultValue={order.amount} className="w-auto ml-2"/>
                 </div>
             </div>
 
             <div className="flex flex-row justify-center space-x-4 border-t">
-                <Button className="mt-4" type="button" variant="outline" onClick={() =>{router.back()}}>Cancel</Button>
-                <Button className="mt-4" type="submit">Save Changes</Button>
+                <Button className="mt-4" type="button" variant="outline" onClick={() =>{router.back()}}>Cancelar</Button>
+                <Button className="mt-4" type="submit">Guardar cambios</Button>
             </div>
         </form>
     );

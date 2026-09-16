@@ -7,7 +7,7 @@ export default function CustomerDetailCard({customer, className} : {customer: Cu
         <Card className={className}>
             <CardHeader>
                 <CardTitle className="flex items-center">
-                    Details
+                    Datos
                     <span className="flex-1"/>
                     <EditCustomerButton id={customer.id} />
                 </CardTitle>
@@ -16,7 +16,7 @@ export default function CustomerDetailCard({customer, className} : {customer: Cu
                 {
                     customer.type == 'business' && 
                     <div className="flex flex-col">
-                        <span className="text-sm text-gray-500">Name</span>
+                        <span className="text-sm text-gray-500">Nombre</span>
                         <span>{customer.name}</span>
                     </div>
 
@@ -25,11 +25,11 @@ export default function CustomerDetailCard({customer, className} : {customer: Cu
                     customer.type == 'person' && 
                     <>
                         <div className="flex flex-col">
-                            <span className="text-sm text-gray-500">First Name</span>
+                            <span className="text-sm text-gray-500">Nombre</span>
                             <span>{customer.first_name}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-sm text-gray-500">Last Name</span>
+                            <span className="text-sm text-gray-500">Apellido</span>
                             <span>{customer.last_name}</span>
                         </div>
                     </>
@@ -39,7 +39,7 @@ export default function CustomerDetailCard({customer, className} : {customer: Cu
                     <span>{customer.email}</span>
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-sm text-gray-500">Phone</span>
+                    <span className="text-sm text-gray-500">Teléfono</span>
                     <span>{customer.phone}</span>
                 </div>
             </CardContent>

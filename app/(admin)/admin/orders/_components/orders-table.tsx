@@ -3,23 +3,35 @@ import { formatCurrency, formatDateToLocal } from "@/lib/utils";
 import { OrderStatusEditField } from "./status-edit-field";
 import { DeleteOrder, EditOrder } from "./buttons";
 import Link from "next/link";
+import type { OrderListFilter } from "@/lib/consts/order-list-consts";
 
 export default async function OrdersTable({
     query,
     currentPage,
+    filter,
 }: {
     query: string;
     currentPage: number;
+    filter: OrderListFilter;
 }) {
+    const orders = await fetchFilteredOrders(query, currentPage, filter);
 
-    const orders = await fetchFilteredOrders(query, currentPage);
+    if (orders.length === 0) {
+        return (
+            <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+                {filter === 'open'
+                    ? 'No hay pedidos en curso.'
+                    : 'No se encontraron pedidos con esos filtros.'}
+            </div>
+        );
+    }
 
     return (
         <div className="mt-6 flow-root">
         <div className="inline-block min-w-full align-middle">
             <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
             <div className="md:hidden">
-                {orders?.map((order) => (
+                {orders.map((order) => (
                     <div
                         key={order.id}
                         className="mb-2 w-full rounded-md bg-white p-4"
@@ -57,30 +69,30 @@ export default async function OrdersTable({
                 <thead className="rounded-lg text-left text-sm font-normal">
                     <tr>
                         <th scope="col" className="px-3 py-5 font-medium">
-                            Code
+                            Código
                         </th>
                         <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
-                            Customer
+                            Cliente
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                            Amount
+                            Importe
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                            Estimated Date
+                            Fecha estimada
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium">
-                            Created Date
+                            Creado
                         </th>
                         <th scope="col" className="px-3 py-5 font-medium text-center">
-                            Status
+                            Estado
                         </th>
                         <th scope="col" className="relative py-3 pl-6 pr-3">
-                            <span className="sr-only">Edit</span>
+                            <span className="sr-only">Editar</span>
                         </th>
                     </tr>
                 </thead>
                 <tbody className="bg-white">
-                {orders?.map((order) => (
+                {orders.map((order) => (
                     <tr
                     key={order.id}
                     className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"

@@ -97,7 +97,7 @@ export function FeatureAllowlistManager({
                   type="submit"
                   variant="ghost"
                   size="icon"
-                  className="text-destructive hover:text-destructive"
+                  className="size-11 text-destructive hover:text-destructive md:size-9"
                   aria-label={`Quitar a ${user.email} de la lista`}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />

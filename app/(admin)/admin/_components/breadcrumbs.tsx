@@ -14,19 +14,24 @@ export default function Breadcrumbs({
   breadcrumbs: Breadcrumb[];
 }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 block">
+    <nav aria-label="Migas de pan" className="mb-6 block">
       <ol className={clsx(lusitana.className, 'flex text-xl md:text-2xl')}>
         {breadcrumbs.map((breadcrumb, index) => (
           <li
-            key={breadcrumb.href}
-            aria-current={breadcrumb.active}
+            key={`${breadcrumb.href}-${index}`}
             className={clsx(
               breadcrumb.active ? 'text-gray-900' : 'text-gray-500',
             )}
           >
-            <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
+            {breadcrumb.active ? (
+              <span aria-current="page">{breadcrumb.label}</span>
+            ) : (
+              <Link href={breadcrumb.href}>{breadcrumb.label}</Link>
+            )}
             {index < breadcrumbs.length - 1 ? (
-              <span className="mx-3 inline-block">/</span>
+              <span className="mx-3 inline-block" aria-hidden="true">
+                /
+              </span>
             ) : null}
           </li>
         ))}

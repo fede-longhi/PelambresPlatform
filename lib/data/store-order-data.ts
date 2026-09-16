@@ -5,6 +5,14 @@ import type {
   StoreOrderItem,
   StoreOrderTableRow,
 } from '@/types/store-definitions';
+import {
+  DEFAULT_STORE_ORDER_LIST_FILTER,
+  parseStoreOrderListFilter,
+  type StoreOrderListFilter,
+} from '@/lib/consts/store-order-list-consts';
+
+export { parseStoreOrderListFilter, DEFAULT_STORE_ORDER_LIST_FILTER };
+export type { StoreOrderListFilter };
 
 export async function fetchStoreOrderById(
   id: string
@@ -62,12 +70,25 @@ export async function fetchStoreOrderById(
   }
 }
 
+function buildStoreOrderFilterSql(filter: StoreOrderListFilter) {
+  switch (filter) {
+    case 'attention':
+      return sql`AND o.status = 'payment_review'`;
+    case 'all':
+      return sql``;
+    default:
+      return sql`AND o.status = ${filter}`;
+  }
+}
+
 export async function fetchFilteredStoreOrders(
   query: string,
-  currentPage: number
+  currentPage: number,
+  filter: StoreOrderListFilter = DEFAULT_STORE_ORDER_LIST_FILTER
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
   const search = `%${query}%`;
+  const filterSql = buildStoreOrderFilterSql(filter);
 
   try {
     return await sql<StoreOrderTableRow[]>`
@@ -92,7 +113,7 @@ export async function fetchFilteredStoreOrders(
         ORDER BY created_at ASC
         LIMIT 1
       ) i ON true
-      WHERE
+      WHERE (
         o.buyer_email ILIKE ${search}
         OR o.buyer_name ILIKE ${search}
         OR o.status ILIKE ${search}
@@ -101,6 +122,8 @@ export async function fetchFilteredStoreOrders(
         OR COALESCE(o.mp_payment_id, '') ILIKE ${search}
         OR COALESCE(o.transfer_reference, '') ILIKE ${search}
         OR o.id::text ILIKE ${search}
+      )
+      ${filterSql}
       ORDER BY o.created_at DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -110,8 +133,12 @@ export async function fetchFilteredStoreOrders(
   }
 }
 
-export async function fetchStoreOrderPages(query: string) {
+export async function fetchStoreOrderPages(
+  query: string,
+  filter: StoreOrderListFilter = DEFAULT_STORE_ORDER_LIST_FILTER
+) {
   const search = `%${query}%`;
+  const filterSql = buildStoreOrderFilterSql(filter);
 
   try {
     const data = await sql`
@@ -124,7 +151,7 @@ export async function fetchStoreOrderPages(query: string) {
         ORDER BY created_at ASC
         LIMIT 1
       ) i ON true
-      WHERE
+      WHERE (
         o.buyer_email ILIKE ${search}
         OR o.buyer_name ILIKE ${search}
         OR o.status ILIKE ${search}
@@ -133,6 +160,8 @@ export async function fetchStoreOrderPages(query: string) {
         OR COALESCE(o.mp_payment_id, '') ILIKE ${search}
         OR COALESCE(o.transfer_reference, '') ILIKE ${search}
         OR o.id::text ILIKE ${search}
+      )
+      ${filterSql}
     `;
 
     return Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);

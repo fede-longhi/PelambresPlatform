@@ -14,13 +14,19 @@ export default function OrderPrintJobsDetail({orderId, printJobs} : {orderId: st
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-lg font-semibold flex ">
-                    Print jobs
+                <CardTitle className="flex items-center text-lg font-semibold">
+                    Trabajos de impresión
                     <span className="flex-1" />
                     {
                         !isCreateFormOpen &&
-                        <Button size="icon" onClick={() => {setIsCreateFormOpen(true)}}>
-                            <Plus size={24}/>
+                        <Button
+                          type="button"
+                          size="icon"
+                          className="size-11 md:size-9"
+                          aria-label="Agregar trabajo de impresión"
+                          onClick={() => {setIsCreateFormOpen(true)}}
+                        >
+                            <Plus size={20} aria-hidden="true" />
                         </Button>
                     }
                 </CardTitle>
