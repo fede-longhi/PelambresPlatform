@@ -8,6 +8,7 @@ import { lusitana } from '@/app/fonts';
 import QuoteCustomerLinkForm from '../_components/quote-customer-link-form';
 import QuoteStatusForm from '../_components/quote-status-form';
 import { Paperclip } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { QuoteRequestStatus } from '@/lib/consts/quote-request-consts';
 
 type PageProps = {
@@ -58,7 +59,14 @@ export default async function Page({ params }: PageProps) {
         ]}
       />
 
-      <h1 className={`${lusitana.className} mb-6 text-2xl`}>Solicitud de presupuesto</h1>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className={`${lusitana.className} text-2xl`}>Solicitud de presupuesto</h1>
+        <Button asChild>
+          <Link href={`/admin/quotes/create?quoteRequestId=${id}`}>
+            Crear presupuesto
+          </Link>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">

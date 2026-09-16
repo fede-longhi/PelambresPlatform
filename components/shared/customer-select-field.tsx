@@ -28,12 +28,14 @@ export default function CustomerSelectField({
   defaultFirstName,
   defaultLastName,
   defaultBusinessName,
+  onCustomerChange,
 }: {
   defaultValue?: CustomerField;
   defaultEmail?: string;
   defaultFirstName?: string;
   defaultLastName?: string;
   defaultBusinessName?: string;
+  onCustomerChange?: (customer: Customer) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
@@ -115,6 +117,7 @@ export default function CustomerSelectField({
                         value: customer.id,
                         label: getCustomerName(customer),
                       });
+                      onCustomerChange?.(customer);
                       setOpen(false);
                     }}
                   >
@@ -155,6 +158,7 @@ export default function CustomerSelectField({
                     value: customer.id,
                     label: getCustomerName(customer),
                   });
+                  onCustomerChange?.(customer);
                 }
               }}
             />

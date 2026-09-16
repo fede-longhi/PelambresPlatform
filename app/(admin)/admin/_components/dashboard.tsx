@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileInput, FileBox, Hammer, ShoppingBag, Calculator, Plus } from 'lucide-react';
+import { FileInput, FileBox, FileText, Hammer, ShoppingBag, Calculator, Plus } from 'lucide-react';
 import { fetchAdminDashboard } from '@/lib/data/admin-dashboard-data';
 import type {
   AdminDashboardData,
@@ -214,6 +214,12 @@ function DashboardShortcuts() {
       className="flex flex-col gap-3 border-t pt-6 sm:flex-row sm:flex-wrap sm:items-center"
     >
       <Button asChild variant="outline">
+        <Link href="/admin/quotes/create">
+          <Plus className="mr-2 size-4" aria-hidden="true" />
+          Crear presupuesto
+        </Link>
+      </Button>
+      <Button asChild variant="outline">
         <Link href="/admin/orders/create">
           <Plus className="mr-2 size-4" aria-hidden="true" />
           Crear pedido
@@ -225,6 +231,13 @@ function DashboardShortcuts() {
       >
         <FileInput className="size-4 shrink-0" aria-hidden="true" />
         Solicitudes
+      </Link>
+      <Link
+        href="/admin/quotes"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <FileText className="size-4 shrink-0" aria-hidden="true" />
+        Presupuestos
       </Link>
       <Link
         href="/admin/orders"
