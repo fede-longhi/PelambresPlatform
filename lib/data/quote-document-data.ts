@@ -222,6 +222,13 @@ export async function fetchQuoteDocumentById(
       `,
     ]);
 
+    const orderRows = await sql<{ id: string; trackingCode: string }[]>`
+      SELECT id, tracking_code as "trackingCode"
+      FROM orders
+      WHERE quote_id = ${id}
+      LIMIT 1
+    `;
+
     return {
       id: quote.id,
       quoteNumber: Number(quote.quoteNumber),
@@ -245,6 +252,8 @@ export async function fetchQuoteDocumentById(
       updatedAt: asIsoString(quote.updatedAt),
       items: items.map(mapQuoteItem),
       taxes: taxes.map(mapQuoteTax),
+      orderId: orderRows[0]?.id ?? null,
+      orderTrackingCode: orderRows[0]?.trackingCode ?? null,
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -275,5 +284,33 @@ export async function fetchCustomerQuoteDocuments(
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch customer quotes.');
+  }
+}
+
+export async function fetchQuoteDocumentsByRequestId(
+  quoteRequestId: string
+): Promise<QuoteDocumentListItem[]> {
+  try {
+    return await sql<QuoteDocumentListItem[]>`
+      SELECT
+        quotes.id,
+        quotes.quote_number as "quoteNumber",
+        quotes.status,
+        to_char(quotes.quote_date, 'YYYY-MM-DD') as "quoteDate",
+        quotes.client_name as "clientName",
+        quotes.client_email as "clientEmail",
+        quotes.total_cents as "totalCents",
+        quotes.customer_id as "customerId",
+        orders.id as "orderId",
+        orders.tracking_code as "orderTrackingCode"
+      FROM quotes
+      LEFT JOIN orders ON orders.quote_id = quotes.id
+      WHERE quotes.quote_request_id = ${quoteRequestId}
+        AND quotes.deleted_at IS NULL
+      ORDER BY quotes.quote_number DESC
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch quotes for request.');
   }
 }

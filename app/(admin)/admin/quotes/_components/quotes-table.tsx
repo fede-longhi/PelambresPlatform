@@ -1,11 +1,9 @@
 import Link from 'next/link';
 import { fetchFilteredQuoteDocuments } from '@/lib/data/quote-document-data';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
-import {
-  formatQuoteNumber,
-  getQuoteDocumentStatusLabel,
-} from '@/lib/consts/quote-document-consts';
+import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
 import type { QuoteDocumentListFilter } from '@/lib/consts/quote-document-consts';
+import QuoteStatusBadge from './quote-status-badge';
 
 export default async function QuotesTable({
   query,
@@ -46,9 +44,7 @@ export default async function QuotesTable({
                     </p>
                     <p className="text-sm text-gray-500">{quote.clientName}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {getQuoteDocumentStatusLabel(quote.status)}
-                  </span>
+                  <QuoteStatusBadge status={quote.status} />
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <p className="text-sm">
@@ -110,7 +106,7 @@ export default async function QuotesTable({
                     {formatCurrency(quote.totalCents)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {getQuoteDocumentStatusLabel(quote.status)}
+                    <QuoteStatusBadge status={quote.status} />
                   </td>
                 </tr>
               ))}

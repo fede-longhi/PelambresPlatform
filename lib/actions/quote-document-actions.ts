@@ -5,13 +5,18 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
-import { computeQuoteMath, pesosToCents } from '@/lib/quote-math';
+import { computeQuoteMath, getItemTotal, pesosToCents } from '@/lib/quote-math';
+import { formatCurrency, formatDateToLocal } from '@/lib/utils';
+import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
+import { fetchQuoteDocumentById } from '@/lib/data/quote-document-data';
+import { sendQuoteDocumentEmail } from '@/lib/mail/mailer';
 import type { CustomerType } from '@/types/definitions';
 import type { QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
-import type {
-  QuoteDocumentSaveInput,
-  QuoteDocumentSaveResult,
-  QuoteDocumentStatus,
+import {
+  QUOTE_DOCUMENT_STATUSES,
+  type QuoteDocumentSaveInput,
+  type QuoteDocumentSaveResult,
+  type QuoteDocumentStatus,
 } from '@/types/quote-document-definitions';
 
 const CalculatorParamsSchema = z.object({
@@ -65,6 +70,7 @@ export type QuoteDocumentStatusFormState = {
   };
   message?: string | null;
   success?: boolean;
+  savedStatus?: QuoteDocumentStatus;
 };
 
 function revalidateQuotePaths(options: {
@@ -337,7 +343,7 @@ export async function updateQuoteDocumentStatus(
   await requireAdminSessionUserId();
 
   const parsed = z
-    .enum(['draft', 'sent'], {
+    .enum(QUOTE_DOCUMENT_STATUSES, {
       errorMap: () => ({ message: 'Seleccione un estado válido.' }),
     })
     .safeParse(formData.get('status'));
@@ -374,7 +380,11 @@ export async function updateQuoteDocumentStatus(
       quoteRequestId: updated[0].quoteRequestId,
     });
 
-    return { success: true, message: 'Estado actualizado.' };
+    return {
+      success: true,
+      message: 'Estado actualizado.',
+      savedStatus: parsed.data,
+    };
   } catch (error) {
     console.error(error);
     return {
@@ -382,6 +392,84 @@ export async function updateQuoteDocumentStatus(
       success: false,
     };
   }
+}
+
+export type SendQuoteDocumentFormState = {
+  message?: string | null;
+  success?: boolean;
+};
+
+export async function sendQuoteDocumentToCustomer(
+  quoteId: string,
+  _prevState: SendQuoteDocumentFormState,
+  _formData: FormData
+): Promise<SendQuoteDocumentFormState> {
+  await requireAdminSessionUserId();
+
+  const parsedId = z.string().uuid().safeParse(quoteId);
+  if (!parsedId.success) {
+    return { success: false, message: 'Presupuesto inválido.' };
+  }
+
+  const quote = await fetchQuoteDocumentById(parsedId.data);
+  if (!quote) {
+    return { success: false, message: 'No se encontró el presupuesto.' };
+  }
+
+  const clientEmail = quote.clientEmail.trim();
+  if (!clientEmail) {
+    return {
+      success: false,
+      message: 'El presupuesto no tiene un email de cliente para enviar.',
+    };
+  }
+
+  try {
+    await sendQuoteDocumentEmail({
+      to: clientEmail,
+      clientName: quote.clientName || 'cliente',
+      quoteNumber: formatQuoteNumber(quote.quoteNumber),
+      quoteDate: formatDateToLocal(quote.quoteDate, 'es-AR'),
+      items: quote.items.map((item) => ({
+        description: item.description,
+        quantity: String(item.quantity),
+        lineTotal: formatCurrency(Math.round(getItemTotal(item) * 100)),
+      })),
+      subtotal: formatCurrency(quote.subtotalCents),
+      taxes: formatCurrency(quote.taxCents),
+      total: formatCurrency(quote.totalCents),
+      notes: quote.notes || undefined,
+    });
+
+    if (quote.status === 'draft') {
+      await sql`
+        UPDATE quotes
+        SET
+          status = 'sent',
+          updated_at = NOW()
+        WHERE id = ${quote.id}
+          AND deleted_at IS NULL
+          AND status = 'draft'
+      `;
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: 'No se pudo enviar el presupuesto por email.',
+    };
+  }
+
+  revalidateQuotePaths({
+    quoteId: quote.id,
+    customerId: quote.customerId,
+    quoteRequestId: quote.quoteRequestId,
+  });
+
+  return {
+    success: true,
+    message: `Presupuesto enviado a ${clientEmail}.`,
+  };
 }
 
 export async function deleteQuoteDocument(id: string) {

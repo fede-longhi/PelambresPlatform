@@ -15,6 +15,7 @@ interface CustomerFormProps {
     defaultFirstName?: string,
     defaultLastName?: string,
     defaultBusinessName?: string,
+    defaultPhone?: string,
     onSuccess?: (customer?: Customer) => void,
     onCancel?: () => void
 }
@@ -26,6 +27,7 @@ export default function CustomerForm({
     defaultFirstName,
     defaultLastName,
     defaultBusinessName,
+    defaultPhone,
     onSuccess,
     onCancel,
 } : CustomerFormProps) {
@@ -180,7 +182,7 @@ export default function CustomerForm({
                     id="phone"
                     type="text"
                     name="phone"
-                    defaultValue={(state.payload?.get("phone") || "") as string}
+                    defaultValue={(state.payload?.get("phone") || defaultPhone || "") as string}
                     placeholder="Número de teléfono"
                     aria-describedby="phone-error"
                 />

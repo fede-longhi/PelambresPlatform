@@ -61,6 +61,12 @@ export default function QuoteCustomerLinkForm({
         defaultFirstName={nameParts.firstName}
         defaultLastName={nameParts.lastName}
         defaultBusinessName={quoteName}
+        defaultPhone={quotePhone}
+        onCustomerCreated={(customer) => {
+          const formData = new FormData();
+          formData.set('customerId', customer.id);
+          formAction(formData);
+        }}
       />
       <FieldErrorDisplay id="quote-customer-id-error" errors={state.errors?.customerId} />
 

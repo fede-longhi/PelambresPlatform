@@ -1,7 +1,12 @@
 import type { CustomerType } from '@/types/definitions';
 import type { QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
 
-export const QUOTE_DOCUMENT_STATUSES = ['draft', 'sent'] as const;
+export const QUOTE_DOCUMENT_STATUSES = [
+  'draft',
+  'sent',
+  'accepted',
+  'rejected',
+] as const;
 
 export type QuoteDocumentStatus = (typeof QUOTE_DOCUMENT_STATUSES)[number];
 
@@ -14,6 +19,8 @@ export type QuoteDocumentListItem = {
   clientEmail: string;
   totalCents: number;
   customerId: string;
+  orderId?: string | null;
+  orderTrackingCode?: string | null;
 };
 
 export type QuoteDocumentDetail = {
@@ -39,6 +46,8 @@ export type QuoteDocumentDetail = {
   updatedAt: string;
   items: QuoteItem[];
   taxes: TaxItem[];
+  orderId: string | null;
+  orderTrackingCode: string | null;
 };
 
 export type QuoteDocumentSaveItem = {

@@ -250,6 +250,7 @@ export type QuoteStatusFormState = {
   };
   message?: string | null;
   success?: boolean;
+  savedStatus?: string;
 };
 
 export async function updateQuoteRequestStatus(
@@ -298,7 +299,11 @@ export async function updateQuoteRequestStatus(
   revalidatePath(`/admin/quote-requests/${quoteRequestId}`);
   revalidatePath('/admin/quote-requests');
   revalidatePath('/admin');
-  return { success: true, message: 'Estado actualizado.' };
+  return {
+    success: true,
+    message: 'Estado actualizado.',
+    savedStatus: parsed.data,
+  };
 }
 
 async function sendQuoteEmail(

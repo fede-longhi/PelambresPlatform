@@ -3,10 +3,12 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import { fetchQuoteById } from '@/lib/data/quote-data';
+import { fetchQuoteDocumentsByRequestId } from '@/lib/data/quote-document-data';
 import { formatDateToLocal, getCustomerName } from '@/lib/utils';
 import { lusitana } from '@/app/fonts';
 import QuoteCustomerLinkForm from '../_components/quote-customer-link-form';
 import QuoteStatusForm from '../_components/quote-status-form';
+import RelatedQuoteDocuments from '../_components/related-quote-documents';
 import { Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { QuoteRequestStatus } from '@/lib/consts/quote-request-consts';
@@ -26,7 +28,10 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const quote = await fetchQuoteById(id);
+  const [quote, relatedQuotes] = await Promise.all([
+    fetchQuoteById(id),
+    fetchQuoteDocumentsByRequestId(id),
+  ]);
 
   if (!quote) {
     notFound();
@@ -170,6 +175,11 @@ export default async function Page({ params }: PageProps) {
           )}
         </section>
       </div>
+
+      <section className="mt-6 space-y-3 rounded-lg border bg-white p-5 sm:p-6">
+        <h2 className="text-lg font-semibold">Presupuestos</h2>
+        <RelatedQuoteDocuments quotes={relatedQuotes} />
+      </section>
     </div>
   );
 }

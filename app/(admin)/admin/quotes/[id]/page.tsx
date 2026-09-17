@@ -12,6 +12,8 @@ import {
 import { fetchCustomerById } from '@/lib/data/customer-data';
 import QuoteDocumentStatusForm from '../_components/quote-status-form';
 import DeleteQuoteDocumentButton from '../_components/delete-button';
+import SendQuoteEmailButton from '../_components/send-quote-email-button';
+import CreateOrderFromQuoteButton from '../_components/create-order-from-quote-button';
 import type { QuoteDocumentStatus } from '@/types/quote-document-definitions';
 
 export const metadata: Metadata = {
@@ -50,10 +52,27 @@ export default async function Page({ params }: PageProps) {
         <h1 className={`${lusitana.className} text-2xl`}>
           Presupuesto {quoteLabel}
         </h1>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <SendQuoteEmailButton
+            quoteId={quote.id}
+            clientEmail={quote.clientEmail}
+          />
           <Button asChild>
             <Link href={`/admin/quotes/${id}/edit`}>Editar / PDF</Link>
           </Button>
+          {quote.status === 'accepted' && !quote.orderId ? (
+            <CreateOrderFromQuoteButton
+              quoteId={quote.id}
+              totalCents={quote.totalCents}
+            />
+          ) : null}
+          {quote.orderId ? (
+            <Button asChild variant="outline">
+              <Link href={`/admin/orders/${quote.orderId}`}>
+                Ver pedido {quote.orderTrackingCode ?? ''}
+              </Link>
+            </Button>
+          ) : null}
           <DeleteQuoteDocumentButton
             quoteId={id}
             quoteNumber={quoteLabel}
@@ -95,6 +114,24 @@ export default async function Page({ params }: PageProps) {
                   </Link>
                 </dd>
               </div>
+            ) : null}
+            {quote.orderId ? (
+              <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
+                <dt className="font-medium text-muted-foreground">Pedido</dt>
+                <dd>
+                  <Link
+                    href={`/admin/orders/${quote.orderId}`}
+                    className="text-primary hover:underline"
+                  >
+                    {quote.orderTrackingCode ?? 'Ver pedido'}
+                  </Link>
+                </dd>
+              </div>
+            ) : quote.status === 'accepted' ? (
+              <p className="text-sm text-muted-foreground">
+                El presupuesto está aceptado. Creá el pedido cuando quieras seguir con la
+                producción.
+              </p>
             ) : null}
           </dl>
         </section>

@@ -11,6 +11,8 @@ export type { QuoteDocumentStatus };
 export const QUOTE_DOCUMENT_STATUS_LABELS: Record<QuoteDocumentStatus, string> = {
   draft: 'Borrador',
   sent: 'Enviado',
+  accepted: 'Aceptado',
+  rejected: 'Rechazado',
 };
 
 export type QuoteDocumentListFilter = QuoteDocumentStatus | 'all';
@@ -22,6 +24,8 @@ export const QUOTE_DOCUMENT_LIST_FILTERS: {
   { value: 'all', label: 'Todos' },
   { value: 'draft', label: 'Borradores' },
   { value: 'sent', label: 'Enviados' },
+  { value: 'accepted', label: 'Aceptados' },
+  { value: 'rejected', label: 'Rechazados' },
 ];
 
 export const DEFAULT_QUOTE_DOCUMENT_LIST_FILTER: QuoteDocumentListFilter = 'all';
@@ -44,6 +48,22 @@ export function getQuoteDocumentStatusLabel(status: string): string {
   return (
     QUOTE_DOCUMENT_STATUS_LABELS[status as QuoteDocumentStatus] ?? status
   );
+}
+
+export function getQuoteDocumentStatusBadgeClass(status: string): string | undefined {
+  if (status === 'accepted') {
+    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+  }
+
+  if (status === 'rejected') {
+    return 'border-transparent bg-rose-100 text-rose-800 hover:bg-rose-100';
+  }
+
+  if (status === 'sent') {
+    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+  }
+
+  return undefined;
 }
 
 export function formatQuoteNumber(quoteNumber: number | string): string {
