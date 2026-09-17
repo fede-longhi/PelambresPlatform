@@ -14,10 +14,8 @@ export default function Page() {
               },
             ]}
             />
-            <div className="flex w-full">
-                <div className="flex justify-center">
-                    <CreateForm />
-                </div>
+            <div className="w-full max-w-xl">
+                <CreateForm />
             </div>
         </main>
     )

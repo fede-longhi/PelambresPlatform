@@ -1,43 +1,84 @@
-'use server'
+'use server';
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
-import { OrderStatus, OrderStatuses } from '@/types/order-definitions';
+import {
+  ORDER_STATUS_VALUES,
+  OrderStatus,
+  OrderStatuses,
+} from '@/types/order-definitions';
 import { generateCode } from '@/lib/utils';
 import { TRACKING_CODE_CHARACTERS, TRACKING_CODE_LENGTH } from '@/lib/consts';
+import { pesosToCents } from '@/lib/quote-math';
 
 const FormSchema = z.object({
-    id: z.string(),
-    code: z.string(),
-    customerId: z.string(),
-    amount: z.coerce
-        .number()
-        .gt(0, { message: 'Please enter an amount greater than $0.' }),
-    status: z.enum(['pending', 'in progress', 'finished', 'delivered']),
-    estimatedDate: z.coerce.date().optional()
+  id: z.string(),
+  code: z.string(),
+  customerId: z.string().min(1, { message: 'Seleccione un cliente.' }),
+  amount: z.coerce
+    .number({ invalid_type_error: 'Ingrese un importe válido.' })
+    .gt(0, { message: 'Ingrese un importe mayor a $0.' }),
+  status: z.enum(ORDER_STATUS_VALUES, {
+    errorMap: () => ({ message: 'Seleccione un estado válido.' }),
+  }),
+  estimatedDate: z.preprocess(
+    (value) => (value === '' || value == null ? undefined : value),
+    z.coerce.date({
+      errorMap: () => ({ message: 'La fecha estimada es inválida.' }),
+    })
+  ),
 });
 
 const CreateOrder = FormSchema.omit({ id: true });
 
 export type OrderFormState = {
-    errors?: {
-        customerId?: string[],
-        code?: string[],
-        status?: string[],
-        amount?: string[],
-        estimatedDate?: string[],
-    };
-    message?: string | null;
-    payload?: FormData 
+  errors?: {
+    customerId?: string[];
+    code?: string[];
+    status?: string[];
+    amount?: string[];
+    estimatedDate?: string[];
+  };
+  message?: string | null;
+  payload?: FormData;
 };
 
 export type CreateOrderFromQuoteState = {
   message?: string | null;
   success?: boolean;
 };
+
+export type OrderStatusFormState = {
+  errors?: {
+    status?: string[];
+  };
+  message?: string | null;
+  success?: boolean;
+  savedStatus?: OrderStatus;
+};
+
+function revalidateOrderPaths(options: {
+  orderId?: string;
+  customerId?: string;
+  quoteId?: string | null;
+}) {
+  revalidatePath('/admin/orders');
+  revalidatePath('/admin');
+  if (options.orderId) {
+    revalidatePath(`/admin/orders/${options.orderId}`);
+    revalidatePath(`/admin/orders/${options.orderId}/edit`);
+  }
+  if (options.customerId) {
+    revalidatePath(`/admin/customers/${options.customerId}`);
+  }
+  if (options.quoteId) {
+    revalidatePath(`/admin/quotes/${options.quoteId}`);
+    revalidatePath('/admin/quotes');
+  }
+}
 
 async function generateUniqueTrackingCode(tx: typeof sql) {
   for (let attempt = 0; attempt < 10; attempt += 1) {
@@ -57,10 +98,54 @@ async function generateUniqueTrackingCode(tx: typeof sql) {
   throw new Error('TRACKING_CODE');
 }
 
+async function assertTrackingCodeAvailable(
+  tx: typeof sql,
+  code: string,
+  orderId?: string
+) {
+  const existing = orderId
+    ? await tx<{ id: string }[]>`
+        SELECT id
+        FROM orders
+        WHERE tracking_code = ${code}
+          AND id <> ${orderId}
+        LIMIT 1
+      `
+    : await tx<{ id: string }[]>`
+        SELECT id
+        FROM orders
+        WHERE tracking_code = ${code}
+        LIMIT 1
+      `;
+
+  if (existing[0]) {
+    throw new Error('DUPLICATE_CODE');
+  }
+}
+
+async function resolveTrackingCode(
+  tx: typeof sql,
+  rawCode: string,
+  orderId?: string
+) {
+  const trackingCode = rawCode.trim().toUpperCase();
+
+  if (!trackingCode) {
+    return generateUniqueTrackingCode(tx);
+  }
+
+  await assertTrackingCodeAvailable(tx, trackingCode, orderId);
+  return trackingCode;
+}
+
 function addDaysIsoDate(days: number) {
   const estimatedDate = new Date();
   estimatedDate.setDate(estimatedDate.getDate() + days);
   return estimatedDate.toISOString().split('T')[0];
+}
+
+function toIsoDate(date: Date) {
+  return date.toISOString().split('T')[0];
 }
 
 export async function createOrderFromQuote(
@@ -157,20 +242,20 @@ export async function createOrderFromQuote(
         `;
       }
 
-      return { id: inserted[0].id, quoteRequestId: quote.quoteRequestId };
+      return { id: inserted[0].id, quoteRequestId: quote.quoteRequestId, customerId: quote.customerId };
     });
 
     orderId = result.id;
 
-    revalidatePath('/admin/orders');
-    revalidatePath(`/admin/orders/${orderId}`);
-    revalidatePath(`/admin/quotes/${parsedId.data}`);
-    revalidatePath('/admin/quotes');
+    revalidateOrderPaths({
+      orderId,
+      customerId: 'customerId' in result ? result.customerId : undefined,
+      quoteId: parsedId.data,
+    });
     revalidatePath('/admin/quote-requests');
     if ('quoteRequestId' in result && result.quoteRequestId) {
       revalidatePath(`/admin/quote-requests/${result.quoteRequestId}`);
     }
-    revalidatePath('/admin');
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'NOT_FOUND') {
@@ -204,108 +289,271 @@ export async function createOrderFromQuote(
 }
 
 export async function createOrder(
-    _prevState: OrderFormState,
-    formData: FormData
-) {
-    await requireAdminSessionUserId();
-    const validatedFields = CreateOrder.safeParse({
-        customerId: formData.get('customerId'),
-        code: formData.get('code'),
-        status: formData.get('status'),
-        amount: formData.get('amount'),
-        estimatedDate: formData.get('estimatedDate'),
-    });
-  
-    if (!validatedFields.success) {
+  _prevState: OrderFormState,
+  formData: FormData
+): Promise<OrderFormState> {
+  await requireAdminSessionUserId();
+  const validatedFields = CreateOrder.safeParse({
+    customerId: formData.get('customerId'),
+    code: formData.get('code'),
+    status: formData.get('status'),
+    amount: formData.get('amount'),
+    estimatedDate: formData.get('estimatedDate'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+
+  const { customerId, code, status, amount, estimatedDate } =
+    validatedFields.data;
+  const amountInCents = pesosToCents(amount);
+  const createdDate = new Date().toISOString().split('T')[0];
+
+  let orderId: string;
+
+  try {
+    const trackingCode = await resolveTrackingCode(sql, code);
+    const inserted = await sql<{ id: string }[]>`
+      INSERT INTO orders (
+        customer_id,
+        amount,
+        status,
+        created_date,
+        tracking_code,
+        estimated_date
+      )
+      VALUES (
+        ${customerId},
+        ${amountInCents},
+        ${status},
+        ${createdDate},
+        ${trackingCode},
+        ${toIsoDate(estimatedDate)}
+      )
+      RETURNING id
+    `;
+    orderId = inserted[0].id;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'DUPLICATE_CODE') {
         return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Create Invoice.',
-            payload: formData
+          errors: { code: ['Ese código de seguimiento ya está en uso.'] },
+          message: 'Revise los campos. No se pudo crear el pedido.',
+          payload: formData,
         };
+      }
+      if (error.message === 'TRACKING_CODE') {
+        return {
+          message: 'No se pudo generar un código de seguimiento. Probá de nuevo.',
+          payload: formData,
+        };
+      }
     }
 
-    const { customerId, code, status, amount, estimatedDate } = validatedFields.data;
-    const amountInCents = amount * 100;
-    const createdDate = new Date().toISOString().split('T')[0];
+    console.error(error);
+    return { message: 'No se pudo crear el pedido.', payload: formData };
+  }
 
-    try {
-        await sql`
-            INSERT INTO orders (customer_id, amount, status, created_date, tracking_code, estimated_date)
-            VALUES (${customerId}, ${amountInCents}, ${status}, ${createdDate}, ${code}, ${estimatedDate ?? null})
-        `;
-    } catch (error) {
-        console.log(error);
-        return { message: 'Database Error: Failed to Insert Invoice.' };
-    }
-
-    revalidatePath('/admin/orders');
-    redirect('/admin/orders');
+  revalidateOrderPaths({ orderId, customerId });
+  redirect(`/admin/orders/${orderId}`);
 }
 
 export async function updateOrder(
-    id: string,
-    _prevState: OrderFormState,
-    formData: FormData) {
-    await requireAdminSessionUserId();
-    const validatedFields = CreateOrder.safeParse({
-        customerId: formData.get('customerId'),
-        code: formData.get('code'),
-        status: formData.get('status'),
-        amount: formData.get('amount'),
-        estimatedDate: formData.get('estimatedDate'),
-    });
-  
-    if (!validatedFields.success) {
+  id: string,
+  _prevState: OrderFormState,
+  formData: FormData
+): Promise<OrderFormState> {
+  await requireAdminSessionUserId();
+  const validatedFields = CreateOrder.safeParse({
+    customerId: formData.get('customerId'),
+    code: formData.get('code'),
+    status: formData.get('status'),
+    amount: formData.get('amount'),
+    estimatedDate: formData.get('estimatedDate'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Revise los campos. No se pudo guardar el pedido.',
+      payload: formData,
+    };
+  }
+
+  const { customerId, code, status, amount, estimatedDate } =
+    validatedFields.data;
+  const amountInCents = pesosToCents(amount);
+  const deliveredDate = status === 'delivered' ? new Date() : null;
+
+  try {
+    const trackingCode = await resolveTrackingCode(sql, code, id);
+    const updated = await sql<{ id: string }[]>`
+      UPDATE orders
+      SET
+        customer_id = ${customerId},
+        amount = ${amountInCents},
+        status = ${status},
+        tracking_code = ${trackingCode},
+        estimated_date = ${toIsoDate(estimatedDate)},
+        delivered_date = ${deliveredDate}
+      WHERE id = ${id}
+      RETURNING id
+    `;
+
+    if (!updated[0]) {
+      return { message: 'No se encontró el pedido.', payload: formData };
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'DUPLICATE_CODE') {
         return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Create Invoice.',
-            payload: formData
+          errors: { code: ['Ese código de seguimiento ya está en uso.'] },
+          message: 'Revise los campos. No se pudo guardar el pedido.',
+          payload: formData,
         };
+      }
+      if (error.message === 'TRACKING_CODE') {
+        return {
+          message: 'No se pudo generar un código de seguimiento. Probá de nuevo.',
+          payload: formData,
+        };
+      }
     }
 
-    const { customerId, code, status, amount, estimatedDate } = validatedFields.data;
-    const amountInCents = amount * 100;
+    console.error(error);
+    return { message: 'No se pudo guardar el pedido.', payload: formData };
+  }
 
-    try {
-        await sql`
-            UPDATE orders
-            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status},
-                tracking_code = ${code}, estimated_date = ${estimatedDate ?? null}
-            WHERE id = ${id}
-        `;
-    } catch (error) {
-        console.error(error);
-        return { message: 'Database Error: Failed to Update Order.' };
+  revalidateOrderPaths({ orderId: id, customerId });
+  redirect(`/admin/orders/${id}`);
+}
+
+export async function updateOrderStatus(
+  orderId: string,
+  _prevState: OrderStatusFormState,
+  formData: FormData
+): Promise<OrderStatusFormState> {
+  await requireAdminSessionUserId();
+
+  const parsed = z
+    .enum(ORDER_STATUS_VALUES, {
+      errorMap: () => ({ message: 'Seleccione un estado válido.' }),
+    })
+    .safeParse(formData.get('status'));
+
+  if (!parsed.success) {
+    return {
+      errors: { status: ['Seleccione un estado válido.'] },
+      message: 'No se pudo actualizar el estado.',
+      success: false,
+    };
+  }
+
+  const deliveredDate = parsed.data === 'delivered' ? new Date() : null;
+
+  try {
+    const updated = await sql<{ id: string; customerId: string; quoteId: string | null }[]>`
+      UPDATE orders
+      SET
+        status = ${parsed.data},
+        delivered_date = ${deliveredDate}
+      WHERE id = ${orderId}
+      RETURNING id, customer_id as "customerId", quote_id as "quoteId"
+    `;
+
+    if (!updated[0]) {
+      return {
+        message: 'No se encontró el pedido.',
+        success: false,
+      };
     }
 
-    revalidatePath('/admin/orders');
-    redirect('/admin/orders');
+    revalidateOrderPaths({
+      orderId,
+      customerId: updated[0].customerId,
+      quoteId: updated[0].quoteId,
+    });
+
+    return {
+      success: true,
+      message: 'Estado actualizado.',
+      savedStatus: parsed.data,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      message: 'No se pudo actualizar el estado.',
+      success: false,
+    };
+  }
+}
+
+async function setOrderStatus(id: string, status: OrderStatus) {
+  const deliveredDate = status === 'delivered' ? new Date() : null;
+  const updated = await sql<{ id: string; customerId: string; quoteId: string | null }[]>`
+    UPDATE orders
+    SET
+      status = ${status},
+      delivered_date = ${deliveredDate}
+    WHERE id = ${id}
+    RETURNING id, customer_id as "customerId", quote_id as "quoteId"
+  `;
+
+  if (!updated[0]) {
+    return;
+  }
+
+  revalidateOrderPaths({
+    orderId: id,
+    customerId: updated[0].customerId,
+    quoteId: updated[0].quoteId,
+  });
 }
 
 export async function advanceStep(id: string, status: OrderStatus) {
-    await requireAdminSessionUserId();
-    const nextStep = OrderStatuses[status].next;
-    if (nextStep != null) {
-        await sql`UPDATE orders
-                SET status = ${nextStep}
-                WHERE id = ${id}`;
-        revalidatePath('/admin/orders');
-    }
+  await requireAdminSessionUserId();
+  const nextStep = OrderStatuses[status].next;
+  if (nextStep) {
+    await setOrderStatus(id, nextStep);
+  }
 }
 
 export async function goBackStep(id: string, status: OrderStatus) {
-    await requireAdminSessionUserId();
-    const previousStep = OrderStatuses[status].previous;
-    if (previousStep != null) {
-        await sql`UPDATE orders
-                SET status = ${previousStep}
-                WHERE id = ${id}`;
-        revalidatePath('/admin/orders');
-    }
+  await requireAdminSessionUserId();
+  const previousStep = OrderStatuses[status].previous;
+  if (previousStep) {
+    await setOrderStatus(id, previousStep);
+  }
 }
 
 export async function deleteOrder(id: string) {
-    await requireAdminSessionUserId();
-    await sql`DELETE FROM orders WHERE id = ${id}`;
-    revalidatePath('/admin/orders');
+  await requireAdminSessionUserId();
+
+  const printJobs = await sql<{ id: string }[]>`
+    SELECT id
+    FROM print_jobs
+    WHERE order_id = ${id}
+    LIMIT 1
+  `;
+
+  if (printJobs[0]) {
+    return;
+  }
+
+  const deleted = await sql<{ customerId: string; quoteId: string | null }[]>`
+    DELETE FROM orders
+    WHERE id = ${id}
+    RETURNING customer_id as "customerId", quote_id as "quoteId"
+  `;
+
+  revalidateOrderPaths({
+    customerId: deleted[0]?.customerId,
+    quoteId: deleted[0]?.quoteId,
+  });
+  redirect('/admin/orders');
 }

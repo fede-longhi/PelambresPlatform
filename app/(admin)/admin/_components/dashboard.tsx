@@ -17,7 +17,7 @@ const KPI_ITEMS = [
   },
   {
     key: 'activeCustomOrderCount' as const,
-    label: 'Pedidos en curso',
+    label: 'Pedidos activos',
     href: '/admin/orders',
   },
   {

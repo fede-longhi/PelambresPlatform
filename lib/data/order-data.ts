@@ -1,4 +1,5 @@
 import { Order, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
+import type { OrderStatus } from '@/types/order-definitions';
 import sql from '@/lib/db';
 import {
   DEFAULT_ORDER_LIST_FILTER,
@@ -9,7 +10,8 @@ import {
 export { parseOrderListFilter, DEFAULT_ORDER_LIST_FILTER };
 export type { OrderListFilter };
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 12;
+const CUSTOMER_ORDERS_LIMIT = 6;
 
 function buildOrderFilterSql(filter: OrderListFilter) {
   switch (filter) {
@@ -46,13 +48,14 @@ export async function fetchFilteredOrders(
         customers.type as customer_type
       FROM orders
       JOIN customers ON orders.customer_id = customers.id
+      LEFT JOIN quotes ON quotes.id = orders.quote_id
       WHERE (
-        orders.status ILIKE ${search} OR
         orders.tracking_code ILIKE ${search} OR
         customers.first_name ILIKE ${search} OR
         customers.last_name ILIKE ${search} OR
         customers.name ILIKE ${search} OR
-        customers.email ILIKE ${search}
+        customers.email ILIKE ${search} OR
+        CAST(quotes.quote_number AS TEXT) ILIKE ${search}
       )
       ${filterSql}
       ORDER BY orders.created_date DESC
@@ -77,13 +80,14 @@ export async function fetchOrdersPages(
     const data = await sql`SELECT COUNT(*)
     FROM orders
     JOIN customers ON orders.customer_id = customers.id
+    LEFT JOIN quotes ON quotes.id = orders.quote_id
     WHERE (
-        orders.status ILIKE ${search} OR
         orders.tracking_code ILIKE ${search} OR
         customers.first_name ILIKE ${search} OR
         customers.last_name ILIKE ${search} OR
         customers.name ILIKE ${search} OR
-        customers.email ILIKE ${search}
+        customers.email ILIKE ${search} OR
+        CAST(quotes.quote_number AS TEXT) ILIKE ${search}
     )
     ${filterSql}
   `;
@@ -200,7 +204,14 @@ export async function fetchNewestOrder() {
 
 export async function fetchCustomerOrders(id: string) {
     try {
-        const data = await sql`
+        const data = await sql<{
+            id: string;
+            created_date: string;
+            estimated_date: string;
+            status: OrderStatus;
+            tracking_code: string;
+            amount: number;
+        }[]>`
             SELECT
                 id,
                 created_date,
@@ -211,7 +222,7 @@ export async function fetchCustomerOrders(id: string) {
             FROM orders
             WHERE customer_id = ${id}
             ORDER BY created_date DESC
-            LIMIT ${ITEMS_PER_PAGE}
+            LIMIT ${CUSTOMER_ORDERS_LIMIT}
         `;
         return data;
     } catch (error) {
@@ -220,7 +231,7 @@ export async function fetchCustomerOrders(id: string) {
     }
 }
 
-export async function fetchOrderById(id: string) {
+export async function fetchOrderById(id: string): Promise<OrderTable | undefined> {
     try {
         const data = await sql<OrderTable[]>`
           SELECT
@@ -246,12 +257,7 @@ export async function fetchOrderById(id: string) {
             orders.id = ${id}
         `;
 
-        const orders = data.map((order) => ({
-            ...order,
-            amount: order.amount,
-        }));
-    
-        return orders[0];
+        return data[0];
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order with id: ' + id + '.');
