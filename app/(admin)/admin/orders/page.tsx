@@ -40,11 +40,11 @@ export default async function Page(props: {
         </Button>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Pedidos a medida. El filtro En curso muestra pendientes y en producción.
+        Pedidos a medida. El filtro Activos muestra pendientes y en producción.
       </p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Search placeholder="Buscar por código, cliente o estado…" />
+        <Search placeholder="Buscar por código, cliente, email o presupuesto…" />
         <OrdersFilter />
       </div>
 

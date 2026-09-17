@@ -1,12 +1,27 @@
 import { CircleCheck, CircleX, Clock, Hammer, PackageCheck } from "lucide-react";
 
-export type OrderStatus = 'pending' | 'in progress' | 'finished' | 'delivered' | 'cancelled';
+export const ORDER_STATUS_VALUES = [
+    'pending',
+    'in progress',
+    'finished',
+    'delivered',
+    'cancelled',
+] as const;
+
+export type OrderStatus = (typeof ORDER_STATUS_VALUES)[number];
+
+export const ORDER_CREATE_STATUS_VALUES = [
+    'pending',
+    'in progress',
+    'finished',
+    'delivered',
+] as const;
 
 export const OrderStatuses = {
     "pending": { 
         name: "pending",
         previous: null,
-        next: "in progress",
+        next: "in progress" as OrderStatus | null,
         value: 'pending',
         label: 'Pendiente',
         icon: Clock,
@@ -14,28 +29,28 @@ export const OrderStatuses = {
     },
     "in progress": {
         name: "in progress",
-        previous: "pending",
-        next: "finished",
+        previous: "pending" as OrderStatus | null,
+        next: "finished" as OrderStatus | null,
         value: 'in progress',
-        label: 'En curso',
+        label: 'En producción',
         icon: Hammer,
         class: "bg-yellow-500 text-primary-foreground"
     },
     "finished": {
         name: "finished",
-        previous: "in progress",
-        next: "delivered",
+        previous: "in progress" as OrderStatus | null,
+        next: "delivered" as OrderStatus | null,
         value: 'finished',
-        label: 'Terminada',
+        label: 'Terminado',
         icon: CircleCheck,
         class: "bg-green-500 text-primary-foreground"
     },
     "delivered": {
         name: "delivered",
-        previous: "finished",
+        previous: "finished" as OrderStatus | null,
         next: null,
         value: 'delivered',
-        label: 'Entregada',
+        label: 'Entregado',
         icon: PackageCheck,
         class: "bg-primary text-primary-foreground"
     },
@@ -44,8 +59,8 @@ export const OrderStatuses = {
         previous: null,
         next: null,
         value: 'cancelled',
-        label: 'Cancelada',
+        label: 'Cancelado',
         icon: CircleX,
         class: "bg-red-500 text-primary-foreground"
     }
-}
+} as const;
