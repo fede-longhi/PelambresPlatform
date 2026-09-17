@@ -10,9 +10,18 @@ import {
   OrderStatus,
   OrderStatuses,
 } from '@/types/order-definitions';
-import { generateCode } from '@/lib/utils';
-import { TRACKING_CODE_CHARACTERS, TRACKING_CODE_LENGTH } from '@/lib/consts';
+import { formatDateToLocal, generateCode } from '@/lib/utils';
+import {
+  ALLOWED_EXTENSIONS,
+  MAX_FILE_ATTACHMENT_SIZE_BYTES,
+  ORDER_ATTACHMENTS_FOLDER,
+  TRACKING_CODE_CHARACTERS,
+  TRACKING_CODE_LENGTH,
+} from '@/lib/consts';
 import { pesosToCents } from '@/lib/quote-math';
+import { insertFormFiles } from '@/lib/actions/file-storage';
+import { sendOrderStatusEmail } from '@/lib/mail/mailer';
+import type { CustomerType } from '@/types/definitions';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -58,6 +67,25 @@ export type OrderStatusFormState = {
   message?: string | null;
   success?: boolean;
   savedStatus?: OrderStatus;
+  emailStatus?: 'sent' | 'failed' | 'skipped';
+};
+
+export type OrderNotesFormState = {
+  errors?: {
+    notes?: string[];
+  };
+  message?: string | null;
+  success?: boolean;
+};
+
+export type OrderAttachmentsFormState = {
+  message?: string | null;
+  success?: boolean;
+};
+
+export type SendOrderStatusEmailFormState = {
+  message?: string | null;
+  success?: boolean;
 };
 
 function revalidateOrderPaths(options: {
@@ -77,6 +105,105 @@ function revalidateOrderPaths(options: {
   if (options.quoteId) {
     revalidatePath(`/admin/quotes/${options.quoteId}`);
     revalidatePath('/admin/quotes');
+  }
+}
+
+async function insertOrderStatusEvent(
+  tx: typeof sql,
+  orderId: string,
+  fromStatus: OrderStatus | null,
+  toStatus: OrderStatus,
+  userId: string
+) {
+  await tx`
+    INSERT INTO order_status_events (order_id, from_status, to_status, created_by)
+    VALUES (${orderId}, ${fromStatus}, ${toStatus}, ${userId})
+  `;
+}
+
+function getOrderStatusEmailCopy(status: OrderStatus, trackingCode: string) {
+  if (status === 'finished') {
+    return {
+      statusLabel: OrderStatuses.finished.label,
+      body: `Tu pedido ${trackingCode} ya está terminado. Te vamos a contactar para coordinar la entrega.`,
+    };
+  }
+
+  if (status === 'delivered') {
+    return {
+      statusLabel: OrderStatuses.delivered.label,
+      body: `Tu pedido ${trackingCode} fue entregado. ¡Gracias por elegir Pelambres 3D!`,
+    };
+  }
+
+  return null;
+}
+
+async function notifyCustomerOrderStatus(
+  orderId: string,
+  status: OrderStatus
+): Promise<'sent' | 'failed' | 'no-email' | 'not-found' | 'unsupported'> {
+  if (status !== 'finished' && status !== 'delivered') {
+    return 'unsupported';
+  }
+
+  const orders = await sql<{
+    trackingCode: string;
+    estimatedDate: string | null;
+    email: string | null;
+    first_name: string;
+    last_name: string;
+    name: string;
+    customer_type: CustomerType;
+  }[]>`
+    SELECT
+      orders.tracking_code as "trackingCode",
+      orders.estimated_date as "estimatedDate",
+      customers.email,
+      customers.first_name,
+      customers.last_name,
+      customers.name,
+      customers.type as customer_type
+    FROM orders
+    JOIN customers ON customers.id = orders.customer_id
+    WHERE orders.id = ${orderId}
+      AND orders.deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  const order = orders[0];
+  if (!order) {
+    return 'not-found';
+  }
+
+  const recipient = order.email?.trim();
+  if (!recipient) {
+    return 'no-email';
+  }
+
+  const copy = getOrderStatusEmailCopy(status, order.trackingCode);
+  if (!copy) {
+    return 'unsupported';
+  }
+
+  try {
+    await sendOrderStatusEmail({
+      to: recipient,
+      clientName:
+        order.customer_type === 'person'
+          ? (order.first_name ?? '').trim() || order.last_name || 'cliente'
+          : order.name,
+      trackingCode: order.trackingCode,
+      statusLabel: copy.statusLabel,
+      estimatedDate: order.estimatedDate
+        ? formatDateToLocal(order.estimatedDate, 'es-AR')
+        : undefined,
+      body: copy.body,
+    });
+    return 'sent';
+  } catch (error) {
+    console.error(error);
+    return 'failed';
   }
 }
 
@@ -153,7 +280,7 @@ export async function createOrderFromQuote(
   _prevState: CreateOrderFromQuoteState,
   _formData: FormData
 ): Promise<CreateOrderFromQuoteState> {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
 
   const parsedId = z.string().uuid().safeParse(quoteId);
   if (!parsedId.success) {
@@ -168,6 +295,7 @@ export async function createOrderFromQuote(
         SELECT id
         FROM orders
         WHERE quote_id = ${parsedId.data}
+          AND deleted_at IS NULL
         LIMIT 1
       `;
 
@@ -233,6 +361,8 @@ export async function createOrderFromQuote(
         RETURNING id
       `;
 
+      await insertOrderStatusEvent(tx, inserted[0].id, null, 'pending', userId);
+
       if (quote.quoteRequestId) {
         await tx`
           UPDATE quote_requests
@@ -292,7 +422,7 @@ export async function createOrder(
   _prevState: OrderFormState,
   formData: FormData
 ): Promise<OrderFormState> {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
   const validatedFields = CreateOrder.safeParse({
     customerId: formData.get('customerId'),
     code: formData.get('code'),
@@ -338,6 +468,7 @@ export async function createOrder(
       RETURNING id
     `;
     orderId = inserted[0].id;
+    await insertOrderStatusEvent(sql, orderId, null, status, userId);
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'DUPLICATE_CODE') {
@@ -368,7 +499,7 @@ export async function updateOrder(
   _prevState: OrderFormState,
   formData: FormData
 ): Promise<OrderFormState> {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
   const validatedFields = CreateOrder.safeParse({
     customerId: formData.get('customerId'),
     code: formData.get('code'),
@@ -391,6 +522,18 @@ export async function updateOrder(
   const deliveredDate = status === 'delivered' ? new Date() : null;
 
   try {
+    const current = await sql<{ status: OrderStatus }[]>`
+      SELECT status
+      FROM orders
+      WHERE id = ${id}
+        AND deleted_at IS NULL
+      LIMIT 1
+    `;
+
+    if (!current[0]) {
+      return { message: 'No se encontró el pedido.', payload: formData };
+    }
+
     const trackingCode = await resolveTrackingCode(sql, code, id);
     const updated = await sql<{ id: string }[]>`
       UPDATE orders
@@ -402,11 +545,16 @@ export async function updateOrder(
         estimated_date = ${toIsoDate(estimatedDate)},
         delivered_date = ${deliveredDate}
       WHERE id = ${id}
+        AND deleted_at IS NULL
       RETURNING id
     `;
 
     if (!updated[0]) {
       return { message: 'No se encontró el pedido.', payload: formData };
+    }
+
+    if (current[0].status !== status) {
+      await insertOrderStatusEvent(sql, id, current[0].status, status, userId);
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -438,7 +586,7 @@ export async function updateOrderStatus(
   _prevState: OrderStatusFormState,
   formData: FormData
 ): Promise<OrderStatusFormState> {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
 
   const parsed = z
     .enum(ORDER_STATUS_VALUES, {
@@ -454,35 +602,86 @@ export async function updateOrderStatus(
     };
   }
 
-  const deliveredDate = parsed.data === 'delivered' ? new Date() : null;
-
   try {
-    const updated = await sql<{ id: string; customerId: string; quoteId: string | null }[]>`
-      UPDATE orders
-      SET
-        status = ${parsed.data},
-        delivered_date = ${deliveredDate}
+    const current = await sql<{
+      status: OrderStatus;
+      customerId: string;
+      quoteId: string | null;
+    }[]>`
+      SELECT
+        status,
+        customer_id as "customerId",
+        quote_id as "quoteId"
+      FROM orders
       WHERE id = ${orderId}
-      RETURNING id, customer_id as "customerId", quote_id as "quoteId"
+        AND deleted_at IS NULL
+      LIMIT 1
     `;
 
-    if (!updated[0]) {
+    if (!current[0]) {
       return {
         message: 'No se encontró el pedido.',
         success: false,
       };
     }
 
+    if (current[0].status === parsed.data) {
+      return {
+        success: true,
+        message: 'Estado actualizado.',
+        savedStatus: parsed.data,
+        emailStatus: 'skipped',
+      };
+    }
+
+    const deliveredDate = parsed.data === 'delivered' ? new Date() : null;
+    await sql`
+      UPDATE orders
+      SET
+        status = ${parsed.data},
+        delivered_date = ${deliveredDate}
+      WHERE id = ${orderId}
+        AND deleted_at IS NULL
+    `;
+
+    await insertOrderStatusEvent(
+      sql,
+      orderId,
+      current[0].status,
+      parsed.data,
+      userId
+    );
+
+    const shouldSendEmail = formData.get('sendEmail') === 'true';
+    let emailStatus: OrderStatusFormState['emailStatus'] = 'skipped';
+
+    if (shouldSendEmail) {
+      const notifyResult = await notifyCustomerOrderStatus(orderId, parsed.data);
+      if (notifyResult === 'sent') {
+        emailStatus = 'sent';
+      } else if (notifyResult === 'failed') {
+        emailStatus = 'failed';
+      }
+    }
+
     revalidateOrderPaths({
       orderId,
-      customerId: updated[0].customerId,
-      quoteId: updated[0].quoteId,
+      customerId: current[0].customerId,
+      quoteId: current[0].quoteId,
     });
 
     return {
       success: true,
-      message: 'Estado actualizado.',
+      message:
+        emailStatus === 'failed'
+          ? 'Estado actualizado. No se pudo enviar el email al cliente.'
+          : emailStatus === 'sent'
+            ? 'Estado actualizado. Se avisó al cliente por email.'
+            : shouldSendEmail
+              ? 'Estado actualizado. El cliente no tiene email.'
+              : 'Estado actualizado.',
       savedStatus: parsed.data,
+      emailStatus,
     };
   } catch (error) {
     console.error(error);
@@ -493,20 +692,28 @@ export async function updateOrderStatus(
   }
 }
 
-async function setOrderStatus(id: string, status: OrderStatus) {
-  const deliveredDate = status === 'delivered' ? new Date() : null;
+async function setOrderStatus(
+  id: string,
+  fromStatus: OrderStatus,
+  toStatus: OrderStatus,
+  userId: string
+) {
+  const deliveredDate = toStatus === 'delivered' ? new Date() : null;
   const updated = await sql<{ id: string; customerId: string; quoteId: string | null }[]>`
     UPDATE orders
     SET
-      status = ${status},
+      status = ${toStatus},
       delivered_date = ${deliveredDate}
     WHERE id = ${id}
+      AND deleted_at IS NULL
     RETURNING id, customer_id as "customerId", quote_id as "quoteId"
   `;
 
   if (!updated[0]) {
     return;
   }
+
+  await insertOrderStatusEvent(sql, id, fromStatus, toStatus, userId);
 
   revalidateOrderPaths({
     orderId: id,
@@ -516,18 +723,221 @@ async function setOrderStatus(id: string, status: OrderStatus) {
 }
 
 export async function advanceStep(id: string, status: OrderStatus) {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
   const nextStep = OrderStatuses[status].next;
   if (nextStep) {
-    await setOrderStatus(id, nextStep);
+    await setOrderStatus(id, status, nextStep, userId);
   }
 }
 
 export async function goBackStep(id: string, status: OrderStatus) {
-  await requireAdminSessionUserId();
+  const userId = await requireAdminSessionUserId();
   const previousStep = OrderStatuses[status].previous;
   if (previousStep) {
-    await setOrderStatus(id, previousStep);
+    await setOrderStatus(id, status, previousStep, userId);
+  }
+}
+
+export async function sendOrderStatusEmailToCustomer(
+  orderId: string,
+  _prevState: SendOrderStatusEmailFormState,
+  formData: FormData
+): Promise<SendOrderStatusEmailFormState> {
+  await requireAdminSessionUserId();
+
+  const parsedStatus = z
+    .enum(['finished', 'delivered'], {
+      errorMap: () => ({ message: 'Seleccione un aviso válido.' }),
+    })
+    .safeParse(formData.get('status'));
+
+  if (!parsedStatus.success) {
+    return { success: false, message: 'Seleccione un aviso válido.' };
+  }
+
+  const result = await notifyCustomerOrderStatus(orderId, parsedStatus.data);
+
+  if (result === 'sent') {
+    return {
+      success: true,
+      message:
+        parsedStatus.data === 'finished'
+          ? 'Se envió el aviso de pedido terminado.'
+          : 'Se envió el aviso de pedido entregado.',
+    };
+  }
+
+  if (result === 'no-email') {
+    return {
+      success: false,
+      message: 'El cliente no tiene un email para enviar el aviso.',
+    };
+  }
+
+  if (result === 'not-found') {
+    return { success: false, message: 'No se encontró el pedido.' };
+  }
+
+  return { success: false, message: 'No se pudo enviar el email al cliente.' };
+}
+
+export async function updateOrderNotes(
+  orderId: string,
+  _prevState: OrderNotesFormState,
+  formData: FormData
+): Promise<OrderNotesFormState> {
+  await requireAdminSessionUserId();
+
+  const notes = String(formData.get('notes') ?? '');
+  if (notes.length > 4000) {
+    return {
+      errors: { notes: ['Las notas no pueden superar los 4000 caracteres.'] },
+      message: 'No se pudieron guardar las notas.',
+      success: false,
+    };
+  }
+
+  const updated = await sql<{ id: string; customerId: string }[]>`
+    UPDATE orders
+    SET notes = ${notes}
+    WHERE id = ${orderId}
+      AND deleted_at IS NULL
+    RETURNING id, customer_id as "customerId"
+  `;
+
+  if (!updated[0]) {
+    return { message: 'No se encontró el pedido.', success: false };
+  }
+
+  revalidateOrderPaths({
+    orderId,
+    customerId: updated[0].customerId,
+  });
+
+  return { success: true, message: 'Notas guardadas.' };
+}
+
+function getFileExtension(fileName: string) {
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex < 0) {
+    return '';
+  }
+  return fileName.slice(lastDotIndex + 1).toLowerCase();
+}
+
+export async function addOrderAttachments(
+  orderId: string,
+  _prevState: OrderAttachmentsFormState,
+  formData: FormData
+): Promise<OrderAttachmentsFormState> {
+  await requireAdminSessionUserId();
+
+  const filesCount = Number(formData.get('filesCount') ?? 0);
+  if (!filesCount) {
+    return { success: false, message: 'Seleccione al menos un archivo.' };
+  }
+
+  for (let index = 0; index < filesCount; index += 1) {
+    const file = formData.get(`file-${index}`);
+    if (!(file instanceof File) || file.size === 0) {
+      continue;
+    }
+
+    if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
+      return {
+        success: false,
+        message: `El archivo ${file.name} supera el tamaño máximo permitido.`,
+      };
+    }
+
+    const extension = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.has(extension)) {
+      return {
+        success: false,
+        message: `El archivo ${file.name} no tiene un formato permitido.`,
+      };
+    }
+  }
+
+  const order = await sql<{ id: string; customerId: string }[]>`
+    SELECT id, customer_id as "customerId"
+    FROM orders
+    WHERE id = ${orderId}
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  if (!order[0]) {
+    return { success: false, message: 'No se encontró el pedido.' };
+  }
+
+  const uploaded = await insertFormFiles(ORDER_ATTACHMENTS_FOLDER, formData);
+  if (!uploaded.success) {
+    return {
+      success: false,
+      message: uploaded.message ?? 'No se pudieron subir los archivos.',
+    };
+  }
+
+  const files = [
+    ...(uploaded.insertedFiles ?? []),
+    ...(uploaded.existingFiles ?? []),
+  ].filter((file) => file.id);
+
+  if (files.length === 0) {
+    return { success: false, message: 'No se pudieron adjuntar los archivos.' };
+  }
+
+  try {
+    for (const file of files) {
+      const fileId = file.id;
+      if (!fileId) {
+        continue;
+      }
+
+      await sql`
+        INSERT INTO order_attachments (order_id, file_id)
+        VALUES (${orderId}, ${fileId})
+        ON CONFLICT (order_id, file_id) DO NOTHING
+      `;
+    }
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'No se pudieron adjuntar los archivos.' };
+  }
+
+  revalidateOrderPaths({
+    orderId,
+    customerId: order[0].customerId,
+  });
+
+  return { success: true, message: 'Archivos adjuntos.' };
+}
+
+export async function deleteOrderAttachment(attachmentId: string, orderId: string) {
+  await requireAdminSessionUserId();
+
+  const order = await sql<{ id: string }[]>`
+    SELECT id
+    FROM orders
+    WHERE id = ${orderId}
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  if (!order[0]) {
+    return;
+  }
+
+  const deleted = await sql<{ id: string }[]>`
+    DELETE FROM order_attachments
+    WHERE id = ${attachmentId}
+      AND order_id = ${orderId}
+    RETURNING id
+  `;
+
+  if (deleted[0]) {
+    revalidateOrderPaths({ orderId });
   }
 }
 
@@ -546,8 +956,10 @@ export async function deleteOrder(id: string) {
   }
 
   const deleted = await sql<{ customerId: string; quoteId: string | null }[]>`
-    DELETE FROM orders
+    UPDATE orders
+    SET deleted_at = NOW()
     WHERE id = ${id}
+      AND deleted_at IS NULL
     RETURNING customer_id as "customerId", quote_id as "quoteId"
   `;
 

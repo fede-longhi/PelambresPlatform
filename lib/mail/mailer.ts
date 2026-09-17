@@ -4,6 +4,7 @@ import { CourseWelcomeEmail } from "./templates/course-welcome";
 import { CourseConfirmationEmail } from "./templates/course-confirmation";
 import { PasswordResetEmail } from "./templates/password-reset";
 import { QuoteDocumentEmail } from "./templates/quote-document-email";
+import { OrderStatusEmail } from "./templates/order-status-email";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -119,6 +120,32 @@ export async function sendQuoteDocumentEmail(input: {
     to: input.to,
     cc: 'contacto@pelambres.com.ar',
     subject: `Presupuesto ${input.quoteNumber} — Pelambres 3D`,
+    html: emailHtml,
+  });
+}
+
+export async function sendOrderStatusEmail(input: {
+  to: string;
+  clientName: string;
+  trackingCode: string;
+  statusLabel: string;
+  estimatedDate?: string;
+  body: string;
+}) {
+  const emailHtml = await render(
+    OrderStatusEmail({
+      clientName: input.clientName,
+      trackingCode: input.trackingCode,
+      statusLabel: input.statusLabel,
+      estimatedDate: input.estimatedDate,
+      body: input.body,
+    })
+  );
+
+  await sendEmail({
+    to: input.to,
+    cc: 'contacto@pelambres.com.ar',
+    subject: `Pedido ${input.trackingCode} — ${input.statusLabel}`,
     html: emailHtml,
   });
 }

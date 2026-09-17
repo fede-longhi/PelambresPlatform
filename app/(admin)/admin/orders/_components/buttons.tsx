@@ -75,7 +75,7 @@ export function DeleteOrder({
   if (hasPrintJobs) {
     return (
       <p className="self-center text-sm text-muted-foreground">
-        No se puede eliminar un pedido con trabajos de impresión.
+        No se puede archivar un pedido con trabajos de impresión.
       </p>
     );
   }
@@ -87,10 +87,11 @@ export function DeleteOrder({
     <ConfirmDeleteButton
       variant="outline"
       className="text-destructive hover:text-destructive"
-      label="Eliminar"
-      ariaLabel={`Eliminar pedido${codeLabel}`}
-      title="Eliminar pedido"
-      description={`Se va a eliminar el pedido${codeLabel}. Esta acción no se puede deshacer.`}
+      label="Archivar"
+      confirmLabel="Archivar"
+      ariaLabel={`Archivar pedido${codeLabel}`}
+      title="Archivar pedido"
+      description={`Se va a archivar el pedido${codeLabel}. Esta acción no se puede deshacer.`}
       action={deleteOrderWithId}
     />
   );

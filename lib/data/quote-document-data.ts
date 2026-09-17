@@ -226,6 +226,7 @@ export async function fetchQuoteDocumentById(
       SELECT id, tracking_code as "trackingCode"
       FROM orders
       WHERE quote_id = ${id}
+        AND deleted_at IS NULL
       LIMIT 1
     `;
 
@@ -304,7 +305,7 @@ export async function fetchQuoteDocumentsByRequestId(
         orders.id as "orderId",
         orders.tracking_code as "orderTrackingCode"
       FROM quotes
-      LEFT JOIN orders ON orders.quote_id = quotes.id
+      LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.quote_request_id = ${quoteRequestId}
         AND quotes.deleted_at IS NULL
       ORDER BY quotes.quote_number DESC
@@ -312,5 +313,27 @@ export async function fetchQuoteDocumentsByRequestId(
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch quotes for request.');
+  }
+}
+
+export async function fetchQuoteItemsForOrder(quoteId: string) {
+  try {
+    const rows = await sql<QuoteItemRow[]>`
+      SELECT
+        id,
+        description,
+        quantity,
+        unit_price_cents as "unitPriceCents",
+        discount_percent as "discountPercent",
+        calculator_params as "calculatorParams"
+      FROM quote_items
+      WHERE quote_id = ${quoteId}
+      ORDER BY sort_order ASC, created_at ASC
+    `;
+
+    return rows.map(mapQuoteItem);
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch quote items for order.');
   }
 }

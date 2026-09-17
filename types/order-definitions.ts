@@ -64,3 +64,18 @@ export const OrderStatuses = {
         class: "bg-red-500 text-primary-foreground"
     }
 } as const;
+
+export type OrderStatusEvent = {
+  id: string;
+  fromStatus: OrderStatus | null;
+  toStatus: OrderStatus;
+  createdAt: string;
+};
+
+export type OrderAttachment = {
+  id: string;
+  filename: string;
+  path: string;
+  mimeType: string;
+  size: number;
+};
