@@ -28,14 +28,18 @@ export default function CustomerSelectField({
   defaultFirstName,
   defaultLastName,
   defaultBusinessName,
+  defaultPhone,
   onCustomerChange,
+  onCustomerCreated,
 }: {
   defaultValue?: CustomerField;
   defaultEmail?: string;
   defaultFirstName?: string;
   defaultLastName?: string;
   defaultBusinessName?: string;
+  defaultPhone?: string;
   onCustomerChange?: (customer: Customer) => void;
+  onCustomerCreated?: (customer: Customer) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
@@ -146,11 +150,12 @@ export default function CustomerSelectField({
           </PopoverTrigger>
           <PopoverContent className="flex w-auto max-w-md">
             <CustomerForm
-              key={`${defaultEmail ?? ''}-${defaultFirstName ?? ''}-${defaultLastName ?? ''}-${defaultBusinessName ?? ''}`}
+              key={`${defaultEmail ?? ''}-${defaultFirstName ?? ''}-${defaultLastName ?? ''}-${defaultBusinessName ?? ''}-${defaultPhone ?? ''}`}
               defaultEmail={defaultEmail}
               defaultFirstName={defaultFirstName}
               defaultLastName={defaultLastName}
               defaultBusinessName={defaultBusinessName}
+              defaultPhone={defaultPhone}
               onSuccess={(customer?: Customer) => {
                 setCustomerFormOpen(false);
                 if (customer) {
@@ -159,6 +164,7 @@ export default function CustomerSelectField({
                     label: getCustomerName(customer),
                   });
                   onCustomerChange?.(customer);
+                  onCustomerCreated?.(customer);
                 }
               }}
             />

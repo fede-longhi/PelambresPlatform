@@ -135,7 +135,9 @@ export type OrderTable = {
     email: string,
     phone: string,
     name: string,
-    customer_type: CustomerType 
+    customer_type: CustomerType,
+    quote_id?: string | null,
+    quote_number?: number | null,
 }
 
 export type Order = {
@@ -151,7 +153,9 @@ export type Order = {
     email: string,
     phone: string,
     name: string,
-    customer_type: CustomerType
+    customer_type: CustomerType,
+    quote_id?: string | null,
+    quote_number?: number | null,
 }
 
 export type OrdersSummary = {

@@ -2,10 +2,8 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchCustomerQuoteDocuments } from '@/lib/data/quote-document-data';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
-import {
-  formatQuoteNumber,
-  getQuoteDocumentStatusLabel,
-} from '@/lib/consts/quote-document-consts';
+import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
+import QuoteStatusBadge from './quote-status-badge';
 
 export default async function CustomerLastQuotes({
   id,
@@ -37,9 +35,7 @@ export default async function CustomerLastQuotes({
                   <span className="font-medium">
                     Nº {formatQuoteNumber(quote.quoteNumber)}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    {getQuoteDocumentStatusLabel(quote.status)}
-                  </span>
+                  <QuoteStatusBadge status={quote.status} />
                   <span className="text-sm">
                     {formatCurrency(quote.totalCents)}
                   </span>

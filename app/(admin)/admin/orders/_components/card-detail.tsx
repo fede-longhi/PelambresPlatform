@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderTable } from "@/types/definitions";
 import { OrderStatusEditField } from "./status-edit-field";
 import { formatDateToLocal } from "@/lib/utils";
+import { formatQuoteNumber } from "@/lib/consts/quote-document-consts";
 import { EditOrder } from "./buttons";
+import Link from "next/link";
 
 function OrderDetailCard ({order} : {order: OrderTable}) {
   return (
@@ -33,6 +35,17 @@ function OrderDetailCard ({order} : {order: OrderTable}) {
         <p className="text-sm text-gray-600">
           <span className="font-medium">Creado:</span> {formatDateToLocal(order.created_date, 'es-AR')}
         </p>
+        {order.quote_id ? (
+          <p className="text-sm text-gray-600">
+            <span className="font-medium">Presupuesto:</span>{' '}
+            <Link
+              href={`/admin/quotes/${order.quote_id}`}
+              className="text-primary hover:underline"
+            >
+              Nº {formatQuoteNumber(order.quote_number ?? 0)}
+            </Link>
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

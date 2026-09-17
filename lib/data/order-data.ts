@@ -230,6 +230,8 @@ export async function fetchOrderById(id: string) {
             orders.status,
             orders.tracking_code,
             orders.amount,
+            orders.quote_id,
+            quotes.quote_number,
             customers.id as customer_id,
             customers.first_name,
             customers.last_name,
@@ -239,6 +241,7 @@ export async function fetchOrderById(id: string) {
             customers.type as customer_type
           FROM orders
           JOIN customers ON orders.customer_id = customers.id
+          LEFT JOIN quotes ON quotes.id = orders.quote_id
           WHERE
             orders.id = ${id}
         `;

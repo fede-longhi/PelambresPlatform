@@ -3,6 +3,7 @@ import { render } from "@react-email/render";
 import { CourseWelcomeEmail } from "./templates/course-welcome";
 import { CourseConfirmationEmail } from "./templates/course-confirmation";
 import { PasswordResetEmail } from "./templates/password-reset";
+import { QuoteDocumentEmail } from "./templates/quote-document-email";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -16,13 +17,15 @@ type SendEmailOptions = {
     to: string;
     subject: string;
     html: string;
+    cc?: string;
 };
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions) {
+export async function sendEmail({ to, subject, html, cc }: SendEmailOptions) {
     try {
         await transporter.sendMail({
             from: `"Pelambres 3D" <${process.env.GOOGLE_MAIL_USER}>`,
             to,
+            cc,
             subject,
             html,
         });
@@ -84,6 +87,38 @@ export async function sendPasswordResetEmail(
   await sendEmail({
     to,
     subject: 'Restablecé tu contraseña — Pelambres 3D',
+    html: emailHtml,
+  });
+}
+
+export async function sendQuoteDocumentEmail(input: {
+  to: string;
+  clientName: string;
+  quoteNumber: string;
+  quoteDate: string;
+  items: { description: string; quantity: string; lineTotal: string }[];
+  subtotal: string;
+  taxes: string;
+  total: string;
+  notes?: string;
+}) {
+  const emailHtml = await render(
+    QuoteDocumentEmail({
+      clientName: input.clientName,
+      quoteNumber: input.quoteNumber,
+      quoteDate: input.quoteDate,
+      items: input.items,
+      subtotal: input.subtotal,
+      taxes: input.taxes,
+      total: input.total,
+      notes: input.notes,
+    })
+  );
+
+  await sendEmail({
+    to: input.to,
+    cc: 'contacto@pelambres.com.ar',
+    subject: `Presupuesto ${input.quoteNumber} — Pelambres 3D`,
     html: emailHtml,
   });
 }
