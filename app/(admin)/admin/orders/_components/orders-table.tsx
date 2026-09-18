@@ -24,7 +24,9 @@ export default async function OrdersTable({
           ? 'No hay pedidos activos.'
           : filter === 'unpaid'
             ? 'No hay pedidos sin pagar.'
-            : 'No se encontraron pedidos con esos filtros.'}
+            : filter === 'overdue'
+              ? 'No hay pedidos con la fecha estimada vencida.'
+              : 'No se encontraron pedidos con esos filtros.'}
       </div>
     );
   }
