@@ -1,5 +1,12 @@
 import { Order, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
-import type { OrderAttachment, OrderStatus } from '@/types/order-definitions';
+import type {
+  OrderAttachment,
+  OrderPayment,
+  OrderPaymentKind,
+  OrderPaymentMethod,
+  OrderPaymentStatus,
+  OrderStatus,
+} from '@/types/order-definitions';
 import sql from '@/lib/db';
 import {
   DEFAULT_ORDER_LIST_FILTER,
@@ -17,6 +24,9 @@ function buildOrderFilterSql(filter: OrderListFilter) {
   switch (filter) {
     case 'open':
       return sql`AND orders.status IN ('pending', 'in progress')`;
+    case 'unpaid':
+      return sql`AND orders.payment_status IN ('pending', 'deposit', 'partial')
+        AND orders.status <> 'cancelled'`;
     case 'all':
       return sql``;
     default:
@@ -42,6 +52,9 @@ export async function fetchFilteredOrders(
         orders.status,
         orders.tracking_code,
         orders.amount,
+        orders.payment_status,
+        orders.paid_amount_cents,
+        orders.paid_at,
         customers.first_name,
         customers.last_name,
         customers.name,
@@ -217,6 +230,7 @@ export async function fetchCustomerOrders(id: string) {
             status: OrderStatus;
             tracking_code: string;
             amount: number;
+            payment_status: OrderPaymentStatus;
         }[]>`
             SELECT
                 id,
@@ -224,7 +238,8 @@ export async function fetchCustomerOrders(id: string) {
                 estimated_date,
                 status,
                 tracking_code,
-                amount
+                amount,
+                payment_status
             FROM orders
             WHERE customer_id = ${id}
               AND deleted_at IS NULL
@@ -251,6 +266,9 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
             orders.quote_id,
             quotes.quote_number,
             orders.notes,
+            orders.payment_status,
+            orders.paid_amount_cents,
+            orders.paid_at,
             customers.id as customer_id,
             customers.first_name,
             customers.last_name,
@@ -266,7 +284,22 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
             AND orders.deleted_at IS NULL
         `;
 
-        return data[0];
+        const order = data[0];
+        if (!order) {
+          return undefined;
+        }
+
+        const paidAt = order.paid_at as string | Date | null | undefined;
+
+        return {
+          ...order,
+          paid_amount_cents: Number(order.paid_amount_cents ?? 0),
+          paid_at: paidAt
+            ? paidAt instanceof Date
+              ? paidAt.toISOString()
+              : String(paidAt)
+            : null,
+        };
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order with id: ' + id + '.');
@@ -402,5 +435,42 @@ export async function fetchOrderAttachments(orderId: string) {
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order attachments.');
+    }
+}
+
+export async function fetchOrderPayments(orderId: string) {
+    try {
+        const payments = await sql<{
+            id: string;
+            amountCents: number;
+            kind: OrderPaymentKind;
+            method: OrderPaymentMethod;
+            notes: string;
+            paidAt: string | Date;
+        }[]>`
+            SELECT
+                id,
+                amount_cents as "amountCents",
+                kind,
+                method,
+                notes,
+                paid_at as "paidAt"
+            FROM order_payments
+            WHERE order_id = ${orderId}
+              AND deleted_at IS NULL
+            ORDER BY paid_at ASC, created_at ASC
+        `;
+
+        return payments.map((payment) => ({
+            ...payment,
+            amountCents: Number(payment.amountCents),
+            paidAt:
+                payment.paidAt instanceof Date
+                    ? payment.paidAt.toISOString()
+                    : String(payment.paidAt),
+        })) satisfies OrderPayment[];
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order payments.');
     }
 }

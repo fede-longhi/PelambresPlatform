@@ -26,6 +26,7 @@ export type AdminDashboardData = {
   kpis: {
     unlinkedQuoteCount: number;
     activeCustomOrderCount: number;
+    unpaidCustomOrderCount: number;
     paymentReviewCount: number;
     activePrintJobCount: number;
     overdueOrderCount: number;
@@ -112,6 +113,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
     const [
       unlinkedQuotesCount,
       activeCustomOrdersCount,
+      unpaidCustomOrdersCount,
       paymentReviewCount,
       activePrintJobsCount,
       overdueOrdersCount,
@@ -137,6 +139,13 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         SELECT COUNT(*) AS count
         FROM orders
         WHERE status IN ('pending', 'in progress')
+          AND deleted_at IS NULL
+      `,
+      sql<CountRow[]>`
+        SELECT COUNT(*) AS count
+        FROM orders
+        WHERE payment_status IN ('pending', 'deposit', 'partial')
+          AND status <> 'cancelled'
           AND deleted_at IS NULL
       `,
       sql<CountRow[]>`
@@ -304,6 +313,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       kpis: {
         unlinkedQuoteCount: toNumber(unlinkedQuotesCount[0]?.count),
         activeCustomOrderCount: toNumber(activeCustomOrdersCount[0]?.count),
+        unpaidCustomOrderCount: toNumber(unpaidCustomOrdersCount[0]?.count),
         paymentReviewCount: toNumber(paymentReviewCount[0]?.count),
         activePrintJobCount: toNumber(activePrintJobsCount[0]?.count),
         overdueOrderCount: toNumber(overdueOrdersCount[0]?.count),
@@ -331,11 +341,12 @@ export type AdminNavBadgeCounts = {
   '/admin/quote-requests': number;
   '/admin/store-orders': number;
   '/admin/print-jobs': number;
+  '/admin/orders': number;
 };
 
 export async function fetchAdminNavBadges(): Promise<AdminNavBadgeCounts> {
   try {
-    const [openQuotes, paymentReviews, activePrintJobs] = await Promise.all([
+    const [openQuotes, paymentReviews, activePrintJobs, unpaidOrders] = await Promise.all([
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
         FROM quote_requests
@@ -351,12 +362,20 @@ export async function fetchAdminNavBadges(): Promise<AdminNavBadgeCounts> {
         FROM print_jobs
         WHERE status IN ('pending', 'printing', 'postprocess')
       `,
+      sql<CountRow[]>`
+        SELECT COUNT(*) AS count
+        FROM orders
+        WHERE payment_status IN ('pending', 'deposit', 'partial')
+          AND status <> 'cancelled'
+          AND deleted_at IS NULL
+      `,
     ]);
 
     return {
       '/admin/quote-requests': toNumber(openQuotes[0]?.count),
       '/admin/store-orders': toNumber(paymentReviews[0]?.count),
       '/admin/print-jobs': toNumber(activePrintJobs[0]?.count),
+      '/admin/orders': toNumber(unpaidOrders[0]?.count),
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -364,6 +383,7 @@ export async function fetchAdminNavBadges(): Promise<AdminNavBadgeCounts> {
       '/admin/quote-requests': 0,
       '/admin/store-orders': 0,
       '/admin/print-jobs': 0,
+      '/admin/orders': 0,
     };
   }
 }

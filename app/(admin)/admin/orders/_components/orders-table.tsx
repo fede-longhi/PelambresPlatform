@@ -4,6 +4,7 @@ import { isOrderOverdue } from '@/lib/consts/order-list-consts';
 import type { OrderListFilter } from '@/lib/consts/order-list-consts';
 import Link from 'next/link';
 import OrderStatusBadge from './order-status-badge';
+import OrderPaymentBadge from './order-payment-badge';
 
 export default async function OrdersTable({
   query,
@@ -21,7 +22,9 @@ export default async function OrdersTable({
       <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
         {filter === 'open'
           ? 'No hay pedidos activos.'
-          : 'No se encontraron pedidos con esos filtros.'}
+          : filter === 'unpaid'
+            ? 'No hay pedidos sin pagar.'
+            : 'No se encontraron pedidos con esos filtros.'}
       </div>
     );
   }
@@ -47,7 +50,10 @@ export default async function OrdersTable({
                         {getOrderCustomerName(order)}
                       </p>
                     </div>
-                    <OrderStatusBadge status={order.status} />
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <OrderStatusBadge status={order.status} />
+                      <OrderPaymentBadge status={order.payment_status} />
+                    </div>
                   </div>
                   <div className="flex w-full items-center justify-between pt-4">
                     <div>
@@ -93,6 +99,9 @@ export default async function OrdersTable({
                 <th scope="col" className="px-3 py-5 font-medium">
                   Estado
                 </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Pago
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -136,6 +145,9 @@ export default async function OrdersTable({
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
                       <OrderStatusBadge status={order.status} />
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-3">
+                      <OrderPaymentBadge status={order.payment_status} />
                     </td>
                   </tr>
                 );

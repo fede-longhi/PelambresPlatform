@@ -6,11 +6,14 @@ import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { requireAdminSessionUserId } from '@/lib/auth/require-admin';
 import {
+  ORDER_PAYMENT_KIND_VALUES,
+  ORDER_PAYMENT_METHOD_VALUES,
   ORDER_STATUS_VALUES,
+  OrderPaymentKind,
   OrderStatus,
   OrderStatuses,
 } from '@/types/order-definitions';
-import { formatDateToLocal, generateCode } from '@/lib/utils';
+import { formatCurrency, formatDateToLocal, generateCode } from '@/lib/utils';
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILE_ATTACHMENT_SIZE_BYTES,
@@ -22,6 +25,7 @@ import { pesosToCents } from '@/lib/quote-math';
 import { insertFormFiles } from '@/lib/actions/file-storage';
 import { sendOrderStatusEmail } from '@/lib/mail/mailer';
 import type { CustomerType } from '@/types/definitions';
+import { deriveOrderPaymentStatus } from '@/lib/consts/order-payment-consts';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -83,6 +87,17 @@ export type OrderAttachmentsFormState = {
   success?: boolean;
 };
 
+export type OrderPaymentFormState = {
+  errors?: {
+    kind?: string[];
+    amount?: string[];
+    method?: string[];
+    notes?: string[];
+  };
+  message?: string | null;
+  success?: boolean;
+};
+
 export type SendOrderStatusEmailFormState = {
   message?: string | null;
   success?: boolean;
@@ -119,6 +134,63 @@ async function insertOrderStatusEvent(
     INSERT INTO order_status_events (order_id, from_status, to_status, created_by)
     VALUES (${orderId}, ${fromStatus}, ${toStatus}, ${userId})
   `;
+}
+
+async function refreshOrderPaymentSummary(tx: typeof sql, orderId: string) {
+  const orders = await tx<{ amount: number }[]>`
+    SELECT amount
+    FROM orders
+    WHERE id = ${orderId}
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  const order = orders[0];
+  if (!order) {
+    throw new Error('NOT_FOUND');
+  }
+
+  const payments = await tx<
+    {
+      amountCents: number;
+      kind: OrderPaymentKind;
+      paidAt: Date | string;
+    }[]
+  >`
+    SELECT
+      amount_cents as "amountCents",
+      kind,
+      paid_at as "paidAt"
+    FROM order_payments
+    WHERE order_id = ${orderId}
+      AND deleted_at IS NULL
+    ORDER BY paid_at ASC, created_at ASC
+  `;
+
+  const paidAmountCents = payments.reduce(
+    (sum, payment) => sum + Number(payment.amountCents),
+    0
+  );
+  const paymentStatus = deriveOrderPaymentStatus(
+    paidAmountCents,
+    Number(order.amount),
+    payments.map((payment) => payment.kind)
+  );
+  const paidAt =
+    paymentStatus === 'paid' && payments.length > 0
+      ? payments[payments.length - 1].paidAt
+      : null;
+
+  await tx`
+    UPDATE orders
+    SET
+      payment_status = ${paymentStatus},
+      paid_amount_cents = ${paidAmountCents},
+      paid_at = ${paidAt}
+    WHERE id = ${orderId}
+  `;
+
+  return { paidAmountCents, paymentStatus };
 }
 
 function getOrderStatusEmailCopy(status: OrderStatus, trackingCode: string) {
@@ -556,6 +628,8 @@ export async function updateOrder(
     if (current[0].status !== status) {
       await insertOrderStatusEvent(sql, id, current[0].status, status, userId);
     }
+
+    await refreshOrderPaymentSummary(sql, id);
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'DUPLICATE_CODE') {
@@ -815,6 +889,222 @@ export async function updateOrderNotes(
   });
 
   return { success: true, message: 'Notas guardadas.' };
+}
+
+const OrderPaymentSchema = z.object({
+  kind: z.enum(ORDER_PAYMENT_KIND_VALUES, {
+    errorMap: () => ({ message: 'Seleccione un tipo de pago válido.' }),
+  }),
+  amount: z.coerce
+    .number({ invalid_type_error: 'Ingrese un importe válido.' })
+    .gt(0, { message: 'Ingrese un importe mayor a $0.' }),
+  method: z.enum(ORDER_PAYMENT_METHOD_VALUES, {
+    errorMap: () => ({ message: 'Seleccione un método de pago.' }),
+  }),
+  notes: z
+    .string()
+    .trim()
+    .max(500, { message: 'Las notas no pueden superar los 500 caracteres.' }),
+});
+
+export async function createOrderPayment(
+  orderId: string,
+  _prevState: OrderPaymentFormState,
+  formData: FormData
+): Promise<OrderPaymentFormState> {
+  const userId = await requireAdminSessionUserId();
+
+  const parsedOrderId = z.string().uuid().safeParse(orderId);
+  if (!parsedOrderId.success) {
+    return { success: false, message: 'Pedido inválido.' };
+  }
+
+  const validatedFields = OrderPaymentSchema.safeParse({
+    kind: formData.get('kind'),
+    amount: formData.get('amount'),
+    method: formData.get('method'),
+    notes: String(formData.get('notes') ?? ''),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Revise los campos. No se pudo registrar el pago.',
+      success: false,
+    };
+  }
+
+  const { kind, amount, method, notes } = validatedFields.data;
+  const amountCents = pesosToCents(amount);
+
+  try {
+    const result = await sql.begin(async (tx) => {
+      const orders = await tx<
+        {
+          id: string;
+          amount: number;
+          paidAmountCents: number;
+          customerId: string;
+        }[]
+      >`
+        SELECT
+          id,
+          amount,
+          paid_amount_cents as "paidAmountCents",
+          customer_id as "customerId"
+        FROM orders
+        WHERE id = ${parsedOrderId.data}
+          AND deleted_at IS NULL
+        FOR UPDATE
+      `;
+
+      const order = orders[0];
+      if (!order) {
+        throw new Error('NOT_FOUND');
+      }
+
+      const remainingCents = Math.max(
+        0,
+        Number(order.amount) - Number(order.paidAmountCents)
+      );
+
+      if (remainingCents <= 0) {
+        throw new Error('ALREADY_PAID');
+      }
+
+      if (amountCents > remainingCents) {
+        throw new Error(`OVER_BALANCE:${remainingCents}`);
+      }
+
+      if (kind === 'full' && amountCents !== remainingCents) {
+        throw new Error(`FULL_MISMATCH:${remainingCents}`);
+      }
+
+      await tx`
+        INSERT INTO order_payments (
+          order_id,
+          amount_cents,
+          kind,
+          method,
+          notes,
+          created_by
+        )
+        VALUES (
+          ${parsedOrderId.data},
+          ${amountCents},
+          ${kind},
+          ${method},
+          ${notes},
+          ${userId}
+        )
+      `;
+
+      const summary = await refreshOrderPaymentSummary(tx, parsedOrderId.data);
+      return { ...summary, customerId: order.customerId };
+    });
+
+    revalidateOrderPaths({
+      orderId: parsedOrderId.data,
+      customerId: result.customerId,
+    });
+
+    return {
+      success: true,
+      message:
+        result.paymentStatus === 'paid'
+          ? 'Pedido marcado como pagado.'
+          : 'Pago registrado.',
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'NOT_FOUND') {
+        return { success: false, message: 'No se encontró el pedido.' };
+      }
+      if (error.message === 'ALREADY_PAID') {
+        return {
+          success: false,
+          message: 'Este pedido ya está pagado.',
+        };
+      }
+      if (error.message.startsWith('OVER_BALANCE:')) {
+        const remainingCents = Number(error.message.split(':')[1]);
+        return {
+          errors: {
+            amount: [
+              `El monto supera el saldo (${formatCurrency(remainingCents)}).`,
+            ],
+          },
+          message: 'Revise los campos. No se pudo registrar el pago.',
+          success: false,
+        };
+      }
+      if (error.message.startsWith('FULL_MISMATCH:')) {
+        const remainingCents = Number(error.message.split(':')[1]);
+        return {
+          errors: {
+            amount: [
+              `Para un pago total el importe tiene que ser el saldo (${formatCurrency(remainingCents)}).`,
+            ],
+          },
+          message: 'Revise los campos. No se pudo registrar el pago.',
+          success: false,
+        };
+      }
+    }
+
+    console.error(error);
+    return { success: false, message: 'No se pudo registrar el pago.' };
+  }
+}
+
+export async function deleteOrderPayment(orderId: string, paymentId: string) {
+  await requireAdminSessionUserId();
+
+  const parsedOrderId = z.string().uuid().safeParse(orderId);
+  const parsedPaymentId = z.string().uuid().safeParse(paymentId);
+  if (!parsedOrderId.success || !parsedPaymentId.success) {
+    throw new Error('Invalid payment.');
+  }
+
+  try {
+    const result = await sql.begin(async (tx) => {
+      const deleted = await tx<{ id: string }[]>`
+        UPDATE order_payments
+        SET deleted_at = NOW()
+        WHERE id = ${parsedPaymentId.data}
+          AND order_id = ${parsedOrderId.data}
+          AND deleted_at IS NULL
+        RETURNING id
+      `;
+
+      if (!deleted[0]) {
+        throw new Error('NOT_FOUND');
+      }
+
+      await refreshOrderPaymentSummary(tx, parsedOrderId.data);
+
+      const orders = await tx<{ customerId: string }[]>`
+        SELECT customer_id as "customerId"
+        FROM orders
+        WHERE id = ${parsedOrderId.data}
+        LIMIT 1
+      `;
+
+      return { customerId: orders[0]?.customerId };
+    });
+
+    revalidateOrderPaths({
+      orderId: parsedOrderId.data,
+      customerId: result.customerId,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === 'NOT_FOUND') {
+      return;
+    }
+
+    console.error(error);
+    throw new Error('Failed to delete order payment.');
+  }
 }
 
 function getFileExtension(fileName: string) {

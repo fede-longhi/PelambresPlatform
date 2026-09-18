@@ -2,7 +2,7 @@
 // It describes the shape of the data, and what data type each property should accept.
 // For simplicity of teaching, we're manually defining these types.
 
-import { OrderStatus } from "./order-definitions";
+import { OrderPaymentStatus, OrderStatus } from "./order-definitions";
 
 export type { User, UserListItem, UserRole, SessionUser } from './user-definitions';
 
@@ -139,6 +139,9 @@ export type OrderTable = {
     quote_id?: string | null,
     quote_number?: number | null,
     notes?: string,
+    payment_status?: OrderPaymentStatus,
+    paid_amount_cents?: number,
+    paid_at?: string | null,
 }
 
 export type Order = {
@@ -158,6 +161,9 @@ export type Order = {
     quote_id?: string | null,
     quote_number?: number | null,
     notes?: string,
+    payment_status?: OrderPaymentStatus,
+    paid_amount_cents?: number,
+    paid_at?: string | null,
 }
 
 export type OrdersSummary = {

@@ -2,6 +2,7 @@ import { fetchCustomerOrders } from '@/lib/data/order-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import OrderStatusBadge from './order-status-badge';
+import OrderPaymentBadge from './order-payment-badge';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
 
 export default async function CustomerLastOrders({
@@ -33,6 +34,7 @@ export default async function CustomerLastOrders({
                 >
                   <span className="font-medium">{order.tracking_code}</span>
                   <OrderStatusBadge status={order.status} />
+                  <OrderPaymentBadge status={order.payment_status} />
                   <span className="text-sm">
                     {formatCurrency(order.amount)}
                   </span>

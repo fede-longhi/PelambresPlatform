@@ -21,6 +21,11 @@ const KPI_ITEMS = [
     href: '/admin/orders',
   },
   {
+    key: 'unpaidCustomOrderCount' as const,
+    label: 'Pedidos sin pagar',
+    href: '/admin/orders?filter=unpaid',
+  },
+  {
     key: 'paymentReviewCount' as const,
     label: 'Comprobantes a revisar',
     href: '/admin/store-orders',
@@ -44,7 +49,7 @@ function DashboardKpis({
   kpis: AdminDashboardData['kpis'];
 }) {
   return (
-    <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
       {KPI_ITEMS.map((item) => (
         <li key={item.key}>
           <Link
