@@ -48,7 +48,7 @@ export default async function Page(props: {
       </p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Search placeholder="Buscar por número, cliente o email…" />
+        <Search placeholder="Buscar por número, cliente, email o pedido…" />
         <QuotesFilter />
       </div>
 
