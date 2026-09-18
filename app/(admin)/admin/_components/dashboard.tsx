@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileInput, FileBox, FileText, Hammer, ShoppingBag, Calculator, Plus } from 'lucide-react';
+import { FileInput, FileBox, FileText, ShoppingBag, Calculator, Plus } from 'lucide-react';
 import { fetchAdminDashboard } from '@/lib/data/admin-dashboard-data';
 import type {
   AdminDashboardData,
@@ -7,13 +7,17 @@ import type {
 } from '@/lib/data/admin-dashboard-data';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import PrintJobStatusField from '@/app/(admin)/admin/print-jobs/_components/status-field';
 
 const KPI_ITEMS = [
   {
     key: 'unlinkedQuoteCount' as const,
-    label: 'Solicitudes recientes sin cliente',
+    label: 'Solicitudes sin cliente',
     href: '/admin/quote-requests',
+  },
+  {
+    key: 'acceptedQuoteWithoutOrderCount' as const,
+    label: 'Aceptados sin pedido',
+    href: '/admin/quotes?filter=accepted_without_order',
   },
   {
     key: 'activeCustomOrderCount' as const,
@@ -30,17 +34,14 @@ const KPI_ITEMS = [
     label: 'Comprobantes a revisar',
     href: '/admin/store-orders',
   },
-  {
-    key: 'activePrintJobCount' as const,
-    label: 'Trabajos activos',
-    href: '/admin/print-jobs',
-  },
 ] as const;
 
 const WORK_ITEM_LABELS: Record<AdminDashboardWorkItemKind, string> = {
   quote_unlinked: 'Solicitud',
   store_payment_review: 'Tienda',
   order_overdue: 'Atraso',
+  quote_accepted_without_order: 'Presupuesto',
+  order_unpaid: 'Cobro',
 };
 
 function DashboardKpis({
@@ -90,7 +91,7 @@ function WorkQueue({
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed bg-white px-4 py-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No hay solicitudes sin cliente, comprobantes pendientes ni pedidos atrasados.
+            No hay cobros, presupuestos ni solicitudes pendientes de atender.
           </p>
         </div>
       ) : (
@@ -117,62 +118,11 @@ function WorkQueue({
   );
 }
 
-function ActivePrintJobs({
-  jobs,
-}: {
-  jobs: AdminDashboardData['activePrintJobs'];
-}) {
-  return (
-    <section aria-labelledby="dashboard-jobs-heading">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 id="dashboard-jobs-heading" className="text-lg font-semibold">
-          Taller
-        </h2>
-        <Link
-          href="/admin/print-jobs"
-          className="text-sm text-primary hover:underline"
-        >
-          Ver trabajos
-        </Link>
-      </div>
-
-      {jobs.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-white px-4 py-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            No hay trabajos pendientes o en impresión.
-          </p>
-        </div>
-      ) : (
-        <ul className="space-y-2">
-          {jobs.map((job) => (
-            <li key={job.id}>
-              <Link
-                href={`/admin/print-jobs/${job.id}`}
-                className="flex flex-col gap-2 rounded-lg border bg-white p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium">{job.name}</p>
-                  {job.trackingCode ? (
-                    <p className="text-sm text-muted-foreground">
-                      Pedido {job.trackingCode}
-                    </p>
-                  ) : null}
-                </div>
-                <PrintJobStatusField status={job.status} />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
-
 function SalesSummary({ sales }: { sales: AdminDashboardData['sales'] }) {
-  const collectedCents = sales.customDeliveredCents + sales.storePaidCents;
+  const collectedCents = sales.customCollectedCents + sales.storePaidCents;
   const previousCollectedCents =
-    sales.previousCustomDeliveredCents + sales.previousStorePaidCents;
-  const inProgressCents = sales.customInProgressCents + sales.storePendingCents;
+    sales.previousCustomCollectedCents + sales.previousStorePaidCents;
+  const outstandingCents = sales.customOutstandingCents + sales.storePendingCents;
 
   return (
     <section
@@ -183,7 +133,8 @@ function SalesSummary({ sales }: { sales: AdminDashboardData['sales'] }) {
         Ingresos {sales.monthLabel}
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Cobrado en pedidos a medida entregados y compras de tienda pagadas (ARS).
+        Pagos registrados este mes (señas, parciales y totales) y compras de
+        tienda cobradas (ARS).
       </p>
 
       <p className="mt-4 text-3xl font-semibold tabular-nums text-primary">
@@ -193,7 +144,7 @@ function SalesSummary({ sales }: { sales: AdminDashboardData['sales'] }) {
       <dl className="mt-4 space-y-2 text-sm">
         <div className="flex items-center justify-between gap-3">
           <dt className="text-muted-foreground">Pedidos a medida</dt>
-          <dd className="tabular-nums">{formatCurrency(sales.customDeliveredCents)}</dd>
+          <dd className="tabular-nums">{formatCurrency(sales.customCollectedCents)}</dd>
         </div>
         <div className="flex items-center justify-between gap-3">
           <dt className="text-muted-foreground">Tienda</dt>
@@ -204,8 +155,8 @@ function SalesSummary({ sales }: { sales: AdminDashboardData['sales'] }) {
           <dd className="tabular-nums">{formatCurrency(previousCollectedCents)}</dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-muted-foreground">En curso / pendiente</dt>
-          <dd className="tabular-nums">{formatCurrency(inProgressCents)}</dd>
+          <dt className="text-muted-foreground">Saldo por cobrar</dt>
+          <dd className="tabular-nums">{formatCurrency(outstandingCents)}</dd>
         </div>
       </dl>
     </section>
@@ -259,13 +210,6 @@ function DashboardShortcuts() {
         Pedidos de tienda
       </Link>
       <Link
-        href="/admin/print-jobs"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <Hammer className="size-4 shrink-0" aria-hidden="true" />
-        Trabajos
-      </Link>
-      <Link
         href="/admin/quote-calculator"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
@@ -282,12 +226,11 @@ export default async function Dashboard() {
   return (
     <div className="space-y-10">
       <DashboardKpis kpis={dashboard.kpis} />
-      <WorkQueue
-        items={dashboard.workItems}
-        overdueCount={dashboard.kpis.overdueOrderCount}
-      />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <ActivePrintJobs jobs={dashboard.activePrintJobs} />
+        <WorkQueue
+          items={dashboard.workItems}
+          overdueCount={dashboard.kpis.overdueOrderCount}
+        />
         <SalesSummary sales={dashboard.sales} />
       </div>
       <DashboardShortcuts />

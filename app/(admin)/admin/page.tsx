@@ -13,7 +13,7 @@ export default function Page() {
     <div>
       <PageHeader title="Inicio" />
       <p className="mt-2 mb-6 text-sm text-muted-foreground">
-        Lo que hay que atender hoy en el taller, la tienda y las solicitudes.
+        Lo que hay que atender hoy: solicitudes, presupuestos, pedidos y cobros.
       </p>
       <Suspense fallback={<CardsSkeleton />}>
         <Dashboard />
