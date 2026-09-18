@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchCustomerQuoteDocuments } from '@/lib/data/quote-document-data';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
-import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
+import {
+  formatQuoteNumber,
+  getQuoteOrderListHint,
+} from '@/lib/consts/quote-document-consts';
 import QuoteStatusBadge from './quote-status-badge';
 
 export default async function CustomerLastQuotes({
@@ -26,7 +29,10 @@ export default async function CustomerLastQuotes({
           </p>
         ) : (
           <ul className="space-y-2">
-            {quotes.map((quote) => (
+            {quotes.map((quote) => {
+              const orderHint = getQuoteOrderListHint(quote);
+
+              return (
               <li key={quote.id}>
                 <Link
                   href={`/admin/quotes/${quote.id}`}
@@ -42,9 +48,15 @@ export default async function CustomerLastQuotes({
                   <span className="text-sm text-muted-foreground">
                     {formatDateToLocal(quote.quoteDate, 'es-AR')}
                   </span>
+                  {orderHint ? (
+                    <span className="text-xs text-muted-foreground">
+                      {orderHint}
+                    </span>
+                  ) : null}
                 </Link>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </CardContent>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
 import {
   formatQuoteNumber,
+  getQuoteOrderListHint,
 } from '@/lib/consts/quote-document-consts';
 import type { QuoteDocumentListItem } from '@/types/quote-document-definitions';
 import QuoteStatusBadge from '@/app/(admin)/admin/quotes/_components/quote-status-badge';
@@ -21,7 +22,10 @@ export default function RelatedQuoteDocuments({
 
   return (
     <ul className="space-y-2">
-      {quotes.map((quote) => (
+      {quotes.map((quote) => {
+        const orderHint = getQuoteOrderListHint(quote);
+
+        return (
         <li key={quote.id}>
           <Link
             href={`/admin/quotes/${quote.id}`}
@@ -35,14 +39,15 @@ export default function RelatedQuoteDocuments({
             <span className="text-sm text-muted-foreground">
               {formatDateToLocal(quote.quoteDate, 'es-AR')}
             </span>
-            {quote.orderTrackingCode ? (
+            {orderHint ? (
               <span className="text-xs text-muted-foreground">
-                Pedido {quote.orderTrackingCode}
+                {orderHint}
               </span>
             ) : null}
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

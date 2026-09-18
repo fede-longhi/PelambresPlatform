@@ -15,7 +15,10 @@ export const QUOTE_DOCUMENT_STATUS_LABELS: Record<QuoteDocumentStatus, string> =
   rejected: 'Rechazado',
 };
 
-export type QuoteDocumentListFilter = QuoteDocumentStatus | 'all';
+export type QuoteDocumentListFilter =
+  | QuoteDocumentStatus
+  | 'all'
+  | 'accepted_without_order';
 
 export const QUOTE_DOCUMENT_LIST_FILTERS: {
   value: QuoteDocumentListFilter;
@@ -25,6 +28,7 @@ export const QUOTE_DOCUMENT_LIST_FILTERS: {
   { value: 'draft', label: 'Borradores' },
   { value: 'sent', label: 'Enviados' },
   { value: 'accepted', label: 'Aceptados' },
+  { value: 'accepted_without_order', label: 'Aceptados sin pedido' },
   { value: 'rejected', label: 'Rechazados' },
 ];
 
@@ -33,7 +37,7 @@ export const DEFAULT_QUOTE_DOCUMENT_LIST_FILTER: QuoteDocumentListFilter = 'all'
 export function parseQuoteDocumentListFilter(
   value: string | undefined
 ): QuoteDocumentListFilter {
-  if (value === 'all') {
+  if (value === 'all' || value === 'accepted_without_order') {
     return value;
   }
 
@@ -42,6 +46,23 @@ export function parseQuoteDocumentListFilter(
   }
 
   return DEFAULT_QUOTE_DOCUMENT_LIST_FILTER;
+}
+
+export function getQuoteOrderListHint(quote: {
+  status: QuoteDocumentStatus;
+  orderId?: string | null;
+  orderTrackingCode?: string | null;
+}): string | null {
+  if (quote.orderId) {
+    const trackingCode = quote.orderTrackingCode?.trim();
+    return trackingCode ? `Pedido ${trackingCode}` : 'Pedido';
+  }
+
+  if (quote.status === 'accepted') {
+    return 'Crear pedido';
+  }
+
+  return null;
 }
 
 export function getQuoteDocumentStatusLabel(status: string): string {

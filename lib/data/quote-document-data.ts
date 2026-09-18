@@ -88,7 +88,24 @@ function buildQuoteDocumentFilterSql(filter: QuoteDocumentListFilter) {
     return sql``;
   }
 
+  if (filter === 'accepted_without_order') {
+    return sql`AND quotes.status = 'accepted' AND orders.id IS NULL`;
+  }
+
   return sql`AND quotes.status = ${filter}`;
+}
+
+function buildQuoteDocumentSearchSql(search: string, quoteNumberSearch: string) {
+  return sql`
+    AND (
+      quotes.client_name ILIKE ${search} OR
+      quotes.client_email ILIKE ${search} OR
+      quotes.client_phone ILIKE ${search} OR
+      CAST(quotes.quote_number AS TEXT) ILIKE ${search} OR
+      (${quoteNumberSearch} <> '' AND CAST(quotes.quote_number AS TEXT) ILIKE ${'%' + quoteNumberSearch + '%'}) OR
+      COALESCE(orders.tracking_code, '') ILIKE ${search}
+    )
+  `;
 }
 
 export async function fetchFilteredQuoteDocuments(
@@ -111,16 +128,13 @@ export async function fetchFilteredQuoteDocuments(
         quotes.client_name as "clientName",
         quotes.client_email as "clientEmail",
         quotes.total_cents as "totalCents",
-        quotes.customer_id as "customerId"
+        quotes.customer_id as "customerId",
+        orders.id as "orderId",
+        orders.tracking_code as "orderTrackingCode"
       FROM quotes
+      LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.deleted_at IS NULL
-        AND (
-          quotes.client_name ILIKE ${search} OR
-          quotes.client_email ILIKE ${search} OR
-          quotes.client_phone ILIKE ${search} OR
-          CAST(quotes.quote_number AS TEXT) ILIKE ${search} OR
-          (${quoteNumberSearch} <> '' AND CAST(quotes.quote_number AS TEXT) ILIKE ${'%' + quoteNumberSearch + '%'})
-        )
+        ${buildQuoteDocumentSearchSql(search, quoteNumberSearch)}
         ${filterSql}
       ORDER BY quotes.quote_number DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
@@ -143,14 +157,9 @@ export async function fetchQuoteDocumentPages(
     const data = await sql`
       SELECT COUNT(*)
       FROM quotes
+      LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.deleted_at IS NULL
-        AND (
-          quotes.client_name ILIKE ${search} OR
-          quotes.client_email ILIKE ${search} OR
-          quotes.client_phone ILIKE ${search} OR
-          CAST(quotes.quote_number AS TEXT) ILIKE ${search} OR
-          (${quoteNumberSearch} <> '' AND CAST(quotes.quote_number AS TEXT) ILIKE ${'%' + quoteNumberSearch + '%'})
-        )
+        ${buildQuoteDocumentSearchSql(search, quoteNumberSearch)}
         ${filterSql}
     `;
 
@@ -275,8 +284,11 @@ export async function fetchCustomerQuoteDocuments(
         quotes.client_name as "clientName",
         quotes.client_email as "clientEmail",
         quotes.total_cents as "totalCents",
-        quotes.customer_id as "customerId"
+        quotes.customer_id as "customerId",
+        orders.id as "orderId",
+        orders.tracking_code as "orderTrackingCode"
       FROM quotes
+      LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.customer_id = ${customerId}
         AND quotes.deleted_at IS NULL
       ORDER BY quotes.quote_number DESC
