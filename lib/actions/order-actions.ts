@@ -13,7 +13,7 @@ import {
   OrderStatus,
   OrderStatuses,
 } from '@/types/order-definitions';
-import { formatCurrency, formatDateToLocal, generateCode } from '@/lib/utils';
+import { formatCurrency, generateCode } from '@/lib/utils';
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILE_ATTACHMENT_SIZE_BYTES,
@@ -221,7 +221,6 @@ async function notifyCustomerOrderStatus(
 
   const orders = await sql<{
     trackingCode: string;
-    estimatedDate: string | null;
     email: string | null;
     first_name: string;
     last_name: string;
@@ -230,7 +229,6 @@ async function notifyCustomerOrderStatus(
   }[]>`
     SELECT
       orders.tracking_code as "trackingCode",
-      orders.estimated_date as "estimatedDate",
       customers.email,
       customers.first_name,
       customers.last_name,
@@ -267,9 +265,6 @@ async function notifyCustomerOrderStatus(
           : order.name,
       trackingCode: order.trackingCode,
       statusLabel: copy.statusLabel,
-      estimatedDate: order.estimatedDate
-        ? formatDateToLocal(order.estimatedDate, 'es-AR')
-        : undefined,
       body: copy.body,
     });
     return 'sent';

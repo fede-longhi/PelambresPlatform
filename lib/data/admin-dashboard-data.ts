@@ -1,10 +1,13 @@
 import sql from '@/lib/db';
-import type { PrintJobStatus } from '@/types/definitions';
+import { formatCurrency } from '@/lib/utils';
+import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
 
 export type AdminDashboardWorkItemKind =
   | 'quote_unlinked'
   | 'store_payment_review'
-  | 'order_overdue';
+  | 'order_overdue'
+  | 'quote_accepted_without_order'
+  | 'order_unpaid';
 
 export type AdminDashboardWorkItem = {
   id: string;
@@ -14,35 +17,26 @@ export type AdminDashboardWorkItem = {
   href: string;
 };
 
-export type AdminDashboardPrintJob = {
-  id: string;
-  name: string;
-  status: PrintJobStatus;
-  orderId: string;
-  trackingCode: string | null;
-};
-
 export type AdminDashboardData = {
   kpis: {
     unlinkedQuoteCount: number;
     activeCustomOrderCount: number;
     unpaidCustomOrderCount: number;
+    acceptedQuoteWithoutOrderCount: number;
     paymentReviewCount: number;
-    activePrintJobCount: number;
     overdueOrderCount: number;
   };
   sales: {
     monthLabel: string;
     previousMonthLabel: string;
-    customDeliveredCents: number;
+    customCollectedCents: number;
     storePaidCents: number;
-    previousCustomDeliveredCents: number;
+    previousCustomCollectedCents: number;
     previousStorePaidCents: number;
-    customInProgressCents: number;
+    customOutstandingCents: number;
     storePendingCents: number;
   };
   workItems: AdminDashboardWorkItem[];
-  activePrintJobs: AdminDashboardPrintJob[];
 };
 
 type CountRow = { count: number | string };
@@ -67,6 +61,21 @@ type OverdueOrderRow = {
   id: string;
   tracking_code: string;
   estimated_date: string;
+  customer_name: string | null;
+};
+
+type AcceptedQuoteRow = {
+  id: string;
+  quoteNumber: number;
+  clientName: string;
+  totalCents: number;
+};
+
+type UnpaidOrderRow = {
+  id: string;
+  tracking_code: string;
+  status: string;
+  remainingCents: number;
   customer_name: string | null;
 };
 
@@ -114,19 +123,20 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       unlinkedQuotesCount,
       activeCustomOrdersCount,
       unpaidCustomOrdersCount,
+      acceptedQuoteWithoutOrderCount,
       paymentReviewCount,
-      activePrintJobsCount,
       overdueOrdersCount,
-      customDelivered,
+      customCollected,
       storePaid,
-      previousCustomDelivered,
+      previousCustomCollected,
       previousStorePaid,
-      customInProgress,
+      customOutstanding,
       storePending,
       unlinkedQuotes,
       paymentReviews,
       overdueOrders,
-      activePrintJobs,
+      acceptedQuotes,
+      unpaidReadyOrders,
     ] = await Promise.all([
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
@@ -150,13 +160,18 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       `,
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
-        FROM store_orders
-        WHERE status = 'payment_review'
+        FROM quotes
+        LEFT JOIN orders
+          ON orders.quote_id = quotes.id
+          AND orders.deleted_at IS NULL
+        WHERE quotes.status = 'accepted'
+          AND quotes.deleted_at IS NULL
+          AND orders.id IS NULL
       `,
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
-        FROM print_jobs
-        WHERE status IN ('pending', 'printing', 'postprocess')
+        FROM store_orders
+        WHERE status = 'payment_review'
       `,
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
@@ -166,12 +181,13 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           AND deleted_at IS NULL
       `,
       sql<SumRow[]>`
-        SELECT COALESCE(SUM(amount), 0) AS total
-        FROM orders
-        WHERE status = 'delivered'
-          AND deleted_at IS NULL
-          AND COALESCE(delivered_date, created_date) >= ${currentRange.start}::timestamptz
-          AND COALESCE(delivered_date, created_date) < ${currentRange.end}::timestamptz
+        SELECT COALESCE(SUM(order_payments.amount_cents), 0) AS total
+        FROM order_payments
+        JOIN orders ON orders.id = order_payments.order_id
+        WHERE order_payments.deleted_at IS NULL
+          AND orders.deleted_at IS NULL
+          AND order_payments.paid_at >= ${currentRange.start}::timestamptz
+          AND order_payments.paid_at < ${currentRange.end}::timestamptz
       `,
       sql<SumRow[]>`
         SELECT COALESCE(SUM(total_cents), 0) AS total
@@ -182,12 +198,13 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           AND COALESCE(paid_at, created_at) < ${currentRange.end}::timestamptz
       `,
       sql<SumRow[]>`
-        SELECT COALESCE(SUM(amount), 0) AS total
-        FROM orders
-        WHERE status = 'delivered'
-          AND deleted_at IS NULL
-          AND COALESCE(delivered_date, created_date) >= ${previousRange.start}::timestamptz
-          AND COALESCE(delivered_date, created_date) < ${previousRange.end}::timestamptz
+        SELECT COALESCE(SUM(order_payments.amount_cents), 0) AS total
+        FROM order_payments
+        JOIN orders ON orders.id = order_payments.order_id
+        WHERE order_payments.deleted_at IS NULL
+          AND orders.deleted_at IS NULL
+          AND order_payments.paid_at >= ${previousRange.start}::timestamptz
+          AND order_payments.paid_at < ${previousRange.end}::timestamptz
       `,
       sql<SumRow[]>`
         SELECT COALESCE(SUM(total_cents), 0) AS total
@@ -198,9 +215,10 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           AND COALESCE(paid_at, created_at) < ${previousRange.end}::timestamptz
       `,
       sql<SumRow[]>`
-        SELECT COALESCE(SUM(amount), 0) AS total
+        SELECT COALESCE(SUM(amount - paid_amount_cents), 0) AS total
         FROM orders
-        WHERE status IN ('pending', 'in progress')
+        WHERE payment_status IN ('pending', 'deposit', 'partial')
+          AND status <> 'cancelled'
           AND deleted_at IS NULL
       `,
       sql<SumRow[]>`
@@ -259,25 +277,40 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         ORDER BY orders.estimated_date ASC
         LIMIT 6
       `,
-      sql<AdminDashboardPrintJob[]>`
+      sql<AcceptedQuoteRow[]>`
         SELECT
-          print_jobs.id,
-          print_jobs.name,
-          print_jobs.status,
-          print_jobs.order_id AS "orderId",
-          orders.tracking_code AS "trackingCode"
-        FROM print_jobs
-        LEFT JOIN orders ON orders.id = print_jobs.order_id
-        WHERE print_jobs.status IN ('pending', 'printing', 'postprocess')
-        ORDER BY
-          CASE print_jobs.status
-            WHEN 'printing' THEN 1
-            WHEN 'postprocess' THEN 2
-            WHEN 'pending' THEN 3
-            ELSE 4
-          END,
-          print_jobs.name
-        LIMIT 8
+          quotes.id,
+          quotes.quote_number as "quoteNumber",
+          quotes.client_name as "clientName",
+          quotes.total_cents as "totalCents"
+        FROM quotes
+        LEFT JOIN orders
+          ON orders.quote_id = quotes.id
+          AND orders.deleted_at IS NULL
+        WHERE quotes.status = 'accepted'
+          AND quotes.deleted_at IS NULL
+          AND orders.id IS NULL
+        ORDER BY quotes.updated_at DESC
+        LIMIT 6
+      `,
+      sql<UnpaidOrderRow[]>`
+        SELECT
+          orders.id,
+          orders.tracking_code,
+          orders.status,
+          (orders.amount - orders.paid_amount_cents) as "remainingCents",
+          CASE
+            WHEN customers.type = 'person'
+              THEN TRIM(CONCAT(COALESCE(customers.last_name, ''), ', ', COALESCE(customers.first_name, '')))
+            ELSE customers.name
+          END AS customer_name
+        FROM orders
+        JOIN customers ON orders.customer_id = customers.id
+        WHERE orders.payment_status IN ('pending', 'deposit', 'partial')
+          AND orders.status IN ('finished', 'delivered')
+          AND orders.deleted_at IS NULL
+        ORDER BY COALESCE(orders.delivered_date, orders.created_date) DESC
+        LIMIT 6
       `,
     ]);
 
@@ -291,6 +324,21 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           : 'Comprobante de transferencia en revisión',
         href: `/admin/store-orders/${order.id}`,
       })),
+      ...unpaidReadyOrders.map((order) => ({
+        id: `unpaid-${order.id}`,
+        kind: 'order_unpaid' as const,
+        title: order.tracking_code,
+        subtitle: [
+          order.status === 'delivered'
+            ? 'Entregado sin cobrar'
+            : 'Terminado sin cobrar',
+          order.customer_name,
+          formatCurrency(toNumber(order.remainingCents)),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        href: `/admin/orders/${order.id}`,
+      })),
       ...overdueOrders.map((order) => ({
         id: `overdue-${order.id}`,
         kind: 'order_overdue' as const,
@@ -299,6 +347,13 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           ? `Fecha estimada vencida · ${order.customer_name}`
           : 'Fecha estimada vencida',
         href: `/admin/orders/${order.id}`,
+      })),
+      ...acceptedQuotes.map((quote) => ({
+        id: `accepted-quote-${quote.id}`,
+        kind: 'quote_accepted_without_order' as const,
+        title: quote.clientName || 'Sin cliente',
+        subtitle: `Presupuesto Nº ${formatQuoteNumber(quote.quoteNumber)} · ${formatCurrency(toNumber(quote.totalCents))}`,
+        href: `/admin/quotes/${quote.id}`,
       })),
       ...unlinkedQuotes.map((quote) => ({
         id: `quote-${quote.id}`,
@@ -314,22 +369,23 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         unlinkedQuoteCount: toNumber(unlinkedQuotesCount[0]?.count),
         activeCustomOrderCount: toNumber(activeCustomOrdersCount[0]?.count),
         unpaidCustomOrderCount: toNumber(unpaidCustomOrdersCount[0]?.count),
+        acceptedQuoteWithoutOrderCount: toNumber(
+          acceptedQuoteWithoutOrderCount[0]?.count
+        ),
         paymentReviewCount: toNumber(paymentReviewCount[0]?.count),
-        activePrintJobCount: toNumber(activePrintJobsCount[0]?.count),
         overdueOrderCount: toNumber(overdueOrdersCount[0]?.count),
       },
       sales: {
         monthLabel: monthLabel(year, monthIndex),
         previousMonthLabel: monthLabel(previousYear, previousMonthIndex),
-        customDeliveredCents: toNumber(customDelivered[0]?.total),
+        customCollectedCents: toNumber(customCollected[0]?.total),
         storePaidCents: toNumber(storePaid[0]?.total),
-        previousCustomDeliveredCents: toNumber(previousCustomDelivered[0]?.total),
+        previousCustomCollectedCents: toNumber(previousCustomCollected[0]?.total),
         previousStorePaidCents: toNumber(previousStorePaid[0]?.total),
-        customInProgressCents: toNumber(customInProgress[0]?.total),
+        customOutstandingCents: toNumber(customOutstanding[0]?.total),
         storePendingCents: toNumber(storePending[0]?.total),
       },
       workItems,
-      activePrintJobs,
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -339,6 +395,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
 
 export type AdminNavBadgeCounts = {
   '/admin/quote-requests': number;
+  '/admin/quotes': number;
   '/admin/store-orders': number;
   '/admin/print-jobs': number;
   '/admin/orders': number;
@@ -346,33 +403,45 @@ export type AdminNavBadgeCounts = {
 
 export async function fetchAdminNavBadges(): Promise<AdminNavBadgeCounts> {
   try {
-    const [openQuotes, paymentReviews, activePrintJobs, unpaidOrders] = await Promise.all([
-      sql<CountRow[]>`
-        SELECT COUNT(*) AS count
-        FROM quote_requests
-        WHERE status IN ('new', 'in_progress')
-      `,
-      sql<CountRow[]>`
-        SELECT COUNT(*) AS count
-        FROM store_orders
-        WHERE status = 'payment_review'
-      `,
-      sql<CountRow[]>`
-        SELECT COUNT(*) AS count
-        FROM print_jobs
-        WHERE status IN ('pending', 'printing', 'postprocess')
-      `,
-      sql<CountRow[]>`
-        SELECT COUNT(*) AS count
-        FROM orders
-        WHERE payment_status IN ('pending', 'deposit', 'partial')
-          AND status <> 'cancelled'
-          AND deleted_at IS NULL
-      `,
-    ]);
+    const [openQuotes, acceptedWithoutOrder, paymentReviews, activePrintJobs, unpaidOrders] =
+      await Promise.all([
+        sql<CountRow[]>`
+          SELECT COUNT(*) AS count
+          FROM quote_requests
+          WHERE status IN ('new', 'in_progress')
+        `,
+        sql<CountRow[]>`
+          SELECT COUNT(*) AS count
+          FROM quotes
+          LEFT JOIN orders
+            ON orders.quote_id = quotes.id
+            AND orders.deleted_at IS NULL
+          WHERE quotes.status = 'accepted'
+            AND quotes.deleted_at IS NULL
+            AND orders.id IS NULL
+        `,
+        sql<CountRow[]>`
+          SELECT COUNT(*) AS count
+          FROM store_orders
+          WHERE status = 'payment_review'
+        `,
+        sql<CountRow[]>`
+          SELECT COUNT(*) AS count
+          FROM print_jobs
+          WHERE status IN ('pending', 'printing', 'postprocess')
+        `,
+        sql<CountRow[]>`
+          SELECT COUNT(*) AS count
+          FROM orders
+          WHERE payment_status IN ('pending', 'deposit', 'partial')
+            AND status <> 'cancelled'
+            AND deleted_at IS NULL
+        `,
+      ]);
 
     return {
       '/admin/quote-requests': toNumber(openQuotes[0]?.count),
+      '/admin/quotes': toNumber(acceptedWithoutOrder[0]?.count),
       '/admin/store-orders': toNumber(paymentReviews[0]?.count),
       '/admin/print-jobs': toNumber(activePrintJobs[0]?.count),
       '/admin/orders': toNumber(unpaidOrders[0]?.count),
@@ -381,6 +450,7 @@ export async function fetchAdminNavBadges(): Promise<AdminNavBadgeCounts> {
     console.error('Database Error:', error);
     return {
       '/admin/quote-requests': 0,
+      '/admin/quotes': 0,
       '/admin/store-orders': 0,
       '/admin/print-jobs': 0,
       '/admin/orders': 0,

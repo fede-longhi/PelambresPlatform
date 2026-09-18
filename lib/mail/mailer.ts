@@ -5,6 +5,10 @@ import { CourseConfirmationEmail } from "./templates/course-confirmation";
 import { PasswordResetEmail } from "./templates/password-reset";
 import { QuoteDocumentEmail } from "./templates/quote-document-email";
 import { OrderStatusEmail } from "./templates/order-status-email";
+import {
+  PELAMBRES_LOGO_CID,
+  PELAMBRES_LOGO_PNG_BASE64,
+} from "./logo";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -13,6 +17,14 @@ const transporter = nodemailer.createTransport({
         pass: process.env.GOOGLE_MAIL_PASSWORD,
     },
 });
+
+const logoAttachment = {
+    filename: "pelambres-logo.png",
+    content: Buffer.from(PELAMBRES_LOGO_PNG_BASE64, "base64"),
+    cid: PELAMBRES_LOGO_CID,
+    contentType: "image/png",
+    contentDisposition: "inline" as const,
+};
 
 type SendEmailOptions = {
     to: string;
@@ -29,6 +41,7 @@ export async function sendEmail({ to, subject, html, cc }: SendEmailOptions) {
             cc,
             subject,
             html,
+            attachments: [logoAttachment],
         });
         console.log(`Email enviado a ${to}`);
     } catch (error) {
@@ -62,8 +75,7 @@ export async function sendCourseConfirmationEmail(
             CourseConfirmationEmail({ studentName, courseName, courseSlug, token })
         );
     
-        await transporter.sendMail({
-            from: `"Pelambres 3D" <${process.env.GOOGLE_MAIL_USER}>`,
+        await sendEmail({
             to,
             subject: `Confirma tu inscripción: ${courseName}`,
             html: emailHtml,
@@ -129,7 +141,6 @@ export async function sendOrderStatusEmail(input: {
   clientName: string;
   trackingCode: string;
   statusLabel: string;
-  estimatedDate?: string;
   body: string;
 }) {
   const emailHtml = await render(
@@ -137,7 +148,6 @@ export async function sendOrderStatusEmail(input: {
       clientName: input.clientName,
       trackingCode: input.trackingCode,
       statusLabel: input.statusLabel,
-      estimatedDate: input.estimatedDate,
       body: input.body,
     })
   );
