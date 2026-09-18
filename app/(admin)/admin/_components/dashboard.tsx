@@ -77,14 +77,31 @@ function WorkQueue({
 }) {
   return (
     <section aria-labelledby="dashboard-queue-heading">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 id="dashboard-queue-heading" className="text-lg font-semibold">
-          Bandeja de hoy
-        </h2>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h2 id="dashboard-queue-heading" className="text-lg font-semibold">
+            Bandeja de hoy
+          </h2>
+          {overdueCount > 0 ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Hay pedidos que ya pasaron la fecha estimada de entrega y todavía
+              no están entregados.
+            </p>
+          ) : null}
+        </div>
         {overdueCount > 0 ? (
-          <p className="text-sm text-destructive">
-            {overdueCount} pedido{overdueCount === 1 ? '' : 's'} con fecha vencida
-          </p>
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Link href="/admin/orders?filter=overdue">
+              {overdueCount === 1
+                ? 'Ver 1 pedido vencido'
+                : `Ver ${overdueCount} pedidos vencidos`}
+            </Link>
+          </Button>
         ) : null}
       </div>
 

@@ -1,5 +1,5 @@
 import sql from '@/lib/db';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDateToLocal } from '@/lib/utils';
 import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
 
 export type AdminDashboardWorkItemKind =
@@ -176,8 +176,8 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
         FROM orders
-        WHERE status IN ('pending', 'in progress')
-          AND estimated_date < NOW()
+        WHERE status NOT IN ('delivered', 'cancelled')
+          AND estimated_date < CURRENT_DATE
           AND deleted_at IS NULL
       `,
       sql<SumRow[]>`
@@ -270,9 +270,9 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
             ELSE customers.name
           END AS customer_name
         FROM orders
-        JOIN customers ON orders.customer_id = customers.id
-        WHERE orders.status IN ('pending', 'in progress')
-          AND orders.estimated_date < NOW()
+        LEFT JOIN customers ON orders.customer_id = customers.id
+        WHERE orders.status NOT IN ('delivered', 'cancelled')
+          AND orders.estimated_date < CURRENT_DATE
           AND orders.deleted_at IS NULL
         ORDER BY orders.estimated_date ASC
         LIMIT 6
@@ -343,9 +343,12 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         id: `overdue-${order.id}`,
         kind: 'order_overdue' as const,
         title: order.tracking_code,
-        subtitle: order.customer_name
-          ? `Fecha estimada vencida · ${order.customer_name}`
-          : 'Fecha estimada vencida',
+        subtitle: [
+          `Estimada ${formatDateToLocal(order.estimated_date, 'es-AR')}`,
+          order.customer_name,
+        ]
+          .filter(Boolean)
+          .join(' · '),
         href: `/admin/orders/${order.id}`,
       })),
       ...acceptedQuotes.map((quote) => ({

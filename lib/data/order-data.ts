@@ -27,6 +27,9 @@ function buildOrderFilterSql(filter: OrderListFilter) {
     case 'unpaid':
       return sql`AND orders.payment_status IN ('pending', 'deposit', 'partial')
         AND orders.status <> 'cancelled'`;
+    case 'overdue':
+      return sql`AND orders.status NOT IN ('delivered', 'cancelled')
+        AND orders.estimated_date < CURRENT_DATE`;
     case 'all':
       return sql``;
     default:
@@ -60,7 +63,7 @@ export async function fetchFilteredOrders(
         customers.name,
         customers.type as customer_type
       FROM orders
-      JOIN customers ON orders.customer_id = customers.id
+      LEFT JOIN customers ON orders.customer_id = customers.id
       LEFT JOIN quotes ON quotes.id = orders.quote_id
       WHERE (
         orders.tracking_code ILIKE ${search} OR
@@ -93,7 +96,7 @@ export async function fetchOrdersPages(
   try {
     const data = await sql`SELECT COUNT(*)
     FROM orders
-    JOIN customers ON orders.customer_id = customers.id
+    LEFT JOIN customers ON orders.customer_id = customers.id
     LEFT JOIN quotes ON quotes.id = orders.quote_id
     WHERE (
         orders.tracking_code ILIKE ${search} OR
