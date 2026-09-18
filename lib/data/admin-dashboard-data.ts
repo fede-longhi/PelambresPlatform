@@ -137,6 +137,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         SELECT COUNT(*) AS count
         FROM orders
         WHERE status IN ('pending', 'in progress')
+          AND deleted_at IS NULL
       `,
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
@@ -153,11 +154,13 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         FROM orders
         WHERE status IN ('pending', 'in progress')
           AND estimated_date < NOW()
+          AND deleted_at IS NULL
       `,
       sql<SumRow[]>`
         SELECT COALESCE(SUM(amount), 0) AS total
         FROM orders
         WHERE status = 'delivered'
+          AND deleted_at IS NULL
           AND COALESCE(delivered_date, created_date) >= ${currentRange.start}::timestamptz
           AND COALESCE(delivered_date, created_date) < ${currentRange.end}::timestamptz
       `,
@@ -173,6 +176,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         SELECT COALESCE(SUM(amount), 0) AS total
         FROM orders
         WHERE status = 'delivered'
+          AND deleted_at IS NULL
           AND COALESCE(delivered_date, created_date) >= ${previousRange.start}::timestamptz
           AND COALESCE(delivered_date, created_date) < ${previousRange.end}::timestamptz
       `,
@@ -188,6 +192,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         SELECT COALESCE(SUM(amount), 0) AS total
         FROM orders
         WHERE status IN ('pending', 'in progress')
+          AND deleted_at IS NULL
       `,
       sql<SumRow[]>`
         SELECT COALESCE(SUM(total_cents), 0) AS total
@@ -241,6 +246,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         JOIN customers ON orders.customer_id = customers.id
         WHERE orders.status IN ('pending', 'in progress')
           AND orders.estimated_date < NOW()
+          AND orders.deleted_at IS NULL
         ORDER BY orders.estimated_date ASC
         LIMIT 6
       `,

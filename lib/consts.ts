@@ -1,5 +1,6 @@
 export const MODELS_FOLDER = 'models';
 export const GCODE_FOLDER = 'gcode';
+export const ORDER_ATTACHMENTS_FOLDER = 'order-attachments';
 export const TRACKING_CODE_LENGTH = 6;
 export const TRACKING_CODE_CHARACTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 export const ITEMS_PER_PAGE = 6;

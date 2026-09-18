@@ -138,6 +138,7 @@ export type OrderTable = {
     customer_type: CustomerType,
     quote_id?: string | null,
     quote_number?: number | null,
+    notes?: string,
 }
 
 export type Order = {
@@ -156,6 +157,7 @@ export type Order = {
     customer_type: CustomerType,
     quote_id?: string | null,
     quote_number?: number | null,
+    notes?: string,
 }
 
 export type OrdersSummary = {

@@ -15,7 +15,11 @@ function OrderDetailCard({ order }: { order: OrderTable }) {
         <CardTitle className="text-lg font-semibold">Datos del pedido</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <OrderStatusForm orderId={order.id} status={order.status} />
+        <OrderStatusForm
+          orderId={order.id}
+          status={order.status}
+          customerEmail={order.email}
+        />
         <dl className="space-y-3 text-sm">
           <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
             <dt className="font-medium text-muted-foreground">Código</dt>

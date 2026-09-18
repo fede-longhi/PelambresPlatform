@@ -64,6 +64,7 @@ export async function fetchCustomerPortalOrders(customerId: string) {
         amount
       FROM orders
       WHERE customer_id = ${customerId}
+        AND deleted_at IS NULL
       ORDER BY created_date DESC
     `;
   } catch (error) {
@@ -85,6 +86,7 @@ export async function fetchCustomerPortalOrderById(customerId: string, orderId: 
       FROM orders
       WHERE id = ${orderId}
         AND customer_id = ${customerId}
+        AND deleted_at IS NULL
       LIMIT 1
     `;
 

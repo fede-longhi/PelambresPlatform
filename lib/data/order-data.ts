@@ -1,5 +1,5 @@
 import { Order, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
-import type { OrderStatus } from '@/types/order-definitions';
+import type { OrderAttachment, OrderStatus } from '@/types/order-definitions';
 import sql from '@/lib/db';
 import {
   DEFAULT_ORDER_LIST_FILTER,
@@ -58,6 +58,7 @@ export async function fetchFilteredOrders(
         CAST(quotes.quote_number AS TEXT) ILIKE ${search}
       )
       ${filterSql}
+      AND orders.deleted_at IS NULL
       ORDER BY orders.created_date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -90,6 +91,7 @@ export async function fetchOrdersPages(
         CAST(quotes.quote_number AS TEXT) ILIKE ${search}
     )
     ${filterSql}
+    AND orders.deleted_at IS NULL
   `;
 
     const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
@@ -117,6 +119,7 @@ export async function fetchOrderDetailByTrackingCode(code: string) {
         JOIN customers ON orders.customer_id = customers.id
         WHERE
             orders.tracking_code = ${code}
+            AND orders.deleted_at IS NULL
         `;
         return order;
     } catch (error) {
@@ -141,6 +144,7 @@ export async function fetchLastOrderDetail() {
         FROM orders
         JOIN customers ON orders.customer_id = customers.id
         WHERE orders.status != 'delivered'
+          AND orders.deleted_at IS NULL
         ORDER BY orders.created_date DESC
         LIMIT 1
         `;
@@ -166,6 +170,7 @@ export async function fetchOrdersForPrintJobSelect() {
             FROM orders
             JOIN customers ON orders.customer_id = customers.id
             WHERE orders.status IN ('pending', 'in progress', 'finished')
+              AND orders.deleted_at IS NULL
             ORDER BY orders.created_date DESC
             LIMIT 40
         `;
@@ -191,6 +196,7 @@ export async function fetchNewestOrder() {
         FROM orders
         JOIN customers ON orders.customer_id = customers.id
         WHERE orders.status != 'delivered'
+          AND orders.deleted_at IS NULL
         ORDER BY orders.created_date ASC
         LIMIT 1
         `;
@@ -221,6 +227,7 @@ export async function fetchCustomerOrders(id: string) {
                 amount
             FROM orders
             WHERE customer_id = ${id}
+              AND deleted_at IS NULL
             ORDER BY created_date DESC
             LIMIT ${CUSTOMER_ORDERS_LIMIT}
         `;
@@ -243,6 +250,7 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
             orders.amount,
             orders.quote_id,
             quotes.quote_number,
+            orders.notes,
             customers.id as customer_id,
             customers.first_name,
             customers.last_name,
@@ -255,6 +263,7 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
           LEFT JOIN quotes ON quotes.id = orders.quote_id
           WHERE
             orders.id = ${id}
+            AND orders.deleted_at IS NULL
         `;
 
         return data[0];
@@ -276,8 +285,8 @@ export async function getOrderSalesValueFromMonth(month:number, year:number) {
             WHERE
                 estimated_date >= ${start}::timestamptz
                 AND estimated_date < ${end}::timestamptz
-                
                 AND status = 'delivered'
+                AND deleted_at IS NULL
         `;
 
         const orders = data.map((order) => ({
@@ -304,6 +313,7 @@ export async function getEstimatedOrderSalesValueFromMonth(month:number, year:nu
             WHERE
                 estimated_date >= ${start}::timestamptz
                 AND estimated_date < ${end}::timestamptz
+                AND deleted_at IS NULL
         `;
 
         const orders = data.map((order) => ({
@@ -334,11 +344,63 @@ export async function getEstimatedOrdersFromMonth(month:number, year:number) {
             WHERE
                 estimated_date >= ${start}::timestamptz
                 AND estimated_date < ${end}::timestamptz
+                AND deleted_at IS NULL
         `;
     
         return data;
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order sales amount');
+    }
+}
+
+export async function fetchOrderStatusEvents(orderId: string) {
+    try {
+        const events = await sql<{
+            id: string;
+            fromStatus: OrderStatus | null;
+            toStatus: OrderStatus;
+            createdAt: string | Date;
+        }[]>`
+            SELECT
+                id,
+                from_status as "fromStatus",
+                to_status as "toStatus",
+                created_at as "createdAt"
+            FROM order_status_events
+            WHERE order_id = ${orderId}
+            ORDER BY created_at ASC
+        `;
+
+        return events.map((event) => ({
+            ...event,
+            createdAt:
+                event.createdAt instanceof Date
+                    ? event.createdAt.toISOString()
+                    : String(event.createdAt),
+        }));
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order status history.');
+    }
+}
+
+export async function fetchOrderAttachments(orderId: string) {
+    try {
+        return await sql<OrderAttachment[]>`
+            SELECT
+                order_attachments.id,
+                files.filename,
+                files.path,
+                files.mime_type as "mimeType",
+                files.size
+            FROM order_attachments
+            JOIN files ON files.id = order_attachments.file_id
+            WHERE order_attachments.order_id = ${orderId}
+            ORDER BY order_attachments.created_at DESC
+        `;
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order attachments.');
     }
 }
