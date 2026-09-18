@@ -79,3 +79,38 @@ export type OrderAttachment = {
   mimeType: string;
   size: number;
 };
+
+export const ORDER_PAYMENT_STATUS_VALUES = [
+  'pending',
+  'deposit',
+  'partial',
+  'paid',
+] as const;
+
+export type OrderPaymentStatus = (typeof ORDER_PAYMENT_STATUS_VALUES)[number];
+
+export const ORDER_PAYMENT_KIND_VALUES = [
+  'deposit',
+  'partial',
+  'full',
+] as const;
+
+export type OrderPaymentKind = (typeof ORDER_PAYMENT_KIND_VALUES)[number];
+
+export const ORDER_PAYMENT_METHOD_VALUES = [
+  'transfer',
+  'mercadopago',
+  'cash',
+  'other',
+] as const;
+
+export type OrderPaymentMethod = (typeof ORDER_PAYMENT_METHOD_VALUES)[number];
+
+export type OrderPayment = {
+  id: string;
+  amountCents: number;
+  kind: OrderPaymentKind;
+  method: OrderPaymentMethod;
+  notes: string;
+  paidAt: string;
+};

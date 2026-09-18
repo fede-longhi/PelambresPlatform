@@ -1,13 +1,14 @@
 import type { OrderStatus } from '@/types/order-definitions';
 import { ORDER_STATUS_VALUES, OrderStatuses } from '@/types/order-definitions';
 
-export type OrderListFilter = 'open' | OrderStatus | 'all';
+export type OrderListFilter = 'open' | 'unpaid' | OrderStatus | 'all';
 
 export const ORDER_LIST_FILTERS: {
   value: OrderListFilter;
   label: string;
 }[] = [
   { value: 'open', label: 'Activos' },
+  { value: 'unpaid', label: 'Sin pagar' },
   { value: 'pending', label: OrderStatuses.pending.label },
   { value: 'in progress', label: OrderStatuses['in progress'].label },
   { value: 'finished', label: OrderStatuses.finished.label },
@@ -21,7 +22,7 @@ export const DEFAULT_ORDER_LIST_FILTER: OrderListFilter = 'open';
 export function parseOrderListFilter(
   value: string | undefined
 ): OrderListFilter {
-  if (value === 'all' || value === 'open') {
+  if (value === 'all' || value === 'open' || value === 'unpaid') {
     return value;
   }
 

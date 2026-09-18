@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { fetchOrderAttachments, fetchOrderById, fetchOrderStatusEvents } from '@/lib/data/order-data';
+import { fetchOrderAttachments, fetchOrderById, fetchOrderPayments, fetchOrderStatusEvents } from '@/lib/data/order-data';
 import { fetchOrderPrintJobs } from '@/lib/data/print-job-data';
 import { fetchQuoteItemsForOrder } from '@/lib/data/quote-document-data';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
@@ -11,6 +11,7 @@ import OrderNotesForm from '@/app/(admin)/admin/orders/_components/order-notes-f
 import OrderStatusHistory from '@/app/(admin)/admin/orders/_components/order-status-history';
 import OrderQuoteItems from '@/app/(admin)/admin/orders/_components/order-quote-items';
 import OrderAttachments from '@/app/(admin)/admin/orders/_components/order-attachments';
+import OrderPaymentPanel from '@/app/(admin)/admin/orders/_components/order-payment-panel';
 import { DeleteOrder, EditOrder } from '@/app/(admin)/admin/orders/_components/buttons';
 import { lusitana } from '@/app/fonts';
 
@@ -24,11 +25,12 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const [order, printJobs, statusEvents, attachments] = await Promise.all([
+  const [order, printJobs, statusEvents, attachments, payments] = await Promise.all([
     fetchOrderById(id),
     fetchOrderPrintJobs(id),
     fetchOrderStatusEvents(id),
     fetchOrderAttachments(id),
+    fetchOrderPayments(id),
   ]);
 
   if (!order) {
@@ -71,6 +73,20 @@ export default async function Page({ params }: PageProps) {
       <div className="flex flex-col gap-4 lg:flex-row">
         <OrderDetailCard order={order} />
         <OrderCustomerDetailCard order={order} />
+      </div>
+
+      <div className="mt-4">
+        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+          <h2 className="text-lg font-semibold">Pago</h2>
+          <OrderPaymentPanel
+            orderId={order.id}
+            amountCents={Number(order.amount)}
+            paidAmountCents={Number(order.paid_amount_cents ?? 0)}
+            paymentStatus={order.payment_status ?? 'pending'}
+            paidAt={order.paid_at}
+            payments={payments}
+          />
+        </section>
       </div>
 
       {order.quote_id ? (

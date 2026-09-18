@@ -40,7 +40,8 @@ export default async function Page(props: {
         </Button>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        Pedidos a medida. El filtro Activos muestra pendientes y en producción.
+        Pedidos a medida. Activos muestra pendientes y en producción. Sin pagar
+        excluye cancelados.
       </p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
