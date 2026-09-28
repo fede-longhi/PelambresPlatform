@@ -6,12 +6,21 @@ import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { Customer } from '@/types/definitions';
 
+const optionalCustomerEmail = z
+    .string()
+    .trim()
+    .refine(
+        (value) => value === '' || z.string().email().safeParse(value).success,
+        { message: 'Debe ser un email válido.' }
+    )
+    .transform((value) => (value === '' ? null : value));
+
 const FormSchema = z.object({
     id: z.string(),
     name: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    email: z.string().email({ message: "Debe ser un email válido." }),
+    email: optionalCustomerEmail,
     phone: z.string(),
     type: z.enum(["person", "business"]),
 });
@@ -77,7 +86,7 @@ export async function createCustomer(
         name: formData.get("name"),
         firstName: formData.get("first-name"),
         lastName: formData.get("last-name"),
-        email: formData.get("email"),
+        email: String(formData.get("email") ?? ""),
         phone: formData.get("phone"),
         type: formData.get("type"),
     });
@@ -137,7 +146,7 @@ export async function updateCustomer(
         name: formData.get("name"),
         firstName: formData.get("first-name"),
         lastName: formData.get("last-name"),
-        email: formData.get("email"),
+        email: String(formData.get("email") ?? ""),
         phone: formData.get("phone"),
         type: formData.get("type"),
     });

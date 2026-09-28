@@ -149,7 +149,7 @@ export default function EditCustomerForm({
                 </div>
                 
                 <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email (opcional)</Label>
                     <Input
                         id="email"
                         type="email"

@@ -42,10 +42,10 @@ export function StatusField({
     : ORDER_CREATE_STATUS_VALUES;
 
   return (
-    <fieldset>
+    <fieldset className="min-w-0">
       <legend className="mb-2 text-sm font-medium">Estado del pedido</legend>
-      <div className="rounded-md border border-gray-200 bg-white px-4 py-3">
-        <div className="flex flex-col gap-4 md:flex-row">
+      <div className="max-w-full rounded-md border border-gray-200 bg-white px-4 py-3">
+        <div className="flex flex-wrap gap-x-4 gap-y-3">
           {statuses.map((statusValue) => {
             const status = OrderStatuses[statusValue];
             const Icon = status.icon;

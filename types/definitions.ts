@@ -112,7 +112,7 @@ export type Customer = {
     last_name: string;
     name: string;
     type: CustomerType;
-    email: string;
+    email: string | null;
     phone: string;
     address: string | null;
 }
