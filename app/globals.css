@@ -64,6 +64,7 @@ input[type='number']::-webkit-outer-spin-button {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --admin-canvas: 46 45% 95%;
   }
 
   .dark {

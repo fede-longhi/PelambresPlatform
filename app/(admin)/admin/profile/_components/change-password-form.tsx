@@ -31,7 +31,7 @@ export default function ChangePasswordForm({
   }, [state.message, toast, hasExistingPassword, onSuccess]);
 
   return (
-    <form action={formAction} className="space-y-4 rounded-md border bg-gray-50 p-6">
+    <form action={formAction} className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
       <h2 className="text-lg font-medium">
         {hasExistingPassword ? 'Cambiar contraseña' : 'Establecer contraseña'}
       </h2>

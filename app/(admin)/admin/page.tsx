@@ -8,15 +8,20 @@ export const metadata: Metadata = {
   title: 'Inicio',
 };
 
-export default function Page() {
+export default async function Page(props: {
+  searchParams?: Promise<{ page?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const currentPage = Number(searchParams?.page) || 1;
+
   return (
     <div>
       <PageHeader title="Inicio" />
       <p className="mt-2 mb-6 text-sm text-muted-foreground">
-        Lo que hay que atender hoy: solicitudes, presupuestos, pedidos y cobros.
+        Pendientes: solicitudes, presupuestos, pedidos y cobros.
       </p>
-      <Suspense fallback={<CardsSkeleton />}>
-        <Dashboard />
+      <Suspense key={currentPage} fallback={<CardsSkeleton />}>
+        <Dashboard currentPage={currentPage} />
       </Suspense>
     </div>
   );

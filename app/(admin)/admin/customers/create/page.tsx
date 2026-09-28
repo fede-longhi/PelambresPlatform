@@ -15,7 +15,7 @@ export default function Page() {
                 ]}
             />
             <div className="flex justify-center">
-                <div className="w-fit m-2 bg-gray-100 p-6 rounded-md">
+                <div className="m-2 w-fit rounded-lg border border-border bg-card p-6 shadow-sm">
                     <Form redirect />
                 </div>
             </div>

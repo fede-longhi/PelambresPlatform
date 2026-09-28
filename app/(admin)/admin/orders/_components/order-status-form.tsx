@@ -100,7 +100,7 @@ export default function OrderStatusForm({
 
             submitStatus(nextStatus, false);
           }}
-          className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+          className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
         >
           {ORDER_STATUS_VALUES.map((value) => (
             <option key={value} value={value}>

@@ -14,7 +14,7 @@ export default function OrderQuoteItems({
   items: QuoteItem[];
 }) {
   return (
-    <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+    <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Ítems del presupuesto</h2>
         <Link

@@ -39,7 +39,7 @@ export default function EditCustomerForm({
         
     return (
         <form action={formAction}>
-            <div className="rounded-md bg-gray-50 p-4 md:p-6">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm md:p-6">
                 <div aria-live="polite" aria-atomic="true">
                     {!state.success && state.message && (
                         <div className="flex flex-row items-center mt-2 text-sm text-red-500 border bg-slate-100 rounded-md p-2">
@@ -53,7 +53,7 @@ export default function EditCustomerForm({
                     <legend className="mb-2 block text-sm font-medium">
                         Type of Customer
                     </legend>
-                    <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
+                    <div className="rounded-md border border-border bg-muted/40 px-[14px] py-3">
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex items-center">
                                 <input

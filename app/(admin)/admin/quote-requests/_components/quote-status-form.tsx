@@ -58,7 +58,7 @@ export default function QuoteStatusForm({
           defaultValue={status}
           disabled={isPending}
           onChange={() => formRef.current?.requestSubmit()}
-          className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+          className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
         >
           {QUOTE_REQUEST_STATUSES.map((value) => (
             <option key={value} value={value}>

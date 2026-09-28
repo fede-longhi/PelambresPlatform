@@ -27,7 +27,7 @@ export default function ResetPasswordButton({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="mt-6 rounded-md border border-gray-200 bg-white p-4">
+    <div className="mt-6 rounded-md border border-border bg-muted/40 p-4">
       <h3 className="text-sm font-medium">Restablecer contraseña</h3>
       <p className="mt-1 text-sm text-muted-foreground">
         Genera una contraseña temporal. El usuario deberá cambiarla al ingresar.

@@ -68,7 +68,7 @@ export default function EditUserForm({
 
   return (
     <div className="w-full max-w-lg space-y-6">
-      <form action={formAction} noValidate className="space-y-4 rounded-md bg-gray-50 p-6">
+      <form action={formAction} noValidate className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
         <input type="hidden" name="role" value={role} />
 
         {!state.success && state.message && (

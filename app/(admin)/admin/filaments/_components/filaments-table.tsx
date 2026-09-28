@@ -27,17 +27,17 @@ export default async function FilamentsTable({
 
   if (filaments.length === 0) {
     return (
-      <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         No hay filamentos todavía. Use Nuevo filamento para agregar el primero.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+    <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
       <div className="md:hidden">
         {filaments.map((filament) => (
-          <div key={filament.id} className="mb-2 rounded-md bg-white p-4">
+          <div key={filament.id} className="mb-2 rounded-lg border border-border bg-card p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-medium">{filament.brand}</p>
@@ -57,7 +57,7 @@ export default async function FilamentsTable({
 
       <div className="hidden md:block">
         <Table className="min-w-full text-secondary-foreground">
-        <TableHeader className="[&_tr]:border-0">
+        <TableHeader className="bg-muted/60 [&_tr]:border-0">
           <TableRow className="border-0">
             <TableHead className="px-4 py-5 font-medium">Marca</TableHead>
             <TableHead className="px-4 py-5 font-medium">Tipo</TableHead>
@@ -67,7 +67,7 @@ export default async function FilamentsTable({
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="bg-white">
+        <TableBody className="bg-card">
           {filaments.map((filament) => (
             <TableRow key={filament.id} className="border-0">
               <TableCell className="px-4 py-4">{filament.brand}</TableCell>

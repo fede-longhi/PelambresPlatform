@@ -7,6 +7,9 @@ import type {
 } from '@/lib/data/admin-dashboard-data';
 import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import Pagination from '@/components/ui/pagination';
+
+const WORK_QUEUE_PAGE_SIZE = 10;
 
 const KPI_ITEMS = [
   {
@@ -37,11 +40,12 @@ const KPI_ITEMS = [
 ] as const;
 
 const WORK_ITEM_LABELS: Record<AdminDashboardWorkItemKind, string> = {
-  quote_unlinked: 'Solicitud',
+  quote_open: 'Solicitud',
   store_payment_review: 'Tienda',
   order_overdue: 'Atraso',
   quote_accepted_without_order: 'Presupuesto',
   order_unpaid: 'Cobro',
+  order_open: 'Pedido',
 };
 
 function DashboardKpis({
@@ -55,7 +59,7 @@ function DashboardKpis({
         <li key={item.key}>
           <Link
             href={item.href}
-            className="block rounded-lg border border-border bg-card px-4 py-3 transition-colors hover:bg-muted/40"
+            className="block rounded-lg border border-border bg-card px-4 py-3 shadow-sm transition-colors hover:bg-muted/40"
           >
             <p className="text-xs text-muted-foreground">{item.label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
@@ -71,16 +75,23 @@ function DashboardKpis({
 function WorkQueue({
   items,
   overdueCount,
+  currentPage,
 }: {
   items: AdminDashboardData['workItems'];
   overdueCount: number;
+  currentPage: number;
 }) {
+  const totalPages = Math.max(1, Math.ceil(items.length / WORK_QUEUE_PAGE_SIZE));
+  const page = Math.min(Math.max(currentPage, 1), totalPages);
+  const start = (page - 1) * WORK_QUEUE_PAGE_SIZE;
+  const pageItems = items.slice(start, start + WORK_QUEUE_PAGE_SIZE);
+
   return (
     <section aria-labelledby="dashboard-queue-heading">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h2 id="dashboard-queue-heading" className="text-lg font-semibold">
-            Bandeja de hoy
+            Pendientes
           </h2>
           {overdueCount > 0 ? (
             <p className="mt-1 text-sm text-muted-foreground">
@@ -106,30 +117,37 @@ function WorkQueue({
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-dashed bg-white px-4 py-8 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-card px-4 py-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No hay cobros, presupuestos ni solicitudes pendientes de atender.
+            No hay pendientes para atender.
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={item.href}
-                className="flex flex-col gap-1 rounded-lg border bg-white p-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">{item.subtitle}</p>
-                </div>
-                <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                  {WORK_ITEM_LABELS[item.kind]}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="space-y-2">
+            {pageItems.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                    {WORK_ITEM_LABELS[item.kind]}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {totalPages > 1 ? (
+            <div className="mt-5 flex w-full justify-center">
+              <Pagination totalPages={totalPages} />
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   );
@@ -144,7 +162,7 @@ function SalesSummary({ sales }: { sales: AdminDashboardData['sales'] }) {
   return (
     <section
       aria-labelledby="dashboard-sales-heading"
-      className="rounded-lg border bg-white p-5"
+      className="rounded-lg border border-border bg-card p-5 shadow-sm"
     >
       <h2 id="dashboard-sales-heading" className="text-lg font-semibold">
         Ingresos {sales.monthLabel}
@@ -237,7 +255,11 @@ function DashboardShortcuts() {
   );
 }
 
-export default async function Dashboard() {
+export default async function Dashboard({
+  currentPage,
+}: {
+  currentPage: number;
+}) {
   const dashboard = await fetchAdminDashboard();
 
   return (
@@ -247,6 +269,7 @@ export default async function Dashboard() {
         <WorkQueue
           items={dashboard.workItems}
           overdueCount={dashboard.kpis.overdueOrderCount}
+          currentPage={currentPage}
         />
         <SalesSummary sales={dashboard.sales} />
       </div>

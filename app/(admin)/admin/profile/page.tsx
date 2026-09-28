@@ -24,7 +24,7 @@ export default async function Page() {
 
       <h1 className={`${lusitana.className} mb-6 text-2xl`}>Mi perfil</h1>
 
-      <div className="mb-6 rounded-md border bg-white p-4 text-sm">
+      <div className="mb-6 rounded-lg border border-border bg-card p-4 text-sm shadow-sm">
         <p><span className="font-medium">Nombre:</span> {session.user.name}</p>
         <p className="mt-1"><span className="font-medium">Email:</span> {session.user.email}</p>
       </div>

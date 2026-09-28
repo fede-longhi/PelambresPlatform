@@ -44,7 +44,7 @@ export function StatusField({
   return (
     <fieldset className="min-w-0">
       <legend className="mb-2 text-sm font-medium">Estado del pedido</legend>
-      <div className="max-w-full rounded-md border border-gray-200 bg-white px-4 py-3">
+      <div className="max-w-full rounded-md border border-border bg-muted/40 px-4 py-3">
         <div className="flex flex-wrap gap-x-4 gap-y-3">
           {statuses.map((statusValue) => {
             const status = OrderStatuses[statusValue];
@@ -100,7 +100,7 @@ export function TrackingCodeInput({
           Código
         </Label>
         <InputOTP
-          className="bg-white"
+          className="bg-card"
           id="code"
           name="code"
           maxLength={TRACKING_CODE_LENGTH}
@@ -112,7 +112,7 @@ export function TrackingCodeInput({
           aria-describedby="code-error"
           aria-invalid={!!errors?.length}
         >
-          <InputOTPGroup className="bg-white">
+          <InputOTPGroup className="bg-card">
             {[...Array(TRACKING_CODE_LENGTH)].map((_, index) => (
               <InputOTPSlot key={index} index={index} />
             ))}

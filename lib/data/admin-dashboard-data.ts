@@ -1,13 +1,20 @@
 import sql from '@/lib/db';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
 import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
+import { getOrderStatusLabel } from '@/lib/consts/order-list-consts';
+import { getOrderPaymentStatusLabel } from '@/lib/consts/order-payment-consts';
+import {
+  QUOTE_REQUEST_STATUS_LABELS,
+  type QuoteRequestStatus,
+} from '@/lib/consts/quote-request-consts';
 
 export type AdminDashboardWorkItemKind =
-  | 'quote_unlinked'
+  | 'quote_open'
   | 'store_payment_review'
   | 'order_overdue'
   | 'quote_accepted_without_order'
-  | 'order_unpaid';
+  | 'order_unpaid'
+  | 'order_open';
 
 export type AdminDashboardWorkItem = {
   id: string;
@@ -49,6 +56,7 @@ type QuoteRow = {
   last_name: string | null;
   name: string;
   email: string;
+  status: string;
 };
 
 type StoreReviewRow = {
@@ -57,10 +65,14 @@ type StoreReviewRow = {
   itemName: string | null;
 };
 
-type OverdueOrderRow = {
+type OpenOrderRow = {
   id: string;
   tracking_code: string;
+  status: string;
+  paymentStatus: string;
   estimated_date: string;
+  isOverdue: boolean;
+  remainingCents: number;
   customer_name: string | null;
 };
 
@@ -69,14 +81,6 @@ type AcceptedQuoteRow = {
   quoteNumber: number;
   clientName: string;
   totalCents: number;
-};
-
-type UnpaidOrderRow = {
-  id: string;
-  tracking_code: string;
-  status: string;
-  remainingCents: number;
-  customer_name: string | null;
 };
 
 function toNumber(value: unknown): number {
@@ -107,6 +111,39 @@ function quoteDisplayName(quote: QuoteRow) {
   return quote.name || quote.email || 'Sin nombre';
 }
 
+function openOrderKind(order: OpenOrderRow): AdminDashboardWorkItemKind {
+  if (order.isOverdue) {
+    return 'order_overdue';
+  }
+
+  if (
+    (order.status === 'finished' || order.status === 'delivered') &&
+    order.paymentStatus !== 'paid'
+  ) {
+    return 'order_unpaid';
+  }
+
+  return 'order_open';
+}
+
+function openOrderSubtitle(order: OpenOrderRow) {
+  const parts = [
+    order.isOverdue
+      ? `Estimada ${formatDateToLocal(order.estimated_date, 'es-AR')}`
+      : null,
+    getOrderStatusLabel(order.status),
+    order.customer_name,
+    order.paymentStatus !== 'paid'
+      ? getOrderPaymentStatusLabel(order.paymentStatus)
+      : null,
+    order.paymentStatus !== 'paid' && order.remainingCents > 0
+      ? formatCurrency(toNumber(order.remainingCents))
+      : null,
+  ];
+
+  return parts.filter(Boolean).join(' · ');
+}
+
 export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
   const now = new Date();
   const year = now.getUTCFullYear();
@@ -134,9 +171,8 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       storePending,
       unlinkedQuotes,
       paymentReviews,
-      overdueOrders,
+      openOrders,
       acceptedQuotes,
-      unpaidReadyOrders,
     ] = await Promise.all([
       sql<CountRow[]>`
         SELECT COUNT(*) AS count
@@ -234,13 +270,11 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           first_name,
           last_name,
           name,
-          email
+          email,
+          status
         FROM quote_requests
-        WHERE customer_id IS NULL
-          AND date >= NOW() - INTERVAL '14 days'
-          AND status IN ('new', 'in_progress')
+        WHERE status IN ('new', 'in_progress')
         ORDER BY date DESC
-        LIMIT 6
       `,
       sql<StoreReviewRow[]>`
         SELECT
@@ -257,13 +291,19 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         ) i ON true
         WHERE o.status = 'payment_review'
         ORDER BY o.created_at DESC
-        LIMIT 6
       `,
-      sql<OverdueOrderRow[]>`
+      sql<OpenOrderRow[]>`
         SELECT
           orders.id,
           orders.tracking_code,
+          orders.status,
+          orders.payment_status AS "paymentStatus",
           orders.estimated_date,
+          (
+            orders.status NOT IN ('delivered', 'cancelled')
+            AND orders.estimated_date < CURRENT_DATE
+          ) AS "isOverdue",
+          (orders.amount - orders.paid_amount_cents) AS "remainingCents",
           CASE
             WHEN customers.type = 'person'
               THEN TRIM(CONCAT(COALESCE(customers.last_name, ''), ', ', COALESCE(customers.first_name, '')))
@@ -271,11 +311,20 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           END AS customer_name
         FROM orders
         LEFT JOIN customers ON orders.customer_id = customers.id
-        WHERE orders.status NOT IN ('delivered', 'cancelled')
-          AND orders.estimated_date < CURRENT_DATE
-          AND orders.deleted_at IS NULL
-        ORDER BY orders.estimated_date ASC
-        LIMIT 6
+        WHERE orders.deleted_at IS NULL
+          AND orders.status <> 'cancelled'
+          AND NOT (
+            orders.status = 'delivered'
+            AND orders.payment_status = 'paid'
+          )
+        ORDER BY
+          CASE
+            WHEN orders.status NOT IN ('delivered', 'cancelled')
+              AND orders.estimated_date < CURRENT_DATE THEN 0
+            ELSE 1
+          END,
+          orders.estimated_date ASC NULLS LAST,
+          orders.created_date DESC
       `,
       sql<AcceptedQuoteRow[]>`
         SELECT
@@ -291,26 +340,6 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           AND quotes.deleted_at IS NULL
           AND orders.id IS NULL
         ORDER BY quotes.updated_at DESC
-        LIMIT 6
-      `,
-      sql<UnpaidOrderRow[]>`
-        SELECT
-          orders.id,
-          orders.tracking_code,
-          orders.status,
-          (orders.amount - orders.paid_amount_cents) as "remainingCents",
-          CASE
-            WHEN customers.type = 'person'
-              THEN TRIM(CONCAT(COALESCE(customers.last_name, ''), ', ', COALESCE(customers.first_name, '')))
-            ELSE customers.name
-          END AS customer_name
-        FROM orders
-        JOIN customers ON orders.customer_id = customers.id
-        WHERE orders.payment_status IN ('pending', 'deposit', 'partial')
-          AND orders.status IN ('finished', 'delivered')
-          AND orders.deleted_at IS NULL
-        ORDER BY COALESCE(orders.delivered_date, orders.created_date) DESC
-        LIMIT 6
       `,
     ]);
 
@@ -324,31 +353,11 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
           : 'Comprobante de transferencia en revisión',
         href: `/admin/store-orders/${order.id}`,
       })),
-      ...unpaidReadyOrders.map((order) => ({
-        id: `unpaid-${order.id}`,
-        kind: 'order_unpaid' as const,
+      ...openOrders.map((order) => ({
+        id: `order-${order.id}`,
+        kind: openOrderKind(order),
         title: order.tracking_code,
-        subtitle: [
-          order.status === 'delivered'
-            ? 'Entregado sin cobrar'
-            : 'Terminado sin cobrar',
-          order.customer_name,
-          formatCurrency(toNumber(order.remainingCents)),
-        ]
-          .filter(Boolean)
-          .join(' · '),
-        href: `/admin/orders/${order.id}`,
-      })),
-      ...overdueOrders.map((order) => ({
-        id: `overdue-${order.id}`,
-        kind: 'order_overdue' as const,
-        title: order.tracking_code,
-        subtitle: [
-          `Estimada ${formatDateToLocal(order.estimated_date, 'es-AR')}`,
-          order.customer_name,
-        ]
-          .filter(Boolean)
-          .join(' · '),
+        subtitle: openOrderSubtitle(order),
         href: `/admin/orders/${order.id}`,
       })),
       ...acceptedQuotes.map((quote) => ({
@@ -360,12 +369,14 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       })),
       ...unlinkedQuotes.map((quote) => ({
         id: `quote-${quote.id}`,
-        kind: 'quote_unlinked' as const,
+        kind: 'quote_open' as const,
         title: quoteDisplayName(quote),
-        subtitle: 'Solicitud reciente sin cliente vinculado',
+        subtitle:
+          QUOTE_REQUEST_STATUS_LABELS[quote.status as QuoteRequestStatus] ??
+          quote.status,
         href: `/admin/quote-requests/${quote.id}`,
       })),
-    ].slice(0, 10);
+    ];
 
     return {
       kpis: {

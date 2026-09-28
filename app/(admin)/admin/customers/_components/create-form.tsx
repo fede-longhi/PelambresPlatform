@@ -60,7 +60,7 @@ export default function CustomerForm({
                 <legend className="mb-2 block text-sm font-medium">
                     Type of Customer
                 </legend>
-                <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
+                <div className="rounded-md border border-border bg-muted/40 px-[14px] py-3">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex items-center">
                             <input

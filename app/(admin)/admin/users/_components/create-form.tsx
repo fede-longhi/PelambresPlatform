@@ -35,7 +35,7 @@ export default function CreateUserForm() {
 
   if (state.success && state.tempPassword) {
     return (
-      <div className="w-full max-w-lg space-y-4 rounded-md bg-gray-50 p-6">
+      <div className="w-full max-w-lg space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
         <h2 className="text-lg font-medium text-green-700">Usuario creado</h2>
         <p className="text-sm text-muted-foreground">
           {state.user ? getUserDisplayName(state.user) : 'Usuario'} ({state.user?.email}) fue creado
@@ -55,7 +55,7 @@ export default function CreateUserForm() {
   }
 
   return (
-    <form action={formAction} noValidate className="w-full max-w-lg space-y-4 rounded-md bg-gray-50 p-6">
+    <form action={formAction} noValidate className="w-full max-w-lg space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
       <input type="hidden" name="role" value={role} />
 
       {!state.success && state.message && (

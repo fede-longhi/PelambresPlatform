@@ -36,7 +36,7 @@ export default async function CustomerLastQuotes({
               <li key={quote.id}>
                 <Link
                   href={`/admin/quotes/${quote.id}`}
-                  className="flex flex-col gap-1 rounded-lg bg-gray-50 px-3 py-2 hover:bg-gray-200 sm:flex-row sm:items-center sm:justify-between sm:space-x-4"
+                  className="flex flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2 shadow-sm hover:bg-muted sm:flex-row sm:items-center sm:justify-between sm:space-x-4"
                 >
                   <span className="font-medium">
                     Nº {formatQuoteNumber(quote.quoteNumber)}

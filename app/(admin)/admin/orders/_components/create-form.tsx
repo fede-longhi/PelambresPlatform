@@ -23,7 +23,7 @@ export default function CreateForm() {
 
   return (
     <form action={formAction}>
-      <div className="space-y-4 rounded-md bg-gray-50 p-4 md:p-6">
+      <div className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-sm md:p-6">
         <TrackingCodeInput
           errors={state.errors?.code}
         />

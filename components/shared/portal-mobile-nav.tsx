@@ -71,7 +71,7 @@ export function PortalMobileNav({ logoHref, children }: PortalMobileNavProps) {
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(100vw,20rem)] flex-col overflow-hidden bg-background shadow-lg transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:shadow-none',
+          'fixed inset-y-0 left-0 z-50 flex h-dvh w-[min(100vw,20rem)] flex-col overflow-hidden bg-card shadow-lg transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:border-r md:border-border md:shadow-none',
           isOpen
             ? 'translate-x-0'
             : '-translate-x-full max-md:pointer-events-none md:translate-x-0'

@@ -433,7 +433,7 @@ export function ProductCategoryPicker({
           <ul
             id={listboxId}
             role="listbox"
-            className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-slate-200 bg-white py-1 shadow-lg"
+            className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-border bg-card py-1 shadow-lg"
           >
             {suggestions.length === 0 && !canOfferCreateFromQuery ? (
               <li className="px-3 py-2 text-sm text-slate-500">

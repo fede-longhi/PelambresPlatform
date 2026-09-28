@@ -49,7 +49,7 @@ export default function AdminListFilter({
         id={id}
         value={selectedValue}
         onChange={(event) => handleFilterChange(event.target.value)}
-        className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm sm:min-w-[200px]"
+        className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm shadow-sm sm:min-w-[200px]"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

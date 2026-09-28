@@ -33,7 +33,7 @@ export default function OrderEditForm({ order }: OrderEditFormProps) {
   const amountInPesos = centsToPesos(order.amount);
 
   return (
-    <form action={formAction} className="min-w-0 space-y-4 rounded-lg border p-4 shadow-md">
+    <form action={formAction} className="min-w-0 space-y-4 rounded-lg border border-border bg-card p-4 shadow-sm">
       <TrackingCodeInput
         defaultValue={order.tracking_code}
         errors={state.errors?.code}

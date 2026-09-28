@@ -83,7 +83,7 @@ export default function CategoryForm({ mode, category }: CategoryFormProps) {
 
       <form
         action={formAction}
-        className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+        className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm md:p-8"
         aria-busy={isPending}
       >
         <div aria-live="polite" aria-atomic="true">
