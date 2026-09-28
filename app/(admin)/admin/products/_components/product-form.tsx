@@ -131,7 +131,7 @@ export default function ProductForm({
 
       <form
         action={formAction}
-        className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+        className="space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm md:p-8"
         aria-busy={isPending}
       >
         <div aria-live="polite" aria-atomic="true">
@@ -197,7 +197,7 @@ export default function ProductForm({
             )}
           </div>
 
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4 md:col-span-2">
+          <div className="space-y-4 rounded-lg border border-border bg-muted/40 p-4 md:col-span-2">
             <div>
               <p className="text-sm font-medium text-slate-900">Precio</p>
               <p className="text-xs text-slate-500">

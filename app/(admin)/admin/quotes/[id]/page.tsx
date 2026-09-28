@@ -81,7 +81,7 @@ export default async function Page({ params }: PageProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Datos del presupuesto</h2>
           <dl className="space-y-3 text-sm">
             <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
@@ -136,7 +136,7 @@ export default async function Page({ params }: PageProps) {
           </dl>
         </section>
 
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Cliente</h2>
           <dl className="space-y-3 text-sm">
             <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
@@ -174,7 +174,7 @@ export default async function Page({ params }: PageProps) {
         </section>
       </div>
 
-      <section className="mt-6 space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+      <section className="mt-6 space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Ítems</h2>
         {quote.items.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin ítems.</p>

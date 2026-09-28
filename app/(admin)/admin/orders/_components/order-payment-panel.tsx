@@ -175,7 +175,7 @@ export default function OrderPaymentPanel({
                 onChange={(event) =>
                   handleKindChange(event.target.value as OrderPaymentKind)
                 }
-                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
                 aria-invalid={!!state.errors?.kind}
                 aria-describedby="order-payment-kind-error"
               >
@@ -201,7 +201,7 @@ export default function OrderPaymentPanel({
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 readOnly={kind === 'full'}
-                className="bg-white"
+                className="bg-card"
                 aria-invalid={!!state.errors?.amount}
                 aria-describedby="order-payment-amount-error"
               />
@@ -216,7 +216,7 @@ export default function OrderPaymentPanel({
                 id="order-payment-method"
                 name="method"
                 defaultValue="transfer"
-                className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
                 aria-invalid={!!state.errors?.method}
                 aria-describedby="order-payment-method-error"
               >

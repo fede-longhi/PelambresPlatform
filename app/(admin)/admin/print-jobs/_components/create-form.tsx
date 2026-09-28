@@ -71,7 +71,7 @@ export default function PrintJobCreateForm({ orderId, orders, handleCancel } : P
 
     return (
         <form action={handleSubmit}>
-            <div className="rounded-md bg-gray-50 p-4 md:p-6">
+            <div className="rounded-lg border border-border bg-card p-4 shadow-sm md:p-6">
                 {state.message && !state.success && (
                 <div className="flex items-center text-sm text-red-500 border bg-slate-100 rounded-md p-2">
                     <CircleX className="mr-2" />
@@ -92,7 +92,7 @@ export default function PrintJobCreateForm({ orderId, orders, handleCancel } : P
                                     name="order_id"
                                     required
                                     defaultValue=""
-                                    className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                                    className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
                                 >
                                     <option value="" disabled>
                                         Elegir un pedido
@@ -130,7 +130,7 @@ export default function PrintJobCreateForm({ orderId, orders, handleCancel } : P
                         <Label htmlFor="gcode_file">G-code</Label>
                         {
                             gcodeFile ? 
-                            <div className="flex flex-row items-center rounded border p-1 text-xs bg-white">
+                            <div className="flex flex-row items-center rounded border border-border bg-card p-1 text-xs">
                                 <File className="mr-2"/>
                                     <p>{gcodeFile.name}</p>
                                     <span className="flex-1"/>
@@ -173,7 +173,7 @@ export default function PrintJobCreateForm({ orderId, orders, handleCancel } : P
                                         models.map(
                                             (model, i) => {
                                                 return (
-                                                    <li key={i} className="flex flex-row items-center rounded border p-1 text-xs bg-white">
+                                                    <li key={i} className="flex flex-row items-center rounded border border-border bg-card p-1 text-xs">
                                                         <File className="mr-2"/>
                                                         <p>{model.name}</p>
                                                         <span className="flex-1"/>
@@ -209,7 +209,7 @@ export default function PrintJobCreateForm({ orderId, orders, handleCancel } : P
                             id="filament_type"
                             name="filament_type"
                             defaultValue="pla"
-                            className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+                            className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
                         >
                             {FILAMENT_TYPES.map((filament) => (
                                 <option key={filament.name} value={filament.name}>

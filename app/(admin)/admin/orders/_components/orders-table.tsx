@@ -19,7 +19,7 @@ export default async function OrdersTable({
 
   if (orders.length === 0) {
     return (
-      <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="mt-6 rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         {filter === 'open'
           ? 'No hay pedidos activos.'
           : filter === 'unpaid'
@@ -34,7 +34,7 @@ export default async function OrdersTable({
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
-        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+        <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
           <div className="md:hidden">
             {orders.map((order) => {
               const overdue = isOrderOverdue(order.status, order.estimated_date);
@@ -43,7 +43,7 @@ export default async function OrdersTable({
                 <Link
                   key={order.id}
                   href={`/admin/orders/${order.id}`}
-                  className="mb-2 block w-full rounded-md bg-white p-4"
+                  className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3 border-b pb-4">
                     <div className="min-w-0">
@@ -81,7 +81,7 @@ export default async function OrdersTable({
           </div>
 
           <table className="hidden min-w-full text-gray-900 md:table">
-            <thead className="rounded-lg text-left text-sm font-normal">
+            <thead className="bg-muted/60 text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Código
@@ -106,7 +106,7 @@ export default async function OrdersTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white">
+            <tbody className="bg-card">
               {orders.map((order) => {
                 const overdue = isOrderOverdue(
                   order.status,

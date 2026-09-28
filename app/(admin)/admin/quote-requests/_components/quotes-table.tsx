@@ -28,7 +28,7 @@ export default async function QuotesTable({
 
   if (quotes.length === 0) {
     return (
-      <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="mt-6 rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         {filter === 'open'
           ? 'No hay solicitudes abiertas.'
           : 'No se encontraron solicitudes con esos filtros.'}
@@ -39,13 +39,13 @@ export default async function QuotesTable({
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
-        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+        <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
           <div className="md:hidden">
             {quotes.map((quote) => (
               <Link
                 key={quote.id}
                 href={`/admin/quote-requests/${quote.id}`}
-                className="mb-2 block w-full rounded-md bg-white p-4"
+                className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between border-b pb-4">
                   <div>
@@ -68,7 +68,7 @@ export default async function QuotesTable({
             ))}
           </div>
           <table className="hidden min-w-full text-gray-900 md:table">
-            <thead className="rounded-lg text-left text-sm font-normal">
+            <thead className="bg-muted/60 text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
                   Nombre
@@ -90,7 +90,7 @@ export default async function QuotesTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white">
+            <tbody className="bg-card">
               {quotes.map((quote) => (
                 <tr
                   key={quote.id}

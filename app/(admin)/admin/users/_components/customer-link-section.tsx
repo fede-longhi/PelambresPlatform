@@ -89,7 +89,7 @@ export default function CustomerLinkSection({
   }, [userEmail]);
 
   return (
-    <fieldset className="space-y-4 rounded-md border border-gray-200 bg-white p-4">
+    <fieldset className="space-y-4 rounded-md border border-border bg-muted/40 p-4">
       <legend className="px-1 text-sm font-medium">Vinculación con cliente</legend>
 
       <p className="text-xs text-muted-foreground">

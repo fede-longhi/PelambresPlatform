@@ -7,8 +7,9 @@ import { deleteConfiguration } from "@/lib/actions/configuration-actions";
 
 export default function ConfigurationTable({configurations, className} : {configurations: ConfigurationVariable[], className?: string}) {
     return (
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <Table className={className}>
-            <TableHeader>
+            <TableHeader className="bg-muted/60">
                 <TableRow>
                     <TableHead className="w-[200px]">Clave</TableHead>
                     <TableHead className="w-[200px]">Valor</TableHead>
@@ -43,5 +44,6 @@ export default function ConfigurationTable({configurations, className} : {config
                 }
             </TableBody>
         </Table>
+        </div>
     );
 }

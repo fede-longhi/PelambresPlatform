@@ -17,7 +17,7 @@ export default async function PrintJobsTable({
 
   if (printJobs.length === 0) {
     return (
-      <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         {filter === 'active'
           ? 'No hay trabajos activos.'
           : 'No se encontraron trabajos con esos filtros.'}
@@ -28,13 +28,13 @@ export default async function PrintJobsTable({
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
-        <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+        <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
           <div className="md:hidden">
             {printJobs.map((job) => (
               <Link
                 key={job.id}
                 href={`/admin/print-jobs/${job.id}`}
-                className="mb-2 block w-full rounded-md bg-white p-4"
+                className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-3 border-b pb-4">
                   <p className="font-medium">{job.name}</p>
@@ -52,7 +52,7 @@ export default async function PrintJobsTable({
           </div>
 
           <table className="hidden min-w-full text-gray-900 md:table">
-            <thead className="rounded-lg text-left text-sm font-normal">
+            <thead className="bg-muted/60 text-left text-sm font-normal">
               <tr>
                 <th scope="col" className="px-4 py-5 font-medium sm:pl-6">
                   Trabajo
@@ -71,7 +71,7 @@ export default async function PrintJobsTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white">
+            <tbody className="bg-card">
               {printJobs.map((job) => (
                 <tr
                   key={job.id}

@@ -60,7 +60,7 @@ function SortableCategoryRow({
     <li
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 ${
+      className={`flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-3 ${
         isDragging ? 'z-10 shadow-md' : ''
       }`}
     >
@@ -195,7 +195,7 @@ export function CategorySortableList({
       )}
 
       {categories.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-500">
+        <p className="rounded-lg border border-dashed border-border bg-card p-6 text-sm text-slate-500">
           Todavía no hay categorías de {getStoreProductTypeLabel(productType).toLowerCase()}.
         </p>
       ) : (

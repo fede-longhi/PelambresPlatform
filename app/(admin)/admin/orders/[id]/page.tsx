@@ -76,7 +76,7 @@ export default async function Page({ params }: PageProps) {
       </div>
 
       <div className="mt-4">
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Pago</h2>
           <OrderPaymentPanel
             orderId={order.id}
@@ -100,18 +100,18 @@ export default async function Page({ params }: PageProps) {
       ) : null}
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Notas internas</h2>
           <OrderNotesForm orderId={order.id} notes={order.notes ?? ''} />
         </section>
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Historial de estados</h2>
           <OrderStatusHistory events={statusEvents} />
         </section>
       </div>
 
       <div className="mt-4">
-        <section className="space-y-4 rounded-lg border bg-white p-5 sm:p-6">
+        <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
           <h2 className="text-lg font-semibold">Archivos adjuntos</h2>
           <OrderAttachments orderId={order.id} attachments={attachments} />
         </section>

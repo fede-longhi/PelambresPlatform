@@ -33,16 +33,16 @@ export default async function ProductsTable({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         No hay artículos todavía. Creá el primero para armar el catálogo.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <Table className="min-w-full text-secondary-foreground">
-        <TableHeader className="[&_tr]:border-0">
+        <TableHeader className="bg-muted/60 [&_tr]:border-0">
           <TableRow className="border-0">
             <TableHead className="px-4 py-5 font-medium">Nombre</TableHead>
             <TableHead className="px-4 py-5 font-medium">Tipo</TableHead>
@@ -52,7 +52,7 @@ export default async function ProductsTable({
             <TableHead />
           </TableRow>
         </TableHeader>
-        <TableBody className="bg-white">
+        <TableBody className="bg-card">
           {products.map((product) => (
             <TableRow
               key={product.id}

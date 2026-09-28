@@ -40,7 +40,7 @@ export default async function StoreOrdersTable({
 
   if (orders.length === 0) {
     return (
-      <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
         {filter === 'attention'
           ? 'No hay comprobantes en revisión.'
           : 'No se encontraron pedidos de tienda con esos filtros.'}
@@ -49,13 +49,13 @@ export default async function StoreOrdersTable({
   }
 
   return (
-    <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
+    <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
       <div className="md:hidden">
         {orders.map((order) => (
           <Link
             key={order.id}
             href={`/admin/store-orders/${order.id}`}
-            className="mb-2 block w-full rounded-md bg-white p-4"
+            className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3 border-b pb-3">
               <div className="min-w-0">
@@ -82,7 +82,7 @@ export default async function StoreOrdersTable({
       </div>
 
       <Table className="hidden min-w-full text-secondary-foreground md:table">
-        <TableHeader className="[&_tr]:border-0">
+        <TableHeader className="bg-muted/60 [&_tr]:border-0">
           <TableRow className="border-0">
             <TableHead className="px-4 py-5 font-medium">Fecha</TableHead>
             <TableHead className="px-4 py-5 font-medium">Comprador</TableHead>

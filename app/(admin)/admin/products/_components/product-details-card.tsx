@@ -208,7 +208,7 @@ export function ProductDetailsCard({ product }: ProductDetailsCardProps) {
   };
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6">
+    <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">
           Datos del artículo

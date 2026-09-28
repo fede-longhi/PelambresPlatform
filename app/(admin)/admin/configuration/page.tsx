@@ -25,7 +25,7 @@ export default async function Page() {
             {hasConfigurations ? (
                 <ConfigurationList configurationVariables={configurations} />
             ) : (
-                <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
                     No hay variables de configuración.
                 </div>
             )}

@@ -30,14 +30,14 @@ export default async function AdminCoursesPage() {
       </p>
 
       {courses.length === 0 ? (
-        <div className="mt-6 rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+        <div className="mt-6 rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
           Todavía no hay cursos creados.
         </div>
       ) : (
         <div className="mt-6">
           <div className="md:hidden">
             {courses.map((course) => (
-              <div key={course.id} className="mb-2 rounded-md border bg-white p-4">
+              <div key={course.id} className="mb-2 rounded-lg border border-border bg-card p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3 border-b pb-3">
                   <div className="min-w-0">
                     <Link
@@ -85,7 +85,7 @@ export default async function AdminCoursesPage() {
             ))}
           </div>
 
-          <div className="hidden overflow-hidden rounded-lg border bg-white md:block">
+          <div className="hidden overflow-hidden rounded-lg border border-border bg-card shadow-sm md:block">
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-left text-muted-foreground">
                 <tr>

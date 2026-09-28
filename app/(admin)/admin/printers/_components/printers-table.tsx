@@ -14,15 +14,16 @@ export default async function PrintersTable({
 
     if (printers.length === 0) {
         return (
-            <div className="rounded-lg bg-gray-50 p-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
                 No se encontraron impresoras.
             </div>
         );
     }
 
     return (
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/60">
                 <TableRow>
                     <TableHead className="w-[200px]">Nombre</TableHead>
                     <TableHead className="w-[200px]">Estado</TableHead>
@@ -41,5 +42,6 @@ export default async function PrintersTable({
                 }
             </TableBody>
         </Table>
+        </div>
     );
 }

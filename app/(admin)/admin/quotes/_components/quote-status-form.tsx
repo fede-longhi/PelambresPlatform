@@ -56,7 +56,7 @@ export default function QuoteDocumentStatusForm({
             formData.set('status', event.currentTarget.value);
             formAction(formData);
           }}
-          className="mt-1 flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm"
+          className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
         >
           {QUOTE_DOCUMENT_STATUSES.map((value) => (
             <option key={value} value={value}>
