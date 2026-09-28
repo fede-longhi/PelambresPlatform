@@ -18,7 +18,7 @@ export const ORDER_LIST_FILTERS: {
   { value: 'all', label: 'Todos' },
 ];
 
-export const DEFAULT_ORDER_LIST_FILTER: OrderListFilter = 'open';
+export const DEFAULT_ORDER_LIST_FILTER: OrderListFilter = 'all';
 
 export function parseOrderListFilter(
   value: string | undefined
