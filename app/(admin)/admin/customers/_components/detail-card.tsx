@@ -36,7 +36,7 @@ export default function CustomerDetailCard({customer, className} : {customer: Cu
                 }
                 <div className="flex flex-col">
                     <span className="text-sm text-gray-500">Email</span>
-                    <span>{customer.email}</span>
+                    <span>{customer.email || '—'}</span>
                 </div>
                 <div className="flex flex-col">
                     <span className="text-sm text-gray-500">Teléfono</span>

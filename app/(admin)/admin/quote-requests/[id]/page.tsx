@@ -136,7 +136,7 @@ export default async function Page({ params }: PageProps) {
                     </Link>
                   }
                 />
-                <DetailRow label="Email" value={quote.customer.email} />
+                <DetailRow label="Email" value={quote.customer.email || '—'} />
                 <DetailRow label="Teléfono" value={quote.customer.phone} />
                 <DetailRow
                   label="Tipo"

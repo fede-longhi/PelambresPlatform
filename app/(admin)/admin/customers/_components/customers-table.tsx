@@ -55,7 +55,7 @@ export default async function CustomersTable ({
                                     </Link>
                                 </TableCell>
                                 <TableCell className="p-3">{customer.type === 'business' ? 'Empresa' : 'Persona'}</TableCell>
-                                <TableCell className="p-3">{customer.email}</TableCell>
+                                <TableCell className="p-3">{customer.email || '—'}</TableCell>
                                 <TableCell className="p-3">{customer.phone}</TableCell>
                                 <TableCell className="flex flex-row space-x-4">
                                     <EditCustomerButton id={customer.id} />
