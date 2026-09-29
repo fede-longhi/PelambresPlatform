@@ -1,3 +1,4 @@
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import type {
   StoreOrderStatus,
   StorePaymentMethod,
@@ -216,6 +217,26 @@ export const STORE_PAYMENT_METHODS = [
   { value: 'mercadopago' as const, label: 'Mercado Pago' },
   { value: 'transfer' as const, label: 'Transferencia bancaria' },
 ] as const;
+
+export function getStoreOrderStatusBadgeClass(status: string): string {
+  if (status === 'payment_review') {
+    return statusBadgeClass('progress');
+  }
+
+  if (status === 'paid') {
+    return statusBadgeClass('success');
+  }
+
+  if (status === 'failed' || status === 'cancelled') {
+    return statusBadgeClass('danger');
+  }
+
+  if (status === 'refunded') {
+    return statusBadgeClass('closed');
+  }
+
+  return statusBadgeClass('neutral');
+}
 
 export function getStoreOrderStatusLabel(status: StoreOrderStatus): string {
   return (

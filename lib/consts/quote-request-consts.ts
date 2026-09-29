@@ -1,3 +1,5 @@
+import { statusBadgeClass } from '@/lib/consts/status-badge';
+
 export const QUOTE_REQUEST_STATUSES = [
   'new',
   'in_progress',
@@ -50,22 +52,18 @@ export function getQuoteRequestStatusLabel(status: string): string {
   );
 }
 
-export function getQuoteRequestStatusBadgeClass(status: string): string | undefined {
-  if (status === 'new') {
-    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
-  }
-
+export function getQuoteRequestStatusBadgeClass(status: string): string {
   if (status === 'in_progress') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+    return statusBadgeClass('progress');
   }
 
   if (status === 'quoted') {
-    return 'border-transparent bg-sky-100 text-sky-900 hover:bg-sky-100';
+    return statusBadgeClass('info');
   }
 
   if (status === 'closed') {
-    return 'border-transparent bg-zinc-200 text-zinc-700 hover:bg-zinc-200';
+    return statusBadgeClass('closed');
   }
 
-  return undefined;
+  return statusBadgeClass('neutral');
 }

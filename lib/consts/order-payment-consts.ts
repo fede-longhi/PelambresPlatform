@@ -1,3 +1,4 @@
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import {
   ORDER_PAYMENT_KIND_VALUES,
   ORDER_PAYMENT_METHOD_VALUES,
@@ -59,24 +60,20 @@ export function getOrderPaymentMethodLabel(method: string): string {
   return option?.label ?? method;
 }
 
-export function getOrderPaymentBadgeClass(status: string): string | undefined {
-  if (status === 'pending') {
-    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
-  }
-
+export function getOrderPaymentBadgeClass(status: string): string {
   if (status === 'deposit') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+    return statusBadgeClass('progress');
   }
 
   if (status === 'partial') {
-    return 'border-transparent bg-sky-100 text-sky-900 hover:bg-sky-100';
+    return statusBadgeClass('info');
   }
 
   if (status === 'paid') {
-    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+    return statusBadgeClass('success');
   }
 
-  return undefined;
+  return statusBadgeClass('neutral');
 }
 
 export function getOrderPaymentRemainingCents(

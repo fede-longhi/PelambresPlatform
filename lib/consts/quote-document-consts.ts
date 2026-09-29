@@ -1,3 +1,4 @@
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import type { Customer } from '@/types/definitions';
 import type { QuoteBuilderState, QuoteItem, TaxItem } from '@/types/quote';
 import {
@@ -71,24 +72,20 @@ export function getQuoteDocumentStatusLabel(status: string): string {
   );
 }
 
-export function getQuoteDocumentStatusBadgeClass(status: string): string | undefined {
-  if (status === 'draft') {
-    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
+export function getQuoteDocumentStatusBadgeClass(status: string): string {
+  if (status === 'sent') {
+    return statusBadgeClass('progress');
   }
 
   if (status === 'accepted') {
-    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+    return statusBadgeClass('success');
   }
 
   if (status === 'rejected') {
-    return 'border-transparent bg-rose-100 text-rose-800 hover:bg-rose-100';
+    return statusBadgeClass('danger');
   }
 
-  if (status === 'sent') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
-  }
-
-  return undefined;
+  return statusBadgeClass('neutral');
 }
 
 export function formatQuoteNumber(quoteNumber: number | string): string {

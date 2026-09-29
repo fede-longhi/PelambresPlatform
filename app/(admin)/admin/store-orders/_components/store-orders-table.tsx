@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import {
   formatStorePrice,
+  getStoreOrderStatusBadgeClass,
   getStoreOrderStatusLabel,
   getStorePaymentMethodLabel,
   getStoreProductTypeLabel,
@@ -16,16 +17,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-
-function statusBadgeClass(status: string): string | undefined {
-  if (status === 'paid') {
-    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
-  }
-  if (status === 'payment_review') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
-  }
-  return undefined;
-}
 
 export default async function StoreOrdersTable({
   query,
@@ -65,8 +56,8 @@ export default async function StoreOrdersTable({
                 </p>
               </div>
               <Badge
-                variant={order.status === 'paid' ? 'default' : 'secondary'}
-                className={statusBadgeClass(order.status)}
+                variant="outline"
+                className={getStoreOrderStatusBadgeClass(order.status)}
               >
                 {getStoreOrderStatusLabel(order.status)}
               </Badge>
@@ -125,8 +116,8 @@ export default async function StoreOrdersTable({
               </TableCell>
               <TableCell className="px-4 py-4 align-middle">
                 <Badge
-                  variant={order.status === 'paid' ? 'default' : 'secondary'}
-                  className={statusBadgeClass(order.status)}
+                  variant="outline"
+                  className={getStoreOrderStatusBadgeClass(order.status)}
                 >
                   {getStoreOrderStatusLabel(order.status)}
                 </Badge>
