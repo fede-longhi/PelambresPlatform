@@ -72,6 +72,10 @@ export function getQuoteDocumentStatusLabel(status: string): string {
 }
 
 export function getQuoteDocumentStatusBadgeClass(status: string): string | undefined {
+  if (status === 'draft') {
+    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
+  }
+
   if (status === 'accepted') {
     return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
   }

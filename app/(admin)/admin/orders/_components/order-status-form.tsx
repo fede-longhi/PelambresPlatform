@@ -20,17 +20,22 @@ import {
   updateOrderStatus,
   type OrderStatusFormState,
 } from '@/lib/actions/order-actions';
+import OrderStatusBadge from './order-status-badge';
 import OrderStatusEmailButtons from './order-status-email-buttons';
+import InlineStatusSelect from '@/components/shared/inline-status-select';
 
 export default function OrderStatusForm({
   orderId,
   status,
   customerEmail,
+  inline = false,
 }: {
   orderId: string;
   status: OrderStatus;
   customerEmail?: string | null;
+  inline?: boolean;
 }) {
+  const fieldId = inline ? `order-status-${orderId}` : 'order-status';
   const initialState: OrderStatusFormState = {
     message: null,
     success: false,
@@ -71,59 +76,95 @@ export default function OrderStatusForm({
     : '';
 
   return (
-    <div className="space-y-4" aria-busy={isPending}>
+    <div className={inline ? undefined : 'space-y-4'} aria-busy={isPending}>
       <div>
-        <Label htmlFor="order-status">Estado</Label>
-        <select
-          id="order-status"
-          name="status"
-          key={status}
-          defaultValue={status}
-          disabled={isPending}
-          onChange={(event) => {
-            const nextStatus = event.currentTarget.value as OrderStatus;
-            event.currentTarget.value = status;
+        {inline ? (
+          <InlineStatusSelect
+            id={fieldId}
+            value={status}
+            disabled={isPending}
+            renderBadge={(value) => <OrderStatusBadge status={value} />}
+            options={ORDER_STATUS_VALUES.map((value) => ({
+              value,
+              label: OrderStatuses[value].label,
+            }))}
+            onChange={(nextValue) => {
+              const nextStatus = nextValue as OrderStatus;
 
-            if (nextStatus === 'cancelled') {
-              const confirmed = window.confirm('¿Cancelar este pedido?');
-              if (!confirmed) {
+              if (nextStatus === 'cancelled') {
+                const confirmed = window.confirm('¿Cancelar este pedido?');
+                if (!confirmed) {
+                  return;
+                }
+                submitStatus(nextStatus, false);
                 return;
               }
+
+              if (nextStatus === 'finished' || nextStatus === 'delivered') {
+                setPendingStatus(nextStatus);
+                return;
+              }
+
               submitStatus(nextStatus, false);
-              return;
-            }
+            }}
+          />
+        ) : (
+          <>
+            <Label htmlFor={fieldId}>Estado</Label>
+            <select
+              id={fieldId}
+              name="status"
+              key={status}
+              defaultValue={status}
+              disabled={isPending}
+              onChange={(event) => {
+                const nextStatus = event.currentTarget.value as OrderStatus;
+                event.currentTarget.value = status;
 
-            if (nextStatus === 'finished' || nextStatus === 'delivered') {
-              setPendingStatus(nextStatus);
-              return;
-            }
+                if (nextStatus === 'cancelled') {
+                  const confirmed = window.confirm('¿Cancelar este pedido?');
+                  if (!confirmed) {
+                    return;
+                  }
+                  submitStatus(nextStatus, false);
+                  return;
+                }
 
-            submitStatus(nextStatus, false);
-          }}
-          className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
-        >
-          {ORDER_STATUS_VALUES.map((value) => (
-            <option key={value} value={value}>
-              {OrderStatuses[value].label}
-            </option>
-          ))}
-        </select>
+                if (nextStatus === 'finished' || nextStatus === 'delivered') {
+                  setPendingStatus(nextStatus);
+                  return;
+                }
+
+                submitStatus(nextStatus, false);
+              }}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-card px-3 py-2 text-sm"
+            >
+              {ORDER_STATUS_VALUES.map((value) => (
+                <option key={value} value={value}>
+                  {OrderStatuses[value].label}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
         <FieldErrorDisplay
-          id="order-status-error"
+          id={`${fieldId}-error`}
           errors={state.errors?.status}
         />
       </div>
 
-      <OrderStatusEmailButtons
-        orderId={orderId}
-        customerEmail={customerEmail}
-      />
+      {inline ? null : (
+        <OrderStatusEmailButtons
+          orderId={orderId}
+          customerEmail={customerEmail}
+        />
+      )}
 
-      {isPending ? (
+      {inline || !isPending ? null : (
         <p className="text-sm text-muted-foreground" role="status">
           Guardando...
         </p>
-      ) : null}
+      )}
       {state.message && !state.success ? (
         <p className="text-sm text-destructive" role="alert">
           {state.message}

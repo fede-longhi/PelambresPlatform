@@ -1,10 +1,22 @@
-import { fetchFilteredOrders } from '@/lib/data/order-data';
+import { fetchFilteredOrders, fetchOrderPaymentsByOrderIds } from '@/lib/data/order-data';
 import { formatCurrency, formatDateToLocal, getOrderCustomerName } from '@/lib/utils';
 import { isOrderOverdue } from '@/lib/consts/order-list-consts';
 import type { OrderListFilter } from '@/lib/consts/order-list-consts';
 import Link from 'next/link';
-import OrderStatusBadge from './order-status-badge';
-import OrderPaymentBadge from './order-payment-badge';
+import type { OrderPaymentStatus } from '@/types/order-definitions';
+import { ORDER_PAYMENT_STATUS_VALUES } from '@/types/order-definitions';
+import { OrderPaymentAction, OrderStatusAction } from './order-row-actions';
+
+function paymentStatusOf(status: string | undefined): OrderPaymentStatus {
+  if (
+    status &&
+    (ORDER_PAYMENT_STATUS_VALUES as readonly string[]).includes(status)
+  ) {
+    return status as OrderPaymentStatus;
+  }
+
+  return 'pending';
+}
 
 export default async function OrdersTable({
   query,
@@ -16,6 +28,9 @@ export default async function OrdersTable({
   filter: OrderListFilter;
 }) {
   const orders = await fetchFilteredOrders(query, currentPage, filter);
+  const paymentsByOrder = await fetchOrderPaymentsByOrderIds(
+    orders.map((order) => order.id)
+  );
 
   if (orders.length === 0) {
     return (
@@ -31,6 +46,30 @@ export default async function OrdersTable({
     );
   }
 
+  function renderStatus(order: (typeof orders)[number]) {
+    return (
+      <OrderStatusAction
+        orderId={order.id}
+        status={order.status}
+        customerEmail={order.email || null}
+      />
+    );
+  }
+
+  function renderPayment(order: (typeof orders)[number]) {
+    return (
+      <OrderPaymentAction
+        orderId={order.id}
+        trackingCode={order.tracking_code}
+        amountCents={Number(order.amount)}
+        paidAmountCents={Number(order.paid_amount_cents ?? 0)}
+        paymentStatus={paymentStatusOf(order.payment_status)}
+        paidAt={order.paid_at ?? null}
+        payments={paymentsByOrder[order.id] ?? []}
+      />
+    );
+  }
+
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
@@ -40,21 +79,25 @@ export default async function OrdersTable({
               const overdue = isOrderOverdue(order.status, order.estimated_date);
 
               return (
-                <Link
+                <div
                   key={order.id}
-                  href={`/admin/orders/${order.id}`}
-                  className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
+                  className="mb-2 w-full rounded-lg border border-border bg-card p-4 shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3 border-b pb-4">
                     <div className="min-w-0">
-                      <p className="mb-1 font-medium">{order.tracking_code}</p>
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="mb-1 block font-medium hover:underline"
+                      >
+                        {order.tracking_code}
+                      </Link>
                       <p className="truncate text-sm text-muted-foreground">
                         {getOrderCustomerName(order)}
                       </p>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <OrderStatusBadge status={order.status} />
-                      <OrderPaymentBadge status={order.payment_status} />
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      {renderStatus(order)}
+                      {renderPayment(order)}
                     </div>
                   </div>
                   <div className="flex w-full items-center justify-between pt-4">
@@ -75,7 +118,7 @@ export default async function OrdersTable({
                       {formatDateToLocal(order.estimated_date, 'es-AR')}
                     </p>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -146,10 +189,10 @@ export default async function OrdersTable({
                       {formatDateToLocal(order.created_date, 'es-AR')}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
-                      <OrderStatusBadge status={order.status} />
+                      {renderStatus(order)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-3">
-                      <OrderPaymentBadge status={order.payment_status} />
+                      {renderPayment(order)}
                     </td>
                   </tr>
                 );

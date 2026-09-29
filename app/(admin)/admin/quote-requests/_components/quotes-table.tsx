@@ -1,8 +1,11 @@
 import { fetchFilteredQuotes } from '@/lib/data/quote-data';
 import { formatDateToLocal } from '@/lib/utils';
 import Link from 'next/link';
+import type { QuoteTable } from '@/types/definitions';
 import type { QuoteRequestListFilter } from '@/lib/consts/quote-request-consts';
-import { getQuoteRequestStatusLabel } from '@/lib/consts/quote-request-consts';
+import QuoteRequestCustomerAction from './quote-request-customer-action';
+import QuoteRequestRowActions from './quote-request-row-actions';
+import QuoteRequestStatusAction from './quote-request-status-action';
 
 function quoteDisplayName(quote: {
   first_name: string | null;
@@ -13,6 +16,19 @@ function quoteDisplayName(quote: {
     return [quote.last_name, quote.first_name].filter(Boolean).join(', ');
   }
   return quote.name || 'Sin nombre';
+}
+
+function quoteCustomer(quote: QuoteTable) {
+  if (!quote.customer_id) {
+    return null;
+  }
+
+  const label = quote.customer_name?.replace(/^,\s*|,\s*$/g, '').trim();
+
+  return {
+    id: quote.customer_id,
+    label: label || 'Cliente',
+  };
 }
 
 export default async function QuotesTable({
@@ -42,29 +58,43 @@ export default async function QuotesTable({
         <div className="rounded-lg md:overflow-hidden md:border md:border-border md:bg-card md:shadow-sm">
           <div className="md:hidden">
             {quotes.map((quote) => (
-              <Link
+              <div
                 key={quote.id}
-                href={`/admin/quote-requests/${quote.id}`}
-                className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
+                className="mb-2 w-full rounded-lg border border-border bg-card p-4 shadow-sm"
               >
-                <div className="flex items-center justify-between border-b pb-4">
-                  <div>
-                    <p className="mb-2 font-medium">{quoteDisplayName(quote)}</p>
+                <div className="flex items-start justify-between gap-3 border-b pb-4">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/admin/quote-requests/${quote.id}`}
+                      className="mb-2 block font-medium hover:underline"
+                    >
+                      {quoteDisplayName(quote)}
+                    </Link>
                     <p className="text-sm text-gray-500">{quote.email}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {getQuoteRequestStatusLabel(quote.status)}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <QuoteRequestStatusAction
+                      quoteRequestId={quote.id}
+                      status={quote.status}
+                    />
+                    <QuoteRequestRowActions
+                      quoteRequestId={quote.id}
+                      quoteName={quote.name || quoteDisplayName(quote)}
+                    />
+                  </div>
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <p className="text-sm">{formatDateToLocal(quote.date)}</p>
-                  {quote.customer_id ? (
-                    <span className="text-xs text-muted-foreground">Con cliente</span>
-                  ) : (
-                    <span className="text-xs text-amber-700">Sin cliente</span>
-                  )}
+                  <QuoteRequestCustomerAction
+                    quoteRequestId={quote.id}
+                    quoteName={quote.name || quoteDisplayName(quote)}
+                    quoteEmail={quote.email}
+                    quotePhone={quote.phone || ''}
+                    customer={quoteCustomer(quote)}
+                    compactLabel
+                  />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
           <table className="hidden min-w-full text-gray-900 md:table">
@@ -88,6 +118,9 @@ export default async function QuotesTable({
                 <th scope="col" className="px-3 py-5 font-medium">
                   Cliente
                 </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  <span className="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-card">
@@ -110,14 +143,25 @@ export default async function QuotesTable({
                     {formatDateToLocal(quote.date)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {getQuoteRequestStatusLabel(quote.status)}
+                    <QuoteRequestStatusAction
+                      quoteRequestId={quote.id}
+                      status={quote.status}
+                    />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {quote.customer_id ? (
-                      <span className="text-muted-foreground">Asociado</span>
-                    ) : (
-                      <span className="text-amber-700">Sin asociar</span>
-                    )}
+                    <QuoteRequestCustomerAction
+                      quoteRequestId={quote.id}
+                      quoteName={quote.name || quoteDisplayName(quote)}
+                      quoteEmail={quote.email}
+                      quotePhone={quote.phone || ''}
+                      customer={quoteCustomer(quote)}
+                    />
+                  </td>
+                  <td className="w-px whitespace-nowrap px-2 py-3 pr-4">
+                    <QuoteRequestRowActions
+                      quoteRequestId={quote.id}
+                      quoteName={quote.name || quoteDisplayName(quote)}
+                    />
                   </td>
                 </tr>
               ))}

@@ -7,7 +7,7 @@ import {
 export default function QuoteStatusBadge({ status }: { status: string }) {
   return (
     <Badge
-      variant={status === 'draft' ? 'secondary' : 'outline'}
+      variant="outline"
       className={getQuoteDocumentStatusBadgeClass(status)}
     >
       {getQuoteDocumentStatusLabel(status)}

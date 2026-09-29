@@ -43,6 +43,10 @@ export function getOrderStatusLabel(status: string): string {
 }
 
 export function getOrderStatusBadgeClass(status: string): string | undefined {
+  if (status === 'pending') {
+    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
+  }
+
   if (status === 'in progress') {
     return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
   }

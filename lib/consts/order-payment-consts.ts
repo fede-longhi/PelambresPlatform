@@ -60,6 +60,10 @@ export function getOrderPaymentMethodLabel(method: string): string {
 }
 
 export function getOrderPaymentBadgeClass(status: string): string | undefined {
+  if (status === 'pending') {
+    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
+  }
+
   if (status === 'deposit') {
     return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
   }

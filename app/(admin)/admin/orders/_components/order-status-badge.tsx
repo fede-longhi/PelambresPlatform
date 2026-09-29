@@ -7,7 +7,7 @@ import {
 export default function OrderStatusBadge({ status }: { status: string }) {
   return (
     <Badge
-      variant={status === 'pending' ? 'secondary' : 'outline'}
+      variant="outline"
       className={getOrderStatusBadgeClass(status)}
     >
       {getOrderStatusLabel(status)}

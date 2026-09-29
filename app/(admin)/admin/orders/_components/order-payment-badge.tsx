@@ -14,7 +14,7 @@ export default function OrderPaymentBadge({
 
   return (
     <Badge
-      variant={paymentStatus === 'pending' ? 'secondary' : 'outline'}
+      variant="outline"
       className={getOrderPaymentBadgeClass(paymentStatus)}
     >
       {getOrderPaymentStatusLabel(paymentStatus)}
