@@ -56,8 +56,8 @@ export default async function StoreOrdersTable({
                 </p>
               </div>
               <Badge
-                variant={order.status === 'paid' ? 'default' : 'secondary'}
-                className={statusBadgeClass(order.status)}
+                variant="outline"
+                className={getStoreOrderStatusBadgeClass(order.status)}
               >
                 {getStoreOrderStatusLabel(order.status)}
               </Badge>
