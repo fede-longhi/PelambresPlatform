@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   formatStorePrice,
+  getStoreOrderStatusBadgeClass,
   getStoreOrderStatusLabel,
   getStorePaymentMethodLabel,
   getStoreProductTypeLabel,
@@ -20,16 +21,6 @@ export const metadata: Metadata = {
 type PageProps = {
   params: Promise<{ id: string }>;
 };
-
-function statusBadgeClass(status: string): string | undefined {
-  if (status === 'paid') {
-    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
-  }
-  if (status === 'payment_review') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
-  }
-  return undefined;
-}
 
 export default async function StoreOrderDetailPage({ params }: PageProps) {
   const { id } = await params;
@@ -51,8 +42,8 @@ export default async function StoreOrderDetailPage({ params }: PageProps) {
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold text-slate-900">Pedido</h1>
             <Badge
-              variant={order.status === 'paid' ? 'default' : 'secondary'}
-              className={statusBadgeClass(order.status)}
+              variant="outline"
+              className={getStoreOrderStatusBadgeClass(order.status)}
             >
               {getStoreOrderStatusLabel(order.status)}
             </Badge>

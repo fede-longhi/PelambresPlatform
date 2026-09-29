@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { canAccessAdmin, canAccessCustomer } from '@/lib/auth/permissions';
 import { fetchCustomerIdForUser } from '@/lib/data/customer-portal-data';
+import { QUOTE_REQUEST_STATUSES } from '@/lib/consts/quote-request-consts';
 import { QuoteTable } from '@/types/definitions';
 
 const FormSchema = z.object({
@@ -304,6 +305,191 @@ export async function updateQuoteRequestStatus(
     message: 'Estado actualizado.',
     savedStatus: parsed.data,
   };
+}
+
+export async function deleteQuoteRequest(quoteRequestId: string): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const parsedId = z.string().uuid().safeParse(quoteRequestId);
+
+  if (!parsedId.success) {
+    return { success: false, message: 'La solicitud no es válida.' };
+  }
+
+  try {
+    await assertAdminAccess();
+
+    const deleted = await sql.begin(async (tx) => {
+      await tx`
+        DELETE FROM quote_request_attachments
+        WHERE quote_request_id = ${parsedId.data}
+      `;
+
+      return tx<{ id: string }[]>`
+        DELETE FROM quote_requests
+        WHERE id = ${parsedId.data}
+        RETURNING id
+      `;
+    });
+
+    if (!deleted[0]) {
+      return { success: false, message: 'No se encontró la solicitud.' };
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return {
+        success: false,
+        message: 'No tenés permiso para borrar solicitudes.',
+      };
+    }
+
+    console.error(error);
+    return { success: false, message: 'No se pudo borrar la solicitud.' };
+  }
+
+  revalidatePath('/admin/quote-requests');
+  revalidatePath(`/admin/quote-requests/${parsedId.data}`);
+  revalidatePath('/admin/quotes');
+  revalidatePath('/admin');
+  revalidatePath('/customer');
+
+  return { success: true, message: 'Solicitud borrada.' };
+}
+
+const quoteRequestIdListSchema = z
+  .array(z.string().uuid())
+  .min(1, { message: 'Seleccioná al menos una solicitud.' })
+  .max(50, { message: 'Podés actualizar hasta 50 solicitudes a la vez.' });
+
+function parseQuoteRequestIds(quoteRequestIds: string[]) {
+  return quoteRequestIdListSchema.safeParse([...new Set(quoteRequestIds)]);
+}
+
+function unauthorizedBulkMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message === 'Unauthorized') {
+    return 'No tenés permiso para modificar solicitudes.';
+  }
+
+  console.error(error);
+  return fallback;
+}
+
+export async function deleteQuoteRequests(quoteRequestIds: string[]): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const parsedIds = parseQuoteRequestIds(quoteRequestIds);
+
+  if (!parsedIds.success) {
+    return {
+      success: false,
+      message: parsedIds.error.issues[0]?.message ?? 'La selección no es válida.',
+    };
+  }
+
+  try {
+    await assertAdminAccess();
+
+    const deleted = await sql.begin(async (tx) => {
+      await tx`
+        DELETE FROM quote_request_attachments
+        WHERE quote_request_id IN ${sql(parsedIds.data)}
+      `;
+
+      return tx<{ id: string }[]>`
+        DELETE FROM quote_requests
+        WHERE id IN ${sql(parsedIds.data)}
+        RETURNING id
+      `;
+    });
+
+    if (deleted.length === 0) {
+      return { success: false, message: 'No se encontraron las solicitudes.' };
+    }
+
+    revalidatePath('/admin/quote-requests');
+    revalidatePath('/admin/quotes');
+    revalidatePath('/admin');
+    revalidatePath('/customer');
+
+    for (const quoteRequest of deleted) {
+      revalidatePath(`/admin/quote-requests/${quoteRequest.id}`);
+    }
+
+    return {
+      success: true,
+      message:
+        deleted.length === 1
+          ? 'Solicitud borrada.'
+          : `${deleted.length} solicitudes borradas.`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: unauthorizedBulkMessage(error, 'No se pudieron borrar las solicitudes.'),
+    };
+  }
+}
+
+export async function updateQuoteRequestsStatus(
+  quoteRequestIds: string[],
+  status: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const parsedIds = parseQuoteRequestIds(quoteRequestIds);
+  const parsedStatus = z.enum(QUOTE_REQUEST_STATUSES).safeParse(status);
+
+  if (!parsedIds.success) {
+    return {
+      success: false,
+      message: parsedIds.error.issues[0]?.message ?? 'La selección no es válida.',
+    };
+  }
+
+  if (!parsedStatus.success) {
+    return { success: false, message: 'Seleccioná un estado válido.' };
+  }
+
+  try {
+    await assertAdminAccess();
+
+    const updated = await sql<{ id: string }[]>`
+      UPDATE quote_requests
+      SET status = ${parsedStatus.data}
+      WHERE id IN ${sql(parsedIds.data)}
+      RETURNING id
+    `;
+
+    if (updated.length === 0) {
+      return { success: false, message: 'No se encontraron las solicitudes.' };
+    }
+
+    revalidatePath('/admin/quote-requests');
+    revalidatePath('/admin');
+
+    for (const quoteRequest of updated) {
+      revalidatePath(`/admin/quote-requests/${quoteRequest.id}`);
+    }
+
+    return {
+      success: true,
+      message:
+        updated.length === 1
+          ? 'Estado actualizado.'
+          : `Estado actualizado en ${updated.length} solicitudes.`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: unauthorizedBulkMessage(
+        error,
+        'No se pudo actualizar el estado de las solicitudes.'
+      ),
+    };
+  }
 }
 
 async function sendQuoteEmail(

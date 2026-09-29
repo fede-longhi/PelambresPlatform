@@ -1,3 +1,4 @@
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import type { OrderStatus } from '@/types/order-definitions';
 import { ORDER_STATUS_VALUES, OrderStatuses } from '@/types/order-definitions';
 
@@ -42,28 +43,24 @@ export function getOrderStatusLabel(status: string): string {
   return status;
 }
 
-export function getOrderStatusBadgeClass(status: string): string | undefined {
-  if (status === 'pending') {
-    return 'border-transparent bg-slate-200 text-slate-800 hover:bg-slate-200';
-  }
-
+export function getOrderStatusBadgeClass(status: string): string {
   if (status === 'in progress') {
-    return 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100';
+    return statusBadgeClass('progress');
   }
 
   if (status === 'finished') {
-    return 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
+    return statusBadgeClass('success');
   }
 
   if (status === 'delivered') {
-    return 'border-transparent bg-sky-100 text-sky-900 hover:bg-sky-100';
+    return statusBadgeClass('info');
   }
 
   if (status === 'cancelled') {
-    return 'border-transparent bg-rose-100 text-rose-800 hover:bg-rose-100';
+    return statusBadgeClass('danger');
   }
 
-  return undefined;
+  return statusBadgeClass('neutral');
 }
 
 export function isOrderOverdue(

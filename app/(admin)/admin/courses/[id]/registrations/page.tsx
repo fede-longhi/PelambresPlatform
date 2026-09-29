@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, Pencil, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { lusitana } from '@/app/fonts';
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import {
     REGISTRATION_STATUSES,
     PAYMENT_STATUSES,
@@ -20,19 +21,19 @@ type PageProps = {
 function getRegistrationBadge(status: string) {
     const label = REGISTRATION_STATUSES.find(s => s.value === status)?.label || status;
     switch (status) {
-        case 'confirmed': return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800"><CheckCircle2 size={12} aria-hidden="true" /> {label}</span>;
-        case 'cancelled': return <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800"><XCircle size={12} aria-hidden="true" /> {label}</span>;
-        default: return <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground"><Clock size={12} aria-hidden="true" /> {label}</span>;
+        case 'confirmed': return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('success')}`}><CheckCircle2 size={12} aria-hidden="true" /> {label}</span>;
+        case 'cancelled': return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('danger')}`}><XCircle size={12} aria-hidden="true" /> {label}</span>;
+        default: return <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('neutral')}`}><Clock size={12} aria-hidden="true" /> {label}</span>;
     }
 }
 
 function getPaymentBadge(status: string) {
     const label = PAYMENT_STATUSES.find(s => s.value === status)?.label || status;
     switch (status) {
-        case 'paid': return <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">{label}</span>;
-        case 'partial': return <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{label}</span>;
-        case 'refunded': return <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{label}</span>;
-        default: return <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">{label}</span>;
+        case 'paid': return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('success')}`}>{label}</span>;
+        case 'partial': return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('info')}`}>{label}</span>;
+        case 'refunded': return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('closed')}`}>{label}</span>;
+        default: return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadgeClass('neutral')}`}>{label}</span>;
     }
 }
 

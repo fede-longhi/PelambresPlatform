@@ -7,6 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   formatStorePrice,
+  getStoreOrderStatusBadgeClass,
   getStoreOrderStatusLabel,
 } from '@/lib/consts/store-consts';
 import {
@@ -75,14 +76,8 @@ export default async function StoreTransferCheckoutPage({
               Transferencia bancaria
             </h1>
             <Badge
-              variant={isPaid ? 'default' : 'secondary'}
-              className={
-                isPaid
-                  ? 'border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100'
-                  : order.status === 'payment_review'
-                    ? 'border-transparent bg-amber-100 text-amber-900 hover:bg-amber-100'
-                    : undefined
-              }
+              variant="outline"
+              className={getStoreOrderStatusBadgeClass(order.status)}
             >
               {getStoreOrderStatusLabel(order.status)}
             </Badge>

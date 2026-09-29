@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { statusBadgeClass } from '@/lib/consts/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { fetchStoreProductById } from '@/lib/data/store-product-data';
 import { DeleteProductButton } from '../_components/buttons';
@@ -44,12 +45,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
               ) : null}
               <h1 className="text-3xl font-bold text-slate-900">{product.name}</h1>
               {product.isPublished ? (
-                <Badge className="gap-1 border-transparent bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                <Badge variant="outline" className={`gap-1 ${statusBadgeClass('success')}`}>
                   <Eye size={14} aria-hidden="true" />
                   Publicado
                 </Badge>
               ) : (
-                <Badge variant="secondary">Borrador</Badge>
+                <Badge variant="outline" className={statusBadgeClass('neutral')}>Borrador</Badge>
               )}
             </div>
           </div>
