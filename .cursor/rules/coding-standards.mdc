@@ -28,7 +28,7 @@ Follow the read/write split in `lib-read-write.mdc`. Colocate route UI in `app/.
 - **Server Components by default.** Add `'use client'` only for hooks, browser APIs, or interactivity.
 - **Pages** are async Server Components; fetch data via `lib/data/*`, pass props to child components.
 - **Forms**: `useActionState` + server action; export a `*FormState` type with `errors`, `message`, `success`.
-- **UI**: shadcn components from `@/components/ui/*`, icons from `lucide-react`, `cn()` from `@/lib/utils`.
+- **UI**: Use a shadcn/ui component when one is available. Installed primitives live in `@/components/ui/*` (`Button`, `Input`, `Select`, `Dialog`, `Badge`, `DropdownMenu`, and the rest). If shadcn provides the control but it is not in the repo yet, add it there instead of a native `<select>`, `<button>`, `<input>`, or `<textarea>`. Icons from `lucide-react`, `cn()` from `@/lib/utils`.
 - **Naming**: kebab-case files (`broadcast-email-form.tsx`), PascalCase exported components.
 
 ## Variable naming

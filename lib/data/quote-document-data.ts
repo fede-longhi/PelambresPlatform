@@ -16,7 +16,7 @@ import type { CustomerType } from '@/types/definitions';
 export { parseQuoteDocumentListFilter, DEFAULT_QUOTE_DOCUMENT_LIST_FILTER };
 export type { QuoteDocumentListFilter };
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 
 type QuoteDocumentRow = {
   id: string;

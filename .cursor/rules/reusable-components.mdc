@@ -37,7 +37,7 @@ If reuse is unclear, **ask the user** before choosing:
 ## Before creating something new
 
 1. Search the route's `_components/` folder and `components/` for similar UI.
-2. Prefer composing shadcn primitives (`@/components/ui/*`) over duplicating markup.
+2. Use the shadcn primitive from `@/components/ui/*` when that component is available. If shadcn provides it and it is not installed yet, add it instead of duplicating markup.
 3. Name and place by scope:
 
 | Scope | Location | Example |

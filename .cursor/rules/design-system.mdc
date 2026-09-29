@@ -24,7 +24,7 @@ Use semantic tokens from `app/globals.css` — `bg-primary`, `text-primary`, `te
 
 ## Components
 
-- Primitives: `@/components/ui/*` (shadcn new-york)
+- Primitives: shadcn/ui from `@/components/ui/*` when the component is available. If shadcn provides it and it is not installed yet, add it instead of a native control.
 - Shared: `components/shared/`, `components/layout/`
 - Route UI: `app/.../_components/`
 

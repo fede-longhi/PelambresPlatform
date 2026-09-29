@@ -3,7 +3,7 @@
 import sql from '@/lib/db';
 import { Customer } from '@/types/definitions';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 10;
 
 export async function fetchFilteredCustomers(query: string, currentPage: number) {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;

@@ -17,7 +17,7 @@ import {
 export { parseOrderListFilter, DEFAULT_ORDER_LIST_FILTER };
 export type { OrderListFilter };
 
-const ITEMS_PER_PAGE = 12;
+const ITEMS_PER_PAGE = 10;
 const CUSTOMER_ORDERS_LIMIT = 6;
 
 function buildOrderFilterSql(filter: OrderListFilter) {
@@ -58,6 +58,7 @@ export async function fetchFilteredOrders(
         orders.payment_status,
         orders.paid_amount_cents,
         orders.paid_at,
+        customers.email,
         customers.first_name,
         customers.last_name,
         customers.name,
@@ -472,6 +473,61 @@ export async function fetchOrderPayments(orderId: string) {
                     ? payment.paidAt.toISOString()
                     : String(payment.paidAt),
         })) satisfies OrderPayment[];
+    } catch (error) {
+        console.error('Database Error:', error);
+        throw new Error('Failed to fetch order payments.');
+    }
+}
+
+export async function fetchOrderPaymentsByOrderIds(orderIds: string[]) {
+    if (orderIds.length === 0) {
+        return {} as Record<string, OrderPayment[]>;
+    }
+
+    try {
+        const payments = await sql<{
+            orderId: string;
+            id: string;
+            amountCents: number;
+            kind: OrderPaymentKind;
+            method: OrderPaymentMethod;
+            notes: string;
+            paidAt: string | Date;
+        }[]>`
+            SELECT
+                order_id as "orderId",
+                id,
+                amount_cents as "amountCents",
+                kind,
+                method,
+                notes,
+                paid_at as "paidAt"
+            FROM order_payments
+            WHERE order_id IN ${sql(orderIds)}
+              AND deleted_at IS NULL
+            ORDER BY paid_at ASC, created_at ASC
+        `;
+
+        const grouped: Record<string, OrderPayment[]> = {};
+
+        for (const payment of payments) {
+            const item: OrderPayment = {
+                id: payment.id,
+                amountCents: Number(payment.amountCents),
+                kind: payment.kind,
+                method: payment.method,
+                notes: payment.notes ?? '',
+                paidAt:
+                    payment.paidAt instanceof Date
+                        ? payment.paidAt.toISOString()
+                        : String(payment.paidAt),
+            };
+            const list = grouped[payment.orderId] ?? [];
+            list.push(item);
+            grouped[payment.orderId] = list;
+        }
+
+        return grouped;
     } catch (error) {
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order payments.');

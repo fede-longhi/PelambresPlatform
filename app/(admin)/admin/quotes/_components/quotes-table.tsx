@@ -7,7 +7,7 @@ import {
 } from '@/lib/consts/quote-document-consts';
 import type { QuoteDocumentListFilter } from '@/lib/consts/quote-document-consts';
 import type { QuoteDocumentListItem } from '@/types/quote-document-definitions';
-import QuoteStatusBadge from './quote-status-badge';
+import QuoteStatusAction from './quote-row-actions';
 
 function QuoteOrderCell({ quote }: { quote: QuoteDocumentListItem }) {
   if (quote.orderId) {
@@ -67,19 +67,24 @@ export default async function QuotesTable({
               const orderHint = getQuoteOrderListHint(quote);
 
               return (
-                <Link
+                <div
                   key={quote.id}
-                  href={`/admin/quotes/${quote.id}`}
-                  className="mb-2 block w-full rounded-lg border border-border bg-card p-4 shadow-sm"
+                  className="mb-2 w-full rounded-lg border border-border bg-card p-4 shadow-sm"
                 >
-                  <div className="flex items-center justify-between border-b pb-4">
-                    <div>
-                      <p className="mb-2 font-medium">
+                  <div className="flex items-start justify-between gap-3 border-b pb-4">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/admin/quotes/${quote.id}`}
+                        className="mb-2 block font-medium hover:underline"
+                      >
                         Nº {formatQuoteNumber(quote.quoteNumber)}
-                      </p>
+                      </Link>
                       <p className="text-sm text-gray-500">{quote.clientName}</p>
                     </div>
-                    <QuoteStatusBadge status={quote.status} />
+                    <QuoteStatusAction
+                      quoteId={quote.id}
+                      status={quote.status}
+                    />
                   </div>
                   <div className="flex w-full items-center justify-between pt-4">
                     <div>
@@ -94,7 +99,7 @@ export default async function QuotesTable({
                       {formatCurrency(quote.totalCents)}
                     </p>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -150,7 +155,10 @@ export default async function QuotesTable({
                     {formatCurrency(quote.totalCents)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    <QuoteStatusBadge status={quote.status} />
+                    <QuoteStatusAction
+                      quoteId={quote.id}
+                      status={quote.status}
+                    />
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <QuoteOrderCell quote={quote} />

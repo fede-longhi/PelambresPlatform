@@ -94,6 +94,7 @@ export type QuoteTable = {
     detail: string;
     date: string;
     customer_id: string | null;
+    customer_name?: string | null;
     status: string;
 }
 
