@@ -77,7 +77,7 @@ export default async function QuotesTable({
                         href={`/admin/quotes/${quote.id}`}
                         className="mb-2 block font-medium hover:underline"
                       >
-                        Nº {formatQuoteNumber(quote.quoteNumber)}
+                        Nº {formatQuoteNumber(quote.quoteNumber, quote.revision)}
                       </Link>
                       <p className="text-sm text-gray-500">{quote.clientName}</p>
                     </div>
@@ -137,7 +137,7 @@ export default async function QuotesTable({
                       href={`/admin/quotes/${quote.id}`}
                       className="font-medium text-primary hover:underline"
                     >
-                      {formatQuoteNumber(quote.quoteNumber)}
+                      {formatQuoteNumber(quote.quoteNumber, quote.revision)}
                     </Link>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">

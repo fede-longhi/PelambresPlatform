@@ -36,6 +36,13 @@ function OrderDetailCard({ order }: { order: OrderTable }) {
             <dt className="font-medium text-muted-foreground">Importe</dt>
             <dd>{formatCurrency(order.amount)}</dd>
           </div>
+          {order.quoted_amount_cents != null &&
+          order.quoted_amount_cents !== order.amount ? (
+            <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <dt className="font-medium text-muted-foreground">Cotizado</dt>
+              <dd>{formatCurrency(order.quoted_amount_cents)}</dd>
+            </div>
+          ) : null}
           <div className="grid gap-1 sm:grid-cols-[8rem_1fr] sm:gap-4">
             <dt className="font-medium text-muted-foreground">Creado</dt>
             <dd>{formatDateToLocal(order.created_date, 'es-AR')}</dd>
@@ -48,7 +55,7 @@ function OrderDetailCard({ order }: { order: OrderTable }) {
                   href={`/admin/quotes/${order.quote_id}`}
                   className="text-primary hover:underline"
                 >
-                  Nº {formatQuoteNumber(order.quote_number ?? 0)}
+                  Nº {formatQuoteNumber(order.quote_number ?? 0, order.quote_revision ?? 1)}
                 </Link>
               </dd>
             </div>

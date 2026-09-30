@@ -21,7 +21,9 @@ import {
   TRACKING_CODE_CHARACTERS,
   TRACKING_CODE_LENGTH,
 } from '@/lib/consts';
-import { pesosToCents } from '@/lib/quote-math';
+import { computeQuoteMath, pesosToCents } from '@/lib/quote-math';
+import { formatQuoteNumber } from '@/lib/consts/quote-document-consts';
+import type { QuoteItem, TaxItem } from '@/types/quote';
 import { insertFormFiles } from '@/lib/actions/file-storage';
 import { sendOrderStatusEmail } from '@/lib/mail/mailer';
 import type { CustomerType } from '@/types/definitions';
@@ -60,6 +62,15 @@ export type OrderFormState = {
 };
 
 export type CreateOrderFromQuoteState = {
+  message?: string | null;
+  success?: boolean;
+};
+
+export type OrderItemsFormState = {
+  errors?: {
+    reason?: string[];
+    items?: string[];
+  };
   message?: string | null;
   success?: boolean;
 };
@@ -332,6 +343,101 @@ async function resolveTrackingCode(
   return trackingCode;
 }
 
+const OrderItemsSchema = z.object({
+  reason: z.string().trim().min(3, { message: 'Indicá el motivo del cambio.' }),
+  notifyCustomer: z.boolean(),
+  items: z
+    .array(
+      z.object({
+        description: z.string(),
+        quantity: z.number().positive({ message: 'La cantidad tiene que ser mayor a 0.' }),
+        price: z.number().min(0),
+        discount: z.number().min(0).max(100),
+      })
+    )
+    .min(1, { message: 'El pedido tiene que tener al menos una línea.' }),
+});
+
+async function replaceOrderLinesFromQuote(
+  tx: typeof sql,
+  orderId: string,
+  quoteId: string
+) {
+  await tx`DELETE FROM order_items WHERE order_id = ${orderId}`;
+  await tx`DELETE FROM order_taxes WHERE order_id = ${orderId}`;
+
+  await tx`
+    INSERT INTO order_items (
+      order_id,
+      source_quote_item_id,
+      sort_order,
+      description,
+      quantity,
+      unit_price_cents,
+      discount_percent,
+      calculator_params
+    )
+    SELECT
+      ${orderId},
+      id,
+      sort_order,
+      description,
+      quantity,
+      unit_price_cents,
+      discount_percent,
+      calculator_params
+    FROM quote_items
+    WHERE quote_id = ${quoteId}
+    ORDER BY sort_order ASC, created_at ASC
+  `;
+
+  await tx`
+    INSERT INTO order_taxes (
+      order_id,
+      sort_order,
+      name,
+      percentage
+    )
+    SELECT
+      ${orderId},
+      sort_order,
+      name,
+      percentage
+    FROM quote_taxes
+    WHERE quote_id = ${quoteId}
+    ORDER BY sort_order ASC, created_at ASC
+  `;
+}
+
+async function insertOrderAmendment(
+  tx: typeof sql,
+  orderId: string,
+  quoteId: string | null,
+  reason: string,
+  previousAmountCents: number,
+  nextAmountCents: number,
+  userId: string
+) {
+  await tx`
+    INSERT INTO order_amendments (
+      order_id,
+      quote_id,
+      reason,
+      previous_amount_cents,
+      next_amount_cents,
+      created_by
+    )
+    VALUES (
+      ${orderId},
+      ${quoteId},
+      ${reason},
+      ${previousAmountCents},
+      ${nextAmountCents},
+      ${userId}
+    )
+  `;
+}
+
 function addDaysIsoDate(days: number) {
   const estimatedDate = new Date();
   estimatedDate.setDate(estimatedDate.getDate() + days);
@@ -375,14 +481,18 @@ export async function createOrderFromQuote(
         status: string;
         customerId: string;
         quoteRequestId: string | null;
+        quoteNumber: number;
         totalCents: number;
+        globalDiscountPercent: string | number;
       }[]>`
         SELECT
           id,
           status,
           customer_id as "customerId",
           quote_request_id as "quoteRequestId",
-          total_cents as "totalCents"
+          quote_number as "quoteNumber",
+          total_cents as "totalCents",
+          global_discount_percent as "globalDiscountPercent"
         FROM quotes
         WHERE id = ${parsedId.data}
           AND deleted_at IS NULL
@@ -400,6 +510,19 @@ export async function createOrderFromQuote(
 
       if (quote.totalCents <= 0) {
         throw new Error('INVALID_AMOUNT');
+      }
+
+      const familyOrder = await tx<{ id: string }[]>`
+        SELECT orders.id
+        FROM orders
+        JOIN quotes family ON family.id = orders.quote_id
+        WHERE family.quote_number = ${quote.quoteNumber}
+          AND orders.deleted_at IS NULL
+        LIMIT 1
+      `;
+
+      if (familyOrder[0]) {
+        throw new Error('FAMILY_ORDER');
       }
 
       const trackingCode = await generateUniqueTrackingCode(tx);
@@ -428,7 +551,17 @@ export async function createOrderFromQuote(
         RETURNING id
       `;
 
-      await insertOrderStatusEvent(tx, inserted[0].id, null, 'pending', userId);
+      const orderId = inserted[0].id;
+      await replaceOrderLinesFromQuote(tx, orderId, quote.id);
+      await tx`
+        UPDATE orders
+        SET
+          quoted_amount_cents = ${quote.totalCents},
+          global_discount_percent = ${Number(quote.globalDiscountPercent)}
+        WHERE id = ${orderId}
+      `;
+
+      await insertOrderStatusEvent(tx, orderId, null, 'pending', userId);
 
       if (quote.quoteRequestId) {
         await tx`
@@ -468,6 +601,13 @@ export async function createOrderFromQuote(
         return {
           success: false,
           message: 'El presupuesto no tiene un total válido para crear el pedido.',
+        };
+      }
+      if (error.message === 'FAMILY_ORDER') {
+        return {
+          success: false,
+          message:
+            'Ya hay un pedido para otra versión de este presupuesto. Aplicalo desde esta ficha.',
         };
       }
       if (error.message === 'TRACKING_CODE') {
@@ -567,13 +707,26 @@ export async function updateOrder(
   formData: FormData
 ): Promise<OrderFormState> {
   const userId = await requireAdminSessionUserId();
-  const validatedFields = CreateOrder.safeParse({
-    customerId: formData.get('customerId'),
-    code: formData.get('code'),
-    status: formData.get('status'),
-    amount: formData.get('amount'),
-    estimatedDate: formData.get('estimatedDate'),
-  });
+  const lineCount = await sql<{ count: number }[]>`
+    SELECT count(*)::int as count
+    FROM order_items
+    WHERE order_id = ${id}
+  `;
+  const hasLines = Number(lineCount[0]?.count ?? 0) > 0;
+  const validatedFields = hasLines
+    ? CreateOrder.omit({ amount: true }).safeParse({
+        customerId: formData.get('customerId'),
+        code: formData.get('code'),
+        status: formData.get('status'),
+        estimatedDate: formData.get('estimatedDate'),
+      })
+    : CreateOrder.safeParse({
+        customerId: formData.get('customerId'),
+        code: formData.get('code'),
+        status: formData.get('status'),
+        amount: formData.get('amount'),
+        estimatedDate: formData.get('estimatedDate'),
+      });
 
   if (!validatedFields.success) {
     return {
@@ -583,9 +736,13 @@ export async function updateOrder(
     };
   }
 
-  const { customerId, code, status, amount, estimatedDate } =
-    validatedFields.data;
-  const amountInCents = pesosToCents(amount);
+  const { customerId, code, status, estimatedDate } = validatedFields.data;
+  const submittedAmount =
+    'amount' in validatedFields.data && typeof validatedFields.data.amount === 'number'
+      ? validatedFields.data.amount
+      : null;
+  const amountInCents =
+    submittedAmount == null ? null : pesosToCents(submittedAmount);
   const deliveredDate = status === 'delivered' ? new Date() : null;
 
   try {
@@ -606,7 +763,7 @@ export async function updateOrder(
       UPDATE orders
       SET
         customer_id = ${customerId},
-        amount = ${amountInCents},
+        amount = COALESCE(${amountInCents}::int, amount),
         status = ${status},
         tracking_code = ${trackingCode},
         estimated_date = ${toIsoDate(estimatedDate)},
@@ -648,6 +805,367 @@ export async function updateOrder(
 
   revalidateOrderPaths({ orderId: id, customerId });
   redirect(`/admin/orders/${id}`);
+}
+
+export async function updateOrderItems(
+  orderId: string,
+  _prevState: OrderItemsFormState,
+  formData: FormData
+): Promise<OrderItemsFormState> {
+  const userId = await requireAdminSessionUserId();
+
+  let rawItems: unknown;
+  try {
+    rawItems = JSON.parse(String(formData.get('itemsJson') ?? ''));
+  } catch {
+    return {
+      success: false,
+      message: 'Las líneas del pedido no son válidas.',
+    };
+  }
+
+  const validated = OrderItemsSchema.safeParse({
+    reason: formData.get('reason'),
+    notifyCustomer: formData.get('notifyCustomer') === 'true',
+    items: rawItems,
+  });
+
+  if (!validated.success) {
+    const fieldErrors = validated.error.flatten().fieldErrors;
+    return {
+      success: false,
+      errors: {
+        reason: fieldErrors.reason,
+        items: fieldErrors.items,
+      },
+      message: 'Revisá las líneas del pedido.',
+    };
+  }
+
+  const { reason, notifyCustomer, items } = validated.data;
+  let emailNotice: string | null = null;
+
+  try {
+    const saved = await sql.begin(async (tx) => {
+      const orders = await tx<{
+        amount: number;
+        globalDiscountPercent: string | number;
+        customerId: string;
+        trackingCode: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        name: string;
+        customerType: string;
+        paidAmountCents: number;
+        quoteId: string | null;
+      }[]>`
+        SELECT
+          orders.amount,
+          orders.global_discount_percent as "globalDiscountPercent",
+          orders.customer_id as "customerId",
+          orders.tracking_code as "trackingCode",
+          orders.paid_amount_cents as "paidAmountCents",
+          orders.quote_id as "quoteId",
+          customers.email,
+          customers.first_name as "firstName",
+          customers.last_name as "lastName",
+          customers.name,
+          customers.type as "customerType"
+        FROM orders
+        JOIN customers ON customers.id = orders.customer_id
+        WHERE orders.id = ${orderId}
+          AND orders.deleted_at IS NULL
+        LIMIT 1
+      `;
+
+      const order = orders[0];
+      if (!order) {
+        throw new Error('NOT_FOUND');
+      }
+
+      const existingLines = await tx<{ calculatorParams: QuoteItem['calculatorParams'] | null }[]>`
+        SELECT calculator_params as "calculatorParams"
+        FROM order_items
+        WHERE order_id = ${orderId}
+        ORDER BY sort_order ASC, created_at ASC
+      `;
+
+      if (existingLines.length === 0) {
+        throw new Error('NO_LINES');
+      }
+
+      const taxRows = await tx<{ name: string; percentage: string | number }[]>`
+        SELECT name, percentage
+        FROM order_taxes
+        WHERE order_id = ${orderId}
+        ORDER BY sort_order ASC, created_at ASC
+      `;
+
+      const quoteItems: QuoteItem[] = items.map((item, index) => ({
+        id: String(index),
+        description: item.description,
+        quantity: item.quantity,
+        price: item.price,
+        discount: item.discount,
+      }));
+      const taxes: TaxItem[] = taxRows.map((tax, index) => ({
+        id: String(index),
+        name: tax.name,
+        percentage: Number(tax.percentage),
+      }));
+      const math = computeQuoteMath(
+        quoteItems,
+        taxes,
+        Number(order.globalDiscountPercent)
+      );
+      const nextAmountCents = Math.max(0, pesosToCents(math.total));
+      const previousAmountCents = Number(order.amount);
+
+      await tx`DELETE FROM order_items WHERE order_id = ${orderId}`;
+
+      for (const [index, item] of items.entries()) {
+        const calculatorParams = existingLines[index]?.calculatorParams ?? null;
+        await tx`
+          INSERT INTO order_items (
+            order_id,
+            sort_order,
+            description,
+            quantity,
+            unit_price_cents,
+            discount_percent,
+            calculator_params
+          )
+          VALUES (
+            ${orderId},
+            ${index},
+            ${item.description},
+            ${item.quantity},
+            ${pesosToCents(item.price)},
+            ${item.discount},
+            ${calculatorParams ? sql.json(calculatorParams) : null}
+          )
+        `;
+      }
+
+      await tx`
+        UPDATE orders
+        SET amount = ${nextAmountCents}
+        WHERE id = ${orderId}
+      `;
+
+      await insertOrderAmendment(
+        tx,
+        orderId,
+        order.quoteId,
+        reason,
+        previousAmountCents,
+        nextAmountCents,
+        userId
+      );
+      await refreshOrderPaymentSummary(tx, orderId);
+
+      const clientName =
+        order.customerType === 'business'
+          ? order.name
+          : [order.firstName, order.lastName].filter(Boolean).join(' ').trim();
+
+      return {
+        previousAmountCents,
+        nextAmountCents,
+        customerId: order.customerId,
+        quoteId: order.quoteId,
+        trackingCode: order.trackingCode,
+        email: order.email,
+        clientName: clientName || 'cliente',
+        paidAmountCents: Number(order.paidAmountCents),
+      };
+    });
+
+    if (
+      notifyCustomer &&
+      saved.previousAmountCents !== saved.nextAmountCents &&
+      saved.paidAmountCents > 0
+    ) {
+      if (!saved.email.trim()) {
+        emailNotice = 'El pedido se actualizó, pero el cliente no tiene email.';
+      } else {
+        try {
+          await sendOrderStatusEmail({
+            to: saved.email,
+            clientName: saved.clientName,
+            trackingCode: saved.trackingCode,
+            statusLabel: 'Importe actualizado',
+            body: `Actualizamos el importe de tu pedido ${saved.trackingCode}. El total pasó de ${formatCurrency(saved.previousAmountCents)} a ${formatCurrency(saved.nextAmountCents)}.`,
+          });
+          emailNotice = `Avisamos a ${saved.email}.`;
+        } catch (error) {
+          console.error(error);
+          emailNotice = 'El pedido se actualizó, pero no se pudo enviar el email.';
+        }
+      }
+    }
+
+    revalidateOrderPaths({
+      orderId,
+      customerId: saved.customerId,
+      quoteId: saved.quoteId,
+    });
+
+    return {
+      success: true,
+      message: emailNotice ?? 'Líneas del pedido actualizadas.',
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === 'NOT_FOUND') {
+      return { success: false, message: 'No se encontró el pedido.' };
+    }
+    if (error instanceof Error && error.message === 'NO_LINES') {
+      return {
+        success: false,
+        message: 'Este pedido no tiene líneas para editar. Cambiá el importe desde la ficha.',
+      };
+    }
+
+    console.error(error);
+    return { success: false, message: 'No se pudieron guardar las líneas del pedido.' };
+  }
+}
+
+export async function applyAcceptedRevisionToOrder(
+  quoteId: string,
+  _prevState: CreateOrderFromQuoteState,
+  _formData: FormData
+): Promise<CreateOrderFromQuoteState> {
+  const userId = await requireAdminSessionUserId();
+  const parsedId = z.string().uuid().safeParse(quoteId);
+  if (!parsedId.success) {
+    return { success: false, message: 'Presupuesto inválido.' };
+  }
+
+  let orderId: string;
+
+  try {
+    const result = await sql.begin(async (tx) => {
+      const quotes = await tx<{
+        id: string;
+        status: string;
+        quoteNumber: number;
+        revision: number;
+        totalCents: number;
+        globalDiscountPercent: string | number;
+        customerId: string;
+      }[]>`
+        SELECT
+          id,
+          status,
+          quote_number as "quoteNumber",
+          revision,
+          total_cents as "totalCents",
+          global_discount_percent as "globalDiscountPercent",
+          customer_id as "customerId"
+        FROM quotes
+        WHERE id = ${parsedId.data}
+          AND deleted_at IS NULL
+        LIMIT 1
+      `;
+
+      const quote = quotes[0];
+      if (!quote) {
+        throw new Error('NOT_FOUND');
+      }
+      if (quote.status !== 'accepted') {
+        throw new Error('NOT_ACCEPTED');
+      }
+      if (quote.totalCents <= 0) {
+        throw new Error('INVALID_AMOUNT');
+      }
+
+      const orders = await tx<{
+        id: string;
+        quoteId: string | null;
+        amount: number;
+      }[]>`
+        SELECT
+          orders.id,
+          orders.quote_id as "quoteId",
+          orders.amount
+        FROM orders
+        JOIN quotes family ON family.id = orders.quote_id
+        WHERE family.quote_number = ${quote.quoteNumber}
+          AND orders.deleted_at IS NULL
+        LIMIT 1
+      `;
+
+      const order = orders[0];
+      if (!order) {
+        throw new Error('NO_ORDER');
+      }
+      if (order.quoteId === quote.id) {
+        return { id: order.id, customerId: quote.customerId, alreadyApplied: true };
+      }
+
+      const previousAmountCents = Number(order.amount);
+      await replaceOrderLinesFromQuote(tx, order.id, quote.id);
+      await tx`
+        UPDATE orders
+        SET
+          quote_id = ${quote.id},
+          amount = ${quote.totalCents},
+          global_discount_percent = ${Number(quote.globalDiscountPercent)}
+        WHERE id = ${order.id}
+      `;
+      await insertOrderAmendment(
+        tx,
+        order.id,
+        quote.id,
+        `Aplicado el presupuesto ${formatQuoteNumber(quote.quoteNumber, Number(quote.revision))}.`,
+        previousAmountCents,
+        Number(quote.totalCents),
+        userId
+      );
+      await refreshOrderPaymentSummary(tx, order.id);
+
+      return { id: order.id, customerId: quote.customerId };
+    });
+
+    orderId = result.id;
+    revalidateOrderPaths({
+      orderId,
+      customerId: result.customerId,
+      quoteId: parsedId.data,
+    });
+    revalidatePath('/admin/quotes');
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === 'NOT_FOUND') {
+        return { success: false, message: 'No se encontró el presupuesto.' };
+      }
+      if (error.message === 'NOT_ACCEPTED') {
+        return {
+          success: false,
+          message: 'Solo se puede aplicar un presupuesto aceptado.',
+        };
+      }
+      if (error.message === 'INVALID_AMOUNT') {
+        return {
+          success: false,
+          message: 'El presupuesto no tiene un total válido.',
+        };
+      }
+      if (error.message === 'NO_ORDER') {
+        return {
+          success: false,
+          message: 'Todavía no hay un pedido para este presupuesto.',
+        };
+      }
+    }
+
+    console.error(error);
+    return { success: false, message: 'No se pudo aplicar el presupuesto al pedido.' };
+  }
+
+  redirect(`/admin/orders/${orderId}`);
 }
 
 export async function updateOrderStatus(

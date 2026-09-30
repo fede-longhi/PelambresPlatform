@@ -10,6 +10,7 @@ import type {
   QuoteDocumentDetail,
   QuoteDocumentListItem,
   QuoteDocumentStatus,
+  QuoteRevisionSummary,
 } from '@/types/quote-document-definitions';
 import type { CustomerType } from '@/types/definitions';
 
@@ -21,6 +22,7 @@ const ITEMS_PER_PAGE = 10;
 type QuoteDocumentRow = {
   id: string;
   quoteNumber: number;
+  revision: number;
   status: QuoteDocumentStatus;
   customerId: string;
   quoteRequestId: string | null;
@@ -123,6 +125,7 @@ export async function fetchFilteredQuoteDocuments(
       SELECT
         quotes.id,
         quotes.quote_number as "quoteNumber",
+        quotes.revision,
         quotes.status,
         to_char(quotes.quote_date, 'YYYY-MM-DD') as "quoteDate",
         quotes.client_name as "clientName",
@@ -136,7 +139,7 @@ export async function fetchFilteredQuoteDocuments(
       WHERE quotes.deleted_at IS NULL
         ${buildQuoteDocumentSearchSql(search, quoteNumberSearch)}
         ${filterSql}
-      ORDER BY quotes.quote_number DESC
+      ORDER BY quotes.quote_number DESC, quotes.revision DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
   } catch (error) {
@@ -178,6 +181,7 @@ export async function fetchQuoteDocumentById(
       SELECT
         id,
         quote_number as "quoteNumber",
+        revision,
         status,
         customer_id as "customerId",
         quote_request_id as "quoteRequestId",
@@ -239,9 +243,26 @@ export async function fetchQuoteDocumentById(
       LIMIT 1
     `;
 
+    const familyOrderRows = await sql<{
+      id: string;
+      quoteId: string;
+      trackingCode: string;
+    }[]>`
+      SELECT
+        orders.id,
+        orders.quote_id as "quoteId",
+        orders.tracking_code as "trackingCode"
+      FROM orders
+      JOIN quotes linked ON linked.id = orders.quote_id
+      WHERE linked.quote_number = ${quote.quoteNumber}
+        AND orders.deleted_at IS NULL
+      LIMIT 1
+    `;
+
     return {
       id: quote.id,
       quoteNumber: Number(quote.quoteNumber),
+      revision: Number(quote.revision),
       status: quote.status,
       customerId: quote.customerId,
       quoteRequestId: quote.quoteRequestId,
@@ -264,6 +285,9 @@ export async function fetchQuoteDocumentById(
       taxes: taxes.map(mapQuoteTax),
       orderId: orderRows[0]?.id ?? null,
       orderTrackingCode: orderRows[0]?.trackingCode ?? null,
+      familyOrderId: familyOrderRows[0]?.id ?? null,
+      familyOrderQuoteId: familyOrderRows[0]?.quoteId ?? null,
+      familyOrderTrackingCode: familyOrderRows[0]?.trackingCode ?? null,
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -279,6 +303,7 @@ export async function fetchCustomerQuoteDocuments(
       SELECT
         quotes.id,
         quotes.quote_number as "quoteNumber",
+        quotes.revision,
         quotes.status,
         to_char(quotes.quote_date, 'YYYY-MM-DD') as "quoteDate",
         quotes.client_name as "clientName",
@@ -291,7 +316,7 @@ export async function fetchCustomerQuoteDocuments(
       LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.customer_id = ${customerId}
         AND quotes.deleted_at IS NULL
-      ORDER BY quotes.quote_number DESC
+      ORDER BY quotes.quote_number DESC, quotes.revision DESC
       LIMIT 8
     `;
   } catch (error) {
@@ -308,6 +333,7 @@ export async function fetchQuoteDocumentsByRequestId(
       SELECT
         quotes.id,
         quotes.quote_number as "quoteNumber",
+        quotes.revision,
         quotes.status,
         to_char(quotes.quote_date, 'YYYY-MM-DD') as "quoteDate",
         quotes.client_name as "clientName",
@@ -320,7 +346,7 @@ export async function fetchQuoteDocumentsByRequestId(
       LEFT JOIN orders ON orders.quote_id = quotes.id AND orders.deleted_at IS NULL
       WHERE quotes.quote_request_id = ${quoteRequestId}
         AND quotes.deleted_at IS NULL
-      ORDER BY quotes.quote_number DESC
+      ORDER BY quotes.quote_number DESC, quotes.revision DESC
     `;
   } catch (error) {
     console.error('Database Error:', error);
@@ -328,24 +354,30 @@ export async function fetchQuoteDocumentsByRequestId(
   }
 }
 
-export async function fetchQuoteItemsForOrder(quoteId: string) {
+export async function fetchQuoteRevisions(
+  quoteNumber: number
+): Promise<QuoteRevisionSummary[]> {
   try {
-    const rows = await sql<QuoteItemRow[]>`
+    const rows = await sql<QuoteRevisionSummary[]>`
       SELECT
         id,
-        description,
-        quantity,
-        unit_price_cents as "unitPriceCents",
-        discount_percent as "discountPercent",
-        calculator_params as "calculatorParams"
-      FROM quote_items
-      WHERE quote_id = ${quoteId}
-      ORDER BY sort_order ASC, created_at ASC
+        revision,
+        status,
+        total_cents as "totalCents",
+        to_char(quote_date, 'YYYY-MM-DD') as "quoteDate"
+      FROM quotes
+      WHERE quote_number = ${quoteNumber}
+        AND deleted_at IS NULL
+      ORDER BY revision ASC
     `;
 
-    return rows.map(mapQuoteItem);
+    return rows.map((row) => ({
+      ...row,
+      revision: Number(row.revision),
+      totalCents: Number(row.totalCents),
+    }));
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch quote items for order.');
+    throw new Error('Failed to fetch quote revisions.');
   }
 }

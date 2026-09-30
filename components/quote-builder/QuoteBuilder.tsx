@@ -213,7 +213,7 @@ export default function QuoteBuilder({
 
             toast({
                 title: 'Presupuesto guardado',
-                description: `Quedó registrado como Nº ${formatQuoteNumber(result.quoteNumber)}.`,
+                description: `Quedó registrado como Nº ${formatQuoteNumber(result.quoteNumber, result.revision)}.`,
                 variant: 'success',
             });
 
@@ -225,7 +225,7 @@ export default function QuoteBuilder({
 
             quote.setMeta({
                 ...quote.meta,
-                quoteNumber: formatQuoteNumber(result.quoteNumber),
+                quoteNumber: formatQuoteNumber(result.quoteNumber, result.revision),
             });
             router.refresh();
         } catch (error) {

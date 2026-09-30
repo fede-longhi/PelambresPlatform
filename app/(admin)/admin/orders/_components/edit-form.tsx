@@ -18,9 +18,10 @@ import FieldErrorDisplay from '@/components/ui/field-error-display';
 
 interface OrderEditFormProps {
   order: Order;
+  amountLocked?: boolean;
 }
 
-export default function OrderEditForm({ order }: OrderEditFormProps) {
+export default function OrderEditForm({ order, amountLocked = false }: OrderEditFormProps) {
   const router = useRouter();
   const initialState: OrderFormState = { message: null, errors: {} };
   const updateOrderWithId = updateOrder.bind(null, order.id);
@@ -82,13 +83,20 @@ export default function OrderEditForm({ order }: OrderEditFormProps) {
           name="amount"
           min="0"
           step="0.01"
+          readOnly={amountLocked}
           defaultValue={
             (state.payload?.get('amount') as string) || String(amountInPesos)
           }
           aria-invalid={!!state.errors?.amount}
           aria-describedby="amount-error"
         />
-        <FieldErrorDisplay id="amount-error" errors={state.errors?.amount} />
+        {amountLocked ? (
+          <p id="amount-error" className="text-sm text-muted-foreground">
+            El importe sale de las líneas del pedido.
+          </p>
+        ) : (
+          <FieldErrorDisplay id="amount-error" errors={state.errors?.amount} />
+        )}
       </div>
 
       {state.message ? (
