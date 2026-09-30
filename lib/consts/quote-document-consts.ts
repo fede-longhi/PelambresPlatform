@@ -14,6 +14,7 @@ export const QUOTE_DOCUMENT_STATUS_LABELS: Record<QuoteDocumentStatus, string> =
   sent: 'Enviado',
   accepted: 'Aceptado',
   rejected: 'Rechazado',
+  superseded: 'Reemplazado',
 };
 
 export type QuoteDocumentListFilter =
@@ -31,6 +32,7 @@ export const QUOTE_DOCUMENT_LIST_FILTERS: {
   { value: 'accepted', label: 'Aceptados' },
   { value: 'accepted_without_order', label: 'Aceptados sin pedido' },
   { value: 'rejected', label: 'Rechazados' },
+  { value: 'superseded', label: 'Reemplazados' },
 ];
 
 export const DEFAULT_QUOTE_DOCUMENT_LIST_FILTER: QuoteDocumentListFilter = 'all';
@@ -85,11 +87,23 @@ export function getQuoteDocumentStatusBadgeClass(status: string): string {
     return statusBadgeClass('danger');
   }
 
+  if (status === 'superseded') {
+    return statusBadgeClass('neutral');
+  }
+
   return statusBadgeClass('neutral');
 }
 
-export function formatQuoteNumber(quoteNumber: number | string): string {
-  return String(quoteNumber).padStart(7, '0');
+export function formatQuoteNumber(
+  quoteNumber: number | string,
+  revision = 1
+): string {
+  const padded = String(quoteNumber).padStart(7, '0');
+  if (revision > 1) {
+    return `${padded}-${revision}`;
+  }
+
+  return padded;
 }
 
 export function getQuoteClientDisplayName(customer: Customer): string {
@@ -105,6 +119,7 @@ export function getQuoteClientDisplayName(customer: Customer): string {
 
 export function toQuoteBuilderState(quote: {
   quoteNumber: number;
+  revision?: number;
   showQuoteNumber: boolean;
   quoteDate: string;
   companyName: string;
@@ -119,7 +134,7 @@ export function toQuoteBuilderState(quote: {
 }): QuoteBuilderState {
   return {
     meta: {
-      quoteNumber: formatQuoteNumber(quote.quoteNumber),
+      quoteNumber: formatQuoteNumber(quote.quoteNumber, quote.revision ?? 1),
       showQuoteNumber: quote.showQuoteNumber,
       date: quote.quoteDate,
       companyName: quote.companyName,

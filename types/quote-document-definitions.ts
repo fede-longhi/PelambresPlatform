@@ -6,6 +6,7 @@ export const QUOTE_DOCUMENT_STATUSES = [
   'sent',
   'accepted',
   'rejected',
+  'superseded',
 ] as const;
 
 export type QuoteDocumentStatus = (typeof QUOTE_DOCUMENT_STATUSES)[number];
@@ -13,6 +14,7 @@ export type QuoteDocumentStatus = (typeof QUOTE_DOCUMENT_STATUSES)[number];
 export type QuoteDocumentListItem = {
   id: string;
   quoteNumber: number;
+  revision: number;
   status: QuoteDocumentStatus;
   quoteDate: string;
   clientName: string;
@@ -26,6 +28,7 @@ export type QuoteDocumentListItem = {
 export type QuoteDocumentDetail = {
   id: string;
   quoteNumber: number;
+  revision: number;
   status: QuoteDocumentStatus;
   customerId: string;
   quoteRequestId: string | null;
@@ -48,6 +51,17 @@ export type QuoteDocumentDetail = {
   taxes: TaxItem[];
   orderId: string | null;
   orderTrackingCode: string | null;
+  familyOrderId: string | null;
+  familyOrderQuoteId: string | null;
+  familyOrderTrackingCode: string | null;
+};
+
+export type QuoteRevisionSummary = {
+  id: string;
+  revision: number;
+  status: QuoteDocumentStatus;
+  totalCents: number;
+  quoteDate: string;
 };
 
 export type QuoteDocumentSaveItem = {
@@ -86,6 +100,7 @@ export type QuoteDocumentSaveResult = {
   message?: string;
   id?: string;
   quoteNumber?: number;
+  revision?: number;
   errors?: {
     customerId?: string[];
     clientName?: string[];

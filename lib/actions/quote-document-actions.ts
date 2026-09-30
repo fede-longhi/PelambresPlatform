@@ -73,6 +73,24 @@ export type QuoteDocumentStatusFormState = {
   savedStatus?: QuoteDocumentStatus;
 };
 
+async function supersedeSiblingRevisions(
+  tx: typeof sql,
+  quoteNumber: number,
+  quoteId: string,
+  status: 'sent' | 'accepted'
+) {
+  await tx`
+    UPDATE quotes
+    SET
+      status = 'superseded',
+      updated_at = NOW()
+    WHERE quote_number = ${quoteNumber}
+      AND id <> ${quoteId}
+      AND deleted_at IS NULL
+      AND status = ${status}
+  `;
+}
+
 function revalidateQuotePaths(options: {
   quoteId?: string;
   customerId?: string;
@@ -223,7 +241,35 @@ export async function saveQuoteDocument(
   try {
     const saved = await sql.begin(async (tx) => {
       if (data.id) {
-        const updated = await tx<{ id: string; quoteNumber: number }[]>`
+        const current = await tx<{ status: string }[]>`
+          SELECT status
+          FROM quotes
+          WHERE id = ${data.id}
+            AND deleted_at IS NULL
+          LIMIT 1
+        `;
+
+        if (!current[0]) {
+          throw new Error('NOT_FOUND');
+        }
+
+        if (current[0].status !== 'draft') {
+          throw new Error('LOCKED');
+        }
+
+        const linkedOrder = await tx<{ id: string }[]>`
+          SELECT id
+          FROM orders
+          WHERE quote_id = ${data.id}
+            AND deleted_at IS NULL
+          LIMIT 1
+        `;
+
+        if (linkedOrder[0]) {
+          throw new Error('LOCKED');
+        }
+
+        const updated = await tx<{ id: string; quoteNumber: number; revision: number }[]>`
           UPDATE quotes
           SET
             customer_id = ${data.customerId},
@@ -244,7 +290,8 @@ export async function saveQuoteDocument(
             updated_at = NOW()
           WHERE id = ${data.id}
             AND deleted_at IS NULL
-          RETURNING id, quote_number as "quoteNumber"
+            AND status = 'draft'
+          RETURNING id, quote_number as "quoteNumber", revision
         `;
 
         if (!updated[0]) {
@@ -262,7 +309,7 @@ export async function saveQuoteDocument(
         return updated[0];
       }
 
-      const inserted = await tx<{ id: string; quoteNumber: number }[]>`
+      const inserted = await tx<{ id: string; quoteNumber: number; revision: number }[]>`
         INSERT INTO quotes (
           quote_number,
           status,
@@ -301,7 +348,7 @@ export async function saveQuoteDocument(
           ${taxCents},
           ${totalCents}
         )
-        RETURNING id, quote_number as "quoteNumber"
+        RETURNING id, quote_number as "quoteNumber", revision
       `;
 
       const created = inserted[0];
@@ -324,10 +371,19 @@ export async function saveQuoteDocument(
       success: true,
       id: saved.id,
       quoteNumber: Number(saved.quoteNumber),
+      revision: Number(saved.revision),
     };
   } catch (error) {
     if (error instanceof Error && error.message === 'NOT_FOUND') {
       return { success: false, message: 'No se encontró el presupuesto.' };
+    }
+
+    if (error instanceof Error && error.message === 'LOCKED') {
+      return {
+        success: false,
+        message:
+          'Este presupuesto ya no se puede editar. Creá una nueva versión.',
+      };
     }
 
     console.error(error);
@@ -357,17 +413,44 @@ export async function updateQuoteDocumentStatus(
   }
 
   try {
-    const updated = await sql<{ id: string; customerId: string; quoteRequestId: string | null }[]>`
-      UPDATE quotes
-      SET
-        status = ${parsed.data satisfies QuoteDocumentStatus},
-        updated_at = NOW()
-      WHERE id = ${quoteId}
-        AND deleted_at IS NULL
-      RETURNING id, customer_id as "customerId", quote_request_id as "quoteRequestId"
-    `;
+    const updated = await sql.begin(async (tx) => {
+      const rows = await tx<{
+        id: string;
+        quoteNumber: number;
+        customerId: string;
+        quoteRequestId: string | null;
+      }[]>`
+        UPDATE quotes
+        SET
+          status = ${parsed.data satisfies QuoteDocumentStatus},
+          updated_at = NOW()
+        WHERE id = ${quoteId}
+          AND deleted_at IS NULL
+        RETURNING
+          id,
+          quote_number as "quoteNumber",
+          customer_id as "customerId",
+          quote_request_id as "quoteRequestId"
+      `;
 
-    if (!updated[0]) {
+      const quote = rows[0];
+      if (!quote) {
+        return null;
+      }
+
+      if (parsed.data === 'sent' || parsed.data === 'accepted') {
+        await supersedeSiblingRevisions(
+          tx,
+          Number(quote.quoteNumber),
+          quote.id,
+          parsed.data
+        );
+      }
+
+      return quote;
+    });
+
+    if (!updated) {
       return {
         message: 'No se encontró el presupuesto.',
         success: false,
@@ -376,8 +459,8 @@ export async function updateQuoteDocumentStatus(
 
     revalidateQuotePaths({
       quoteId,
-      customerId: updated[0].customerId,
-      quoteRequestId: updated[0].quoteRequestId,
+      customerId: updated.customerId,
+      quoteRequestId: updated.quoteRequestId,
     });
 
     return {
@@ -428,7 +511,7 @@ export async function sendQuoteDocumentToCustomer(
     await sendQuoteDocumentEmail({
       to: clientEmail,
       clientName: quote.clientName || 'cliente',
-      quoteNumber: formatQuoteNumber(quote.quoteNumber),
+      quoteNumber: formatQuoteNumber(quote.quoteNumber, quote.revision),
       quoteDate: formatDateToLocal(quote.quoteDate, 'es-AR'),
       items: quote.items.map((item) => ({
         description: item.description,
@@ -442,15 +525,22 @@ export async function sendQuoteDocumentToCustomer(
     });
 
     if (quote.status === 'draft') {
-      await sql`
-        UPDATE quotes
-        SET
-          status = 'sent',
-          updated_at = NOW()
-        WHERE id = ${quote.id}
-          AND deleted_at IS NULL
-          AND status = 'draft'
-      `;
+      await sql.begin(async (tx) => {
+        const sent = await tx<{ id: string }[]>`
+          UPDATE quotes
+          SET
+            status = 'sent',
+            updated_at = NOW()
+          WHERE id = ${quote.id}
+            AND deleted_at IS NULL
+            AND status = 'draft'
+          RETURNING id
+        `;
+
+        if (sent[0]) {
+          await supersedeSiblingRevisions(tx, quote.quoteNumber, quote.id, 'sent');
+        }
+      });
     }
   } catch (error) {
     console.error(error);
@@ -470,6 +560,155 @@ export async function sendQuoteDocumentToCustomer(
     success: true,
     message: `Presupuesto enviado a ${clientEmail}.`,
   };
+}
+
+export async function createQuoteRevision(
+  quoteId: string,
+  _prevState: QuoteDocumentStatusFormState,
+  _formData: FormData
+): Promise<QuoteDocumentStatusFormState> {
+  await requireAdminSessionUserId();
+
+  const parsedId = z.string().uuid().safeParse(quoteId);
+  if (!parsedId.success) {
+    return { success: false, message: 'Presupuesto inválido.' };
+  }
+
+  const source = await fetchQuoteDocumentById(parsedId.data);
+  if (!source) {
+    return { success: false, message: 'No se encontró el presupuesto.' };
+  }
+
+  if (source.status === 'draft') {
+    redirect(`/admin/quotes/${source.id}/edit`);
+  }
+
+  const existingDraft = await sql<{ id: string }[]>`
+    SELECT id
+    FROM quotes
+    WHERE quote_number = ${source.quoteNumber}
+      AND status = 'draft'
+      AND deleted_at IS NULL
+    LIMIT 1
+  `;
+
+  if (existingDraft[0]) {
+    redirect(`/admin/quotes/${existingDraft[0].id}/edit`);
+  }
+
+  let createdId: string;
+
+  try {
+    createdId = await sql.begin(async (tx) => {
+      const inserted = await tx<{ id: string }[]>`
+        INSERT INTO quotes (
+          quote_number,
+          revision,
+          status,
+          customer_id,
+          quote_request_id,
+          quote_date,
+          company_name,
+          client_name,
+          client_email,
+          client_phone,
+          client_address,
+          client_type,
+          notes,
+          global_discount_percent,
+          show_quote_number,
+          subtotal_cents,
+          tax_cents,
+          total_cents
+        )
+        SELECT
+          quote_number,
+          (
+            SELECT COALESCE(MAX(revision), 0) + 1
+            FROM quotes revisions
+            WHERE revisions.quote_number = source.quote_number
+          ),
+          'draft',
+          customer_id,
+          quote_request_id,
+          CURRENT_DATE,
+          company_name,
+          client_name,
+          client_email,
+          client_phone,
+          client_address,
+          client_type,
+          notes,
+          global_discount_percent,
+          show_quote_number,
+          subtotal_cents,
+          tax_cents,
+          total_cents
+        FROM quotes source
+        WHERE source.id = ${source.id}
+          AND source.deleted_at IS NULL
+        RETURNING id
+      `;
+
+      const created = inserted[0];
+      if (!created) {
+        throw new Error('NOT_FOUND');
+      }
+
+      await tx`
+        INSERT INTO quote_items (
+          quote_id,
+          sort_order,
+          description,
+          quantity,
+          unit_price_cents,
+          discount_percent,
+          calculator_params
+        )
+        SELECT
+          ${created.id},
+          sort_order,
+          description,
+          quantity,
+          unit_price_cents,
+          discount_percent,
+          calculator_params
+        FROM quote_items
+        WHERE quote_id = ${source.id}
+        ORDER BY sort_order ASC, created_at ASC
+      `;
+
+      await tx`
+        INSERT INTO quote_taxes (
+          quote_id,
+          sort_order,
+          name,
+          percentage
+        )
+        SELECT
+          ${created.id},
+          sort_order,
+          name,
+          percentage
+        FROM quote_taxes
+        WHERE quote_id = ${source.id}
+        ORDER BY sort_order ASC, created_at ASC
+      `;
+
+      return created.id;
+    });
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'No se pudo crear la nueva versión.' };
+  }
+
+  revalidateQuotePaths({
+    quoteId: createdId,
+    customerId: source.customerId,
+    quoteRequestId: source.quoteRequestId,
+  });
+  revalidatePath(`/admin/quotes/${source.id}`);
+  redirect(`/admin/quotes/${createdId}/edit`);
 }
 
 export async function deleteQuoteDocument(id: string) {

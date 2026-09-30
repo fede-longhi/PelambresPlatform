@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { fetchOrderById } from '@/lib/data/order-data';
+import { fetchOrderById, fetchOrderItems } from '@/lib/data/order-data';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import OrderEditForm from '@/app/(admin)/admin/orders/_components/edit-form';
 
@@ -14,7 +14,10 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const order = await fetchOrderById(id);
+  const [order, orderItems] = await Promise.all([
+    fetchOrderById(id),
+    fetchOrderItems(id),
+  ]);
 
   if (!order) {
     notFound();
@@ -38,7 +41,7 @@ export default async function Page({ params }: PageProps) {
           },
         ]}
       />
-      <OrderEditForm order={order} />
+      <OrderEditForm order={order} amountLocked={orderItems.length > 0} />
     </main>
   );
 }

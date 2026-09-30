@@ -39,7 +39,7 @@ export default async function CustomerLastQuotes({
                   className="flex flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2 shadow-sm hover:bg-muted sm:flex-row sm:items-center sm:justify-between sm:space-x-4"
                 >
                   <span className="font-medium">
-                    Nº {formatQuoteNumber(quote.quoteNumber)}
+                    Nº {formatQuoteNumber(quote.quoteNumber, quote.revision)}
                   </span>
                   <QuoteStatusBadge status={quote.status} />
                   <span className="text-sm">

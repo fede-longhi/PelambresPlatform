@@ -79,6 +79,7 @@ type OpenOrderRow = {
 type AcceptedQuoteRow = {
   id: string;
   quoteNumber: number;
+  revision: number;
   clientName: string;
   totalCents: number;
 };
@@ -330,6 +331,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         SELECT
           quotes.id,
           quotes.quote_number as "quoteNumber",
+          quotes.revision,
           quotes.client_name as "clientName",
           quotes.total_cents as "totalCents"
         FROM quotes
@@ -364,7 +366,7 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
         id: `accepted-quote-${quote.id}`,
         kind: 'quote_accepted_without_order' as const,
         title: quote.clientName || 'Sin cliente',
-        subtitle: `Presupuesto Nº ${formatQuoteNumber(quote.quoteNumber)} · ${formatCurrency(toNumber(quote.totalCents))}`,
+        subtitle: `Presupuesto Nº ${formatQuoteNumber(quote.quoteNumber, Number(quote.revision))} · ${formatCurrency(toNumber(quote.totalCents))}`,
         href: `/admin/quotes/${quote.id}`,
       })),
       ...unlinkedQuotes.map((quote) => ({

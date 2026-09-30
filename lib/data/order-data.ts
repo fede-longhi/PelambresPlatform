@@ -1,4 +1,4 @@
-import { Order, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
+import { Order, OrderAmendment, OrdersSummary, OrderTable, PrintJobOrderOption } from "@/types/definitions";
 import type {
   OrderAttachment,
   OrderPayment,
@@ -13,6 +13,8 @@ import {
   parseOrderListFilter,
   type OrderListFilter,
 } from '@/lib/consts/order-list-consts';
+import { centsToPesos } from '@/lib/quote-math';
+import type { QuoteItem, QuoteItemCalculatorParams, TaxItem } from '@/types/quote';
 
 export { parseOrderListFilter, DEFAULT_ORDER_LIST_FILTER };
 export type { OrderListFilter };
@@ -269,6 +271,9 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
             orders.amount,
             orders.quote_id,
             quotes.quote_number,
+            quotes.revision as quote_revision,
+            orders.quoted_amount_cents,
+            orders.global_discount_percent,
             orders.notes,
             orders.payment_status,
             orders.paid_amount_cents,
@@ -297,6 +302,13 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
 
         return {
           ...order,
+          quote_revision:
+            order.quote_revision == null ? null : Number(order.quote_revision),
+          quoted_amount_cents:
+            order.quoted_amount_cents == null
+              ? null
+              : Number(order.quoted_amount_cents),
+          global_discount_percent: Number(order.global_discount_percent ?? 0),
           paid_amount_cents: Number(order.paid_amount_cents ?? 0),
           paid_at: paidAt
             ? paidAt instanceof Date
@@ -308,6 +320,105 @@ export async function fetchOrderById(id: string): Promise<OrderTable | undefined
         console.error('Database Error:', error);
         throw new Error('Failed to fetch order with id: ' + id + '.');
     }
+}
+
+type OrderItemRow = {
+  id: string;
+  description: string;
+  quantity: string | number;
+  unitPriceCents: number;
+  discountPercent: string | number;
+  calculatorParams: QuoteItemCalculatorParams | null;
+};
+
+type OrderTaxRow = {
+  id: string;
+  name: string;
+  percentage: string | number;
+};
+
+export async function fetchOrderItems(orderId: string): Promise<QuoteItem[]> {
+  try {
+    const rows = await sql<OrderItemRow[]>`
+      SELECT
+        id,
+        description,
+        quantity,
+        unit_price_cents as "unitPriceCents",
+        discount_percent as "discountPercent",
+        calculator_params as "calculatorParams"
+      FROM order_items
+      WHERE order_id = ${orderId}
+      ORDER BY sort_order ASC, created_at ASC
+    `;
+
+    return rows.map((row) => ({
+      id: row.id,
+      description: row.description,
+      quantity: Number(row.quantity),
+      price: centsToPesos(row.unitPriceCents),
+      discount: Number(row.discountPercent),
+      calculatorParams: row.calculatorParams ?? undefined,
+    }));
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch order items.');
+  }
+}
+
+export async function fetchOrderTaxes(orderId: string): Promise<TaxItem[]> {
+  try {
+    const rows = await sql<OrderTaxRow[]>`
+      SELECT
+        id,
+        name,
+        percentage
+      FROM order_taxes
+      WHERE order_id = ${orderId}
+      ORDER BY sort_order ASC, created_at ASC
+    `;
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      percentage: Number(row.percentage),
+    }));
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch order taxes.');
+  }
+}
+
+export async function fetchOrderAmendments(orderId: string): Promise<OrderAmendment[]> {
+  try {
+    const rows = await sql<OrderAmendment[]>`
+      SELECT
+        order_amendments.id,
+        order_amendments.reason,
+        order_amendments.previous_amount_cents as "previousAmountCents",
+        order_amendments.next_amount_cents as "nextAmountCents",
+        order_amendments.created_at as "createdAt",
+        order_amendments.quote_id as "quoteId",
+        quotes.quote_number as "quoteNumber",
+        quotes.revision as "quoteRevision"
+      FROM order_amendments
+      LEFT JOIN quotes ON quotes.id = order_amendments.quote_id
+      WHERE order_amendments.order_id = ${orderId}
+      ORDER BY order_amendments.created_at DESC
+    `;
+
+    return rows.map((row) => ({
+      ...row,
+      previousAmountCents: Number(row.previousAmountCents),
+      nextAmountCents: Number(row.nextAmountCents),
+      quoteNumber: row.quoteNumber == null ? null : Number(row.quoteNumber),
+      quoteRevision: row.quoteRevision == null ? null : Number(row.quoteRevision),
+      createdAt: new Date(row.createdAt as string | Date).toISOString(),
+    }));
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch order amendments.');
+  }
 }
 
 export async function getOrderSalesValueFromMonth(month:number, year:number) {

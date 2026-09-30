@@ -2,18 +2,24 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
-import { fetchQuoteDocumentById } from '@/lib/data/quote-document-data';
+import {
+  fetchQuoteDocumentById,
+  fetchQuoteRevisions,
+} from '@/lib/data/quote-document-data';
 import { formatCurrency, formatDateToLocal, getCustomerName } from '@/lib/utils';
 import { lusitana } from '@/app/fonts';
 import { Button } from '@/components/ui/button';
 import {
   formatQuoteNumber,
+  getQuoteDocumentStatusLabel,
 } from '@/lib/consts/quote-document-consts';
 import { fetchCustomerById } from '@/lib/data/customer-data';
 import QuoteDocumentStatusForm from '../_components/quote-status-form';
 import DeleteQuoteDocumentButton from '../_components/delete-button';
 import SendQuoteEmailButton from '../_components/send-quote-email-button';
 import CreateOrderFromQuoteButton from '../_components/create-order-from-quote-button';
+import CreateQuoteRevisionButton from '../_components/create-quote-revision-button';
+import ApplyRevisionToOrderButton from '../_components/apply-revision-to-order-button';
 import type { QuoteDocumentStatus } from '@/types/quote-document-definitions';
 
 export const metadata: Metadata = {
@@ -32,8 +38,16 @@ export default async function Page({ params }: PageProps) {
     notFound();
   }
 
-  const customer = await fetchCustomerById(quote.customerId);
-  const quoteLabel = formatQuoteNumber(quote.quoteNumber);
+  const [customer, revisions] = await Promise.all([
+    fetchCustomerById(quote.customerId),
+    fetchQuoteRevisions(quote.quoteNumber),
+  ]);
+  const quoteLabel = formatQuoteNumber(quote.quoteNumber, quote.revision);
+  const canApplyToFamilyOrder =
+    quote.status === 'accepted' &&
+    !quote.orderId &&
+    quote.familyOrderId != null &&
+    quote.familyOrderQuoteId !== quote.id;
 
   return (
     <div className="w-full max-w-5xl">
@@ -57,10 +71,25 @@ export default async function Page({ params }: PageProps) {
             quoteId={quote.id}
             clientEmail={quote.clientEmail}
           />
-          <Button asChild>
-            <Link href={`/admin/quotes/${id}/edit`}>Editar / PDF</Link>
-          </Button>
-          {quote.status === 'accepted' && !quote.orderId ? (
+          {quote.status === 'draft' ? (
+            <Button asChild>
+              <Link href={`/admin/quotes/${id}/edit`}>Editar / PDF</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="outline">
+              <Link href={`/admin/quotes/${id}/edit`}>Ver PDF</Link>
+            </Button>
+          )}
+          {quote.status !== 'draft' ? (
+            <CreateQuoteRevisionButton quoteId={quote.id} />
+          ) : null}
+          {canApplyToFamilyOrder ? (
+            <ApplyRevisionToOrderButton
+              quoteId={quote.id}
+              trackingCode={quote.familyOrderTrackingCode}
+            />
+          ) : null}
+          {quote.status === 'accepted' && !quote.orderId && !canApplyToFamilyOrder ? (
             <CreateOrderFromQuoteButton
               quoteId={quote.id}
               totalCents={quote.totalCents}
@@ -173,6 +202,33 @@ export default async function Page({ params }: PageProps) {
           </dl>
         </section>
       </div>
+
+      {revisions.length > 1 ? (
+        <section className="mt-6 space-y-3 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
+          <h2 className="text-lg font-semibold">Versiones</h2>
+          <ul className="space-y-2 text-sm">
+            {revisions.map((revision) => (
+              <li key={revision.id} className="flex flex-wrap items-center justify-between gap-2">
+                {revision.id === quote.id ? (
+                  <span>
+                    Nº {formatQuoteNumber(quote.quoteNumber, revision.revision)} ·{' '}
+                    {getQuoteDocumentStatusLabel(revision.status)}
+                  </span>
+                ) : (
+                  <Link
+                    href={`/admin/quotes/${revision.id}`}
+                    className="text-primary hover:underline"
+                  >
+                    Nº {formatQuoteNumber(quote.quoteNumber, revision.revision)} ·{' '}
+                    {getQuoteDocumentStatusLabel(revision.status)}
+                  </Link>
+                )}
+                <span>{formatCurrency(revision.totalCents)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="mt-6 space-y-4 rounded-lg border border-border bg-card p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">Ítems</h2>

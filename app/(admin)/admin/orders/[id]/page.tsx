@@ -1,15 +1,23 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { fetchOrderAttachments, fetchOrderById, fetchOrderPayments, fetchOrderStatusEvents } from '@/lib/data/order-data';
+import {
+  fetchOrderAmendments,
+  fetchOrderAttachments,
+  fetchOrderById,
+  fetchOrderItems,
+  fetchOrderPayments,
+  fetchOrderStatusEvents,
+  fetchOrderTaxes,
+} from '@/lib/data/order-data';
 import { fetchOrderPrintJobs } from '@/lib/data/print-job-data';
-import { fetchQuoteItemsForOrder } from '@/lib/data/quote-document-data';
 import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import OrderDetailCard from '@/app/(admin)/admin/orders/_components/card-detail';
 import OrderCustomerDetailCard from '@/app/(admin)/admin/orders/_components/order-customer-detail';
 import OrderPrintJobsDetail from '@/app/(admin)/admin/orders/_components/print-jobs-detail';
 import OrderNotesForm from '@/app/(admin)/admin/orders/_components/order-notes-form';
 import OrderStatusHistory from '@/app/(admin)/admin/orders/_components/order-status-history';
-import OrderQuoteItems from '@/app/(admin)/admin/orders/_components/order-quote-items';
+import OrderItemsForm from '@/app/(admin)/admin/orders/_components/order-items-form';
+import OrderAmendments from '@/app/(admin)/admin/orders/_components/order-amendments';
 import OrderAttachments from '@/app/(admin)/admin/orders/_components/order-attachments';
 import OrderPaymentPanel from '@/app/(admin)/admin/orders/_components/order-payment-panel';
 import { DeleteOrder, EditOrder } from '@/app/(admin)/admin/orders/_components/buttons';
@@ -25,21 +33,21 @@ type PageProps = {
 
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const [order, printJobs, statusEvents, attachments, payments] = await Promise.all([
-    fetchOrderById(id),
-    fetchOrderPrintJobs(id),
-    fetchOrderStatusEvents(id),
-    fetchOrderAttachments(id),
-    fetchOrderPayments(id),
-  ]);
+  const [order, printJobs, statusEvents, attachments, payments, orderItems, orderTaxes, amendments] =
+    await Promise.all([
+      fetchOrderById(id),
+      fetchOrderPrintJobs(id),
+      fetchOrderStatusEvents(id),
+      fetchOrderAttachments(id),
+      fetchOrderPayments(id),
+      fetchOrderItems(id),
+      fetchOrderTaxes(id),
+      fetchOrderAmendments(id),
+    ]);
 
   if (!order) {
     notFound();
   }
-
-  const quoteItems = order.quote_id
-    ? await fetchQuoteItemsForOrder(order.quote_id)
-    : [];
 
   const trackingCode = order.tracking_code ?? id;
 
@@ -89,13 +97,25 @@ export default async function Page({ params }: PageProps) {
         </section>
       </div>
 
-      {order.quote_id ? (
+      {orderItems.length > 0 ? (
         <div className="mt-4">
-          <OrderQuoteItems
+          <OrderItemsForm
+            orderId={order.id}
             quoteId={order.quote_id}
             quoteNumber={order.quote_number}
-            items={quoteItems}
+            quoteRevision={order.quote_revision}
+            quotedAmountCents={order.quoted_amount_cents ?? null}
+            globalDiscountPercent={order.global_discount_percent ?? 0}
+            taxes={orderTaxes}
+            items={orderItems}
+            hasPayments={Number(order.paid_amount_cents ?? 0) > 0}
           />
+        </div>
+      ) : null}
+
+      {amendments.length > 0 ? (
+        <div className="mt-4">
+          <OrderAmendments amendments={amendments} />
         </div>
       ) : null}
 

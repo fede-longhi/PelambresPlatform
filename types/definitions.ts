@@ -139,10 +139,24 @@ export type OrderTable = {
     customer_type: CustomerType,
     quote_id?: string | null,
     quote_number?: number | null,
+    quote_revision?: number | null,
+    quoted_amount_cents?: number | null,
+    global_discount_percent?: number,
     notes?: string,
     payment_status?: OrderPaymentStatus,
     paid_amount_cents?: number,
     paid_at?: string | null,
+}
+
+export type OrderAmendment = {
+    id: string;
+    reason: string;
+    previousAmountCents: number;
+    nextAmountCents: number;
+    createdAt: string;
+    quoteId: string | null;
+    quoteNumber: number | null;
+    quoteRevision: number | null;
 }
 
 export type Order = {
@@ -161,6 +175,9 @@ export type Order = {
     customer_type: CustomerType,
     quote_id?: string | null,
     quote_number?: number | null,
+    quote_revision?: number | null,
+    quoted_amount_cents?: number | null,
+    global_discount_percent?: number,
     notes?: string,
     payment_status?: OrderPaymentStatus,
     paid_amount_cents?: number,

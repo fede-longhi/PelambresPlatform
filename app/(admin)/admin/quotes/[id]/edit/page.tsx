@@ -27,7 +27,7 @@ export default async function Page({ params }: PageProps) {
   }
 
   const customer = await fetchCustomerById(quote.customerId);
-  const quoteLabel = formatQuoteNumber(quote.quoteNumber);
+  const quoteLabel = formatQuoteNumber(quote.quoteNumber, quote.revision);
 
   return (
     <div className="flex h-[calc(100dvh-6rem)] flex-col md:h-[calc(100vh-6rem)]">
@@ -42,6 +42,12 @@ export default async function Page({ params }: PageProps) {
           },
         ]}
       />
+      {quote.status !== 'draft' ? (
+        <p className="mb-3 text-sm text-muted-foreground">
+          Esta versión ya no se edita. Para cambiar el alcance, creá una nueva
+          versión desde la ficha. Podés seguir viendo el PDF desde acá.
+        </p>
+      ) : null}
       <QuoteDocumentBuilder
         quoteId={quote.id}
         quoteRequestId={quote.quoteRequestId}

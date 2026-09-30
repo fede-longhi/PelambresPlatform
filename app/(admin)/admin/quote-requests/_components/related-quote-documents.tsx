@@ -32,7 +32,7 @@ export default function RelatedQuoteDocuments({
             className="flex flex-col gap-1 rounded-md border bg-muted/30 px-3 py-2 hover:bg-muted/60 sm:flex-row sm:items-center sm:justify-between"
           >
             <span className="font-medium">
-              Nº {formatQuoteNumber(quote.quoteNumber)}
+              Nº {formatQuoteNumber(quote.quoteNumber, quote.revision)}
             </span>
             <QuoteStatusBadge status={quote.status} />
             <span className="text-sm">{formatCurrency(quote.totalCents)}</span>
