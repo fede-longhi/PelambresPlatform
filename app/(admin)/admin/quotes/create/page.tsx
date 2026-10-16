@@ -3,9 +3,7 @@ import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import QuoteDocumentBuilder from '../_components/quote-document-builder';
 import { fetchQuoteById } from '@/lib/data/quote-data';
 import { fetchCustomerById } from '@/lib/data/customer-data';
-import {
-  getQuoteClientDisplayName,
-} from '@/lib/consts/quote-document-consts';
+import { getQuoteClientDisplayName } from '@/lib/consts/quote-document-consts';
 import { getCustomerName } from '@/lib/utils';
 import type { QuoteBuilderState } from '@/types/quote';
 
@@ -16,27 +14,33 @@ export const metadata: Metadata = {
 type PageProps = {
   searchParams?: Promise<{
     quoteRequestId?: string;
+    customerId?: string;
   }>;
 };
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function parseUuid(value: string | undefined) {
+  return value && UUID_PATTERN.test(value) ? value : undefined;
+}
+
 export default async function Page({ searchParams }: PageProps) {
   const params = await searchParams;
-  const rawQuoteRequestId = params?.quoteRequestId;
-  const quoteRequestId =
-    rawQuoteRequestId && UUID_PATTERN.test(rawQuoteRequestId)
-      ? rawQuoteRequestId
-      : undefined;
+  const quoteRequestId = parseUuid(params?.quoteRequestId);
+  const customerIdParam = parseUuid(params?.customerId);
+
   const quoteRequest = quoteRequestId
     ? await fetchQuoteById(quoteRequestId)
     : undefined;
+
   const linkedCustomer =
     quoteRequest?.customer ??
     (quoteRequest?.customer_id
       ? await fetchCustomerById(quoteRequest.customer_id)
-      : undefined);
+      : customerIdParam
+        ? await fetchCustomerById(customerIdParam)
+        : undefined);
 
   const initialQuote: Partial<QuoteBuilderState> | undefined = quoteRequest
     ? {
@@ -58,7 +62,22 @@ export default async function Page({ searchParams }: PageProps) {
             'Validez del presupuesto: 15 días. Pago por transferencia bancaria.',
         },
       }
-    : undefined;
+    : linkedCustomer
+      ? {
+          meta: {
+            quoteNumber: '',
+            showQuoteNumber: true,
+            date: new Date().toISOString().split('T')[0],
+            companyName: 'Pelambres 3D',
+            clientName: getQuoteClientDisplayName(linkedCustomer),
+            clientEmail: linkedCustomer.email || '',
+            clientPhone: linkedCustomer.phone || '',
+            clientAddress: linkedCustomer.address || '',
+            notes:
+              'Validez del presupuesto: 15 días. Pago por transferencia bancaria.',
+          },
+        }
+      : undefined;
 
   return (
     <div className="flex h-[calc(100dvh-6rem)] flex-col md:h-[calc(100vh-6rem)]">

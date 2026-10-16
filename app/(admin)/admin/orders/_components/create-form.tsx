@@ -12,8 +12,13 @@ import {
   StatusField,
   TrackingCodeInput,
 } from './form-fields';
+import type { CustomerField } from './form-fields';
 
-export default function CreateForm() {
+export default function CreateForm({
+  defaultCustomer,
+}: {
+  defaultCustomer?: CustomerField;
+}) {
   const router = useRouter();
   const initialState: OrderFormState = { message: null, errors: {} };
   const [state, formAction, isPending] = useActionState(
@@ -24,10 +29,8 @@ export default function CreateForm() {
   return (
     <form action={formAction}>
       <div className="space-y-4 rounded-lg border border-border bg-card p-4 shadow-sm md:p-6">
-        <TrackingCodeInput
-          errors={state.errors?.code}
-        />
-        <CustomerSelectField />
+        <TrackingCodeInput errors={state.errors?.code} />
+        <CustomerSelectField defaultValue={defaultCustomer} />
         <FieldErrorDisplay
           id="customer-error"
           errors={state.errors?.customerId}

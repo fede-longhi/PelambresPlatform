@@ -5,6 +5,36 @@ import { Customer } from '@/types/definitions';
 
 const ITEMS_PER_PAGE = 10;
 
+export type CustomerStats = {
+  orderCount: number;
+  cancelledOrderCount: number;
+  quoteCount: number;
+  paidTotalCents: number;
+  paidMonthCents: number;
+  outstandingCents: number;
+  monthLabel: string;
+};
+
+function toNumber(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function utcMonthRange(year: number, monthIndex: number) {
+  const start = new Date(Date.UTC(year, monthIndex, 1)).toISOString();
+  const end = new Date(Date.UTC(year, monthIndex + 1, 1)).toISOString();
+  return { start, end };
+}
+
+function monthLabel(year: number, monthIndex: number) {
+  const label = new Intl.DateTimeFormat('es-AR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, monthIndex, 1)));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export async function fetchFilteredCustomers(query: string, currentPage: number) {
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
     try {
@@ -107,4 +137,71 @@ export async function fetchCustomerById(id: string) {
         console.error(error);
         throw new Error('Failed to fetch customer.');
     }
+}
+
+export async function fetchCustomerStats(customerId: string): Promise<CustomerStats> {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const monthIndex = now.getUTCMonth();
+  const { start, end } = utcMonthRange(year, monthIndex);
+
+  try {
+    const [orderStats, paidMonthRows, quoteRows] = await Promise.all([
+      sql<{
+        orderCount: number | string;
+        cancelledOrderCount: number | string;
+        paidTotalCents: number | string | null;
+        outstandingCents: number | string | null;
+      }[]>`
+        SELECT
+          COUNT(*) FILTER (WHERE status <> 'cancelled') AS "orderCount",
+          COUNT(*) FILTER (WHERE status = 'cancelled') AS "cancelledOrderCount",
+          COALESCE(
+            SUM(paid_amount_cents) FILTER (WHERE status <> 'cancelled'),
+            0
+          ) AS "paidTotalCents",
+          COALESCE(
+            SUM(amount - paid_amount_cents) FILTER (
+              WHERE status <> 'cancelled'
+                AND payment_status IN ('pending', 'deposit', 'partial')
+            ),
+            0
+          ) AS "outstandingCents"
+        FROM orders
+        WHERE customer_id = ${customerId}
+          AND deleted_at IS NULL
+      `,
+      sql<{ paidMonthCents: number | string | null }[]>`
+        SELECT COALESCE(SUM(order_payments.amount_cents), 0) AS "paidMonthCents"
+        FROM order_payments
+        JOIN orders ON orders.id = order_payments.order_id
+        WHERE orders.customer_id = ${customerId}
+          AND order_payments.deleted_at IS NULL
+          AND orders.deleted_at IS NULL
+          AND orders.status <> 'cancelled'
+          AND order_payments.paid_at >= ${start}::timestamptz
+          AND order_payments.paid_at < ${end}::timestamptz
+      `,
+      sql<{ quoteCount: number | string }[]>`
+        SELECT COUNT(*) AS "quoteCount"
+        FROM quotes
+        WHERE customer_id = ${customerId}
+          AND deleted_at IS NULL
+      `,
+    ]);
+
+    const orderRow = orderStats[0];
+    return {
+      orderCount: toNumber(orderRow?.orderCount),
+      cancelledOrderCount: toNumber(orderRow?.cancelledOrderCount),
+      quoteCount: toNumber(quoteRows[0]?.quoteCount),
+      paidTotalCents: toNumber(orderRow?.paidTotalCents),
+      paidMonthCents: toNumber(paidMonthRows[0]?.paidMonthCents),
+      outstandingCents: toNumber(orderRow?.outstandingCents),
+      monthLabel: monthLabel(year, monthIndex),
+    };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch customer stats.');
+  }
 }
