@@ -1,9 +1,11 @@
 import { fetchCustomerOrders } from '@/lib/data/order-data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import OrderStatusBadge from './order-status-badge';
 import OrderPaymentBadge from './order-payment-badge';
 import { formatCurrency, formatDateToLocal } from '@/lib/utils';
+import { Plus } from 'lucide-react';
 
 export default async function CustomerLastOrders({
   id,
@@ -16,14 +18,28 @@ export default async function CustomerLastOrders({
 
   return (
     <Card className={className}>
-      <CardHeader>
-        <CardTitle>Pedidos</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 gap-2">
+        <CardTitle>Pedidos recientes</CardTitle>
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/admin/orders/create?customerId=${id}`}>
+            <Plus className="mr-1.5 size-4" aria-hidden="true" />
+            Nuevo
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent>
         {orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Este cliente todavía no tiene pedidos.
-          </p>
+          <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Este cliente todavía no tiene pedidos.
+            </p>
+            <Button asChild className="mt-3" size="sm">
+              <Link href={`/admin/orders/create?customerId=${id}`}>
+                <Plus className="mr-1.5 size-4" aria-hidden="true" />
+                Crear primer pedido
+              </Link>
+            </Button>
+          </div>
         ) : (
           <ul className="space-y-2">
             {orders.map((order) => (
