@@ -11,5 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/print-status`, lastModified: new Date() },
     { url: `${baseUrl}/quote-request`, lastModified: new Date() },
     { url: `${baseUrl}/tools`, lastModified: new Date() },
+    { url: `${baseUrl}/tools/map-stl`, lastModified: new Date() },
   ];
 }

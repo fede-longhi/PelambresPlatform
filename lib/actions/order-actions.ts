@@ -28,6 +28,10 @@ import { insertFormFiles } from '@/lib/actions/file-storage';
 import { sendOrderStatusEmail } from '@/lib/mail/mailer';
 import type { CustomerType } from '@/types/definitions';
 import { deriveOrderPaymentStatus } from '@/lib/consts/order-payment-consts';
+import {
+  fetchCustomerAcceptedQuotesWithoutOrder,
+  fetchQuoteDocumentById,
+} from '@/lib/data/quote-document-data';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -49,6 +53,36 @@ const FormSchema = z.object({
 
 const CreateOrder = FormSchema.omit({ id: true });
 
+const CalculatorParamsSchema = z.object({
+  materialCostPerKg: z.number(),
+  partWeightGrams: z.number(),
+  machineCostPerHour: z.number(),
+  printTimeH: z.number(),
+  printTimeM: z.number(),
+  laborCostPerHour: z.number(),
+  laborTimeH: z.number(),
+  laborTimeM: z.number(),
+  extraMaterialsCost: z.number(),
+  markupPercentage: z.number(),
+  discountPercentage: z.number(),
+});
+
+const OrderLineInputSchema = z.object({
+  description: z
+    .string()
+    .trim()
+    .min(1, { message: 'Cada ítem necesita una descripción.' }),
+  quantity: z.number().positive({ message: 'La cantidad tiene que ser mayor a 0.' }),
+  price: z.number().min(0, { message: 'El precio no puede ser negativo.' }),
+  discount: z.number().min(0).max(100),
+  calculatorParams: CalculatorParamsSchema.nullable().optional(),
+});
+
+const OrderTaxInputSchema = z.object({
+  name: z.string(),
+  percentage: z.number().min(0),
+});
+
 export type OrderFormState = {
   errors?: {
     customerId?: string[];
@@ -56,6 +90,12 @@ export type OrderFormState = {
     status?: string[];
     amount?: string[];
     estimatedDate?: string[];
+    items?: string[];
+    notes?: string[];
+    quoteId?: string[];
+    depositAmount?: string[];
+    depositMethod?: string[];
+    attachments?: string[];
   };
   message?: string | null;
   payload?: FormData;
@@ -347,16 +387,114 @@ const OrderItemsSchema = z.object({
   reason: z.string().trim().min(3, { message: 'Indicá el motivo del cambio.' }),
   notifyCustomer: z.boolean(),
   items: z
-    .array(
-      z.object({
-        description: z.string(),
-        quantity: z.number().positive({ message: 'La cantidad tiene que ser mayor a 0.' }),
-        price: z.number().min(0),
-        discount: z.number().min(0).max(100),
-      })
-    )
+    .array(OrderLineInputSchema)
     .min(1, { message: 'El pedido tiene que tener al menos una línea.' }),
 });
+
+async function insertOrderLines(
+  tx: typeof sql,
+  orderId: string,
+  items: z.infer<typeof OrderLineInputSchema>[],
+  taxes: z.infer<typeof OrderTaxInputSchema>[]
+) {
+  await tx`DELETE FROM order_items WHERE order_id = ${orderId}`;
+  await tx`DELETE FROM order_taxes WHERE order_id = ${orderId}`;
+
+  for (const [index, item] of items.entries()) {
+    const calculatorParams = item.calculatorParams ?? null;
+    await tx`
+      INSERT INTO order_items (
+        order_id,
+        sort_order,
+        description,
+        quantity,
+        unit_price_cents,
+        discount_percent,
+        calculator_params
+      )
+      VALUES (
+        ${orderId},
+        ${index},
+        ${item.description},
+        ${item.quantity},
+        ${pesosToCents(item.price)},
+        ${item.discount},
+        ${calculatorParams ? sql.json(calculatorParams) : null}
+      )
+    `;
+  }
+
+  for (const [index, tax] of taxes.entries()) {
+    if (!tax.name.trim() && tax.percentage <= 0) {
+      continue;
+    }
+    await tx`
+      INSERT INTO order_taxes (
+        order_id,
+        sort_order,
+        name,
+        percentage
+      )
+      VALUES (
+        ${orderId},
+        ${index},
+        ${tax.name.trim() || 'Impuesto'},
+        ${tax.percentage}
+      )
+    `;
+  }
+}
+
+async function attachUploadedFilesToOrder(
+  orderId: string,
+  formData: FormData
+): Promise<string | null> {
+  const filesCount = Number(formData.get('filesCount') ?? 0);
+  if (!filesCount) {
+    return null;
+  }
+
+  for (let index = 0; index < filesCount; index += 1) {
+    const file = formData.get(`file-${index}`);
+    if (!(file instanceof File) || file.size === 0) {
+      continue;
+    }
+
+    if (file.size > MAX_FILE_ATTACHMENT_SIZE_BYTES) {
+      return `El archivo ${file.name} supera el tamaño máximo permitido.`;
+    }
+
+    const extension = getFileExtension(file.name);
+    if (!ALLOWED_EXTENSIONS.has(extension)) {
+      return `El archivo ${file.name} no tiene un formato permitido.`;
+    }
+  }
+
+  const uploaded = await insertFormFiles(ORDER_ATTACHMENTS_FOLDER, formData);
+  if (!uploaded.success) {
+    return uploaded.message ?? 'No se pudieron subir los archivos.';
+  }
+
+  const files = [
+    ...(uploaded.insertedFiles ?? []),
+    ...(uploaded.existingFiles ?? []),
+  ].filter((file) => file.id);
+
+  for (const file of files) {
+    const fileId = file.id;
+    if (!fileId) {
+      continue;
+    }
+
+    await sql`
+      INSERT INTO order_attachments (order_id, file_id)
+      VALUES (${orderId}, ${fileId})
+      ON CONFLICT (order_id, file_id) DO NOTHING
+    `;
+  }
+
+  return null;
+}
 
 async function replaceOrderLinesFromQuote(
   tx: typeof sql,
@@ -625,57 +763,302 @@ export async function createOrderFromQuote(
   redirect(`/admin/orders/${orderId}`);
 }
 
+export async function loadCustomerAcceptedQuotesForCreate(customerId: string) {
+  await requireAdminSessionUserId();
+  const parsedId = z.string().uuid().safeParse(customerId);
+  if (!parsedId.success) {
+    return [];
+  }
+  return fetchCustomerAcceptedQuotesWithoutOrder(parsedId.data);
+}
+
+export async function loadQuoteForOrderImport(quoteId: string) {
+  await requireAdminSessionUserId();
+  const parsedId = z.string().uuid().safeParse(quoteId);
+  if (!parsedId.success) {
+    return null;
+  }
+  const quote = await fetchQuoteDocumentById(parsedId.data);
+  return quote ?? null;
+}
+
 export async function createOrder(
   _prevState: OrderFormState,
   formData: FormData
 ): Promise<OrderFormState> {
   const userId = await requireAdminSessionUserId();
-  const validatedFields = CreateOrder.safeParse({
-    customerId: formData.get('customerId'),
-    code: formData.get('code'),
-    status: formData.get('status'),
-    amount: formData.get('amount'),
-    estimatedDate: formData.get('estimatedDate'),
-  });
 
-  if (!validatedFields.success) {
+  let rawItems: unknown;
+  let rawTaxes: unknown;
+  try {
+    rawItems = JSON.parse(String(formData.get('itemsJson') ?? '[]'));
+  } catch {
     return {
-      errors: validatedFields.error.flatten().fieldErrors,
+      errors: { items: ['Las líneas del pedido no son válidas.'] },
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+  try {
+    rawTaxes = JSON.parse(String(formData.get('taxesJson') ?? '[]'));
+  } catch {
+    return {
+      errors: { items: ['Los impuestos del pedido no son válidos.'] },
       message: 'Revise los campos. No se pudo crear el pedido.',
       payload: formData,
     };
   }
 
-  const { customerId, code, status, amount, estimatedDate } =
-    validatedFields.data;
-  const amountInCents = pesosToCents(amount);
-  const createdDate = new Date().toISOString().split('T')[0];
+  const baseFields = CreateOrder.omit({ amount: true }).safeParse({
+    customerId: formData.get('customerId'),
+    code: formData.get('code'),
+    status: formData.get('status'),
+    estimatedDate: formData.get('estimatedDate'),
+  });
 
+  const itemsParsed = z
+    .array(OrderLineInputSchema)
+    .min(1, { message: 'Agregá al menos un ítem.' })
+    .safeParse(rawItems);
+  const taxesParsed = z.array(OrderTaxInputSchema).safeParse(rawTaxes);
+  const notes = String(formData.get('notes') ?? '');
+  const globalDiscountPercent = Number(formData.get('globalDiscountPercent') ?? 0);
+  const rawQuoteId = String(formData.get('quoteId') ?? '').trim();
+  const quoteId = rawQuoteId || null;
+  const registerDeposit = formData.get('registerDeposit') === 'true';
+
+  if (!baseFields.success || !itemsParsed.success || !taxesParsed.success) {
+    return {
+      errors: {
+        ...(baseFields.success ? {} : baseFields.error.flatten().fieldErrors),
+        items: itemsParsed.success
+          ? undefined
+          : itemsParsed.error.flatten().formErrors.length > 0
+            ? itemsParsed.error.flatten().formErrors
+            : ['Revisá las líneas del pedido.'],
+        notes:
+          notes.length > 4000
+            ? ['Las notas no pueden superar los 4000 caracteres.']
+            : undefined,
+      },
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+
+  if (notes.length > 4000) {
+    return {
+      errors: { notes: ['Las notas no pueden superar los 4000 caracteres.'] },
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+
+  if (
+    !Number.isFinite(globalDiscountPercent) ||
+    globalDiscountPercent < 0 ||
+    globalDiscountPercent > 100
+  ) {
+    return {
+      message: 'El descuento general no es válido.',
+      payload: formData,
+    };
+  }
+
+  const { customerId, code, status, estimatedDate } = baseFields.data;
+  const items = itemsParsed.data;
+  const taxes = taxesParsed.data;
+
+  const quoteItems: QuoteItem[] = items.map((item, index) => ({
+    id: String(index),
+    description: item.description,
+    quantity: item.quantity,
+    price: item.price,
+    discount: item.discount,
+  }));
+  const taxItems: TaxItem[] = taxes.map((tax, index) => ({
+    id: String(index),
+    name: tax.name,
+    percentage: tax.percentage,
+  }));
+  const math = computeQuoteMath(quoteItems, taxItems, globalDiscountPercent);
+  const amountInCents = Math.max(0, pesosToCents(math.total));
+
+  if (amountInCents <= 0) {
+    return {
+      errors: { items: ['El total del pedido tiene que ser mayor a $0.'] },
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+
+  let depositAmountCents = 0;
+  let depositMethod: (typeof ORDER_PAYMENT_METHOD_VALUES)[number] | null = null;
+  let depositNotes = '';
+
+  if (registerDeposit) {
+    const depositParsed = z
+      .object({
+        amount: z.coerce
+          .number({ invalid_type_error: 'Ingrese un importe válido.' })
+          .gt(0, { message: 'Ingrese un importe mayor a $0.' }),
+        method: z.enum(ORDER_PAYMENT_METHOD_VALUES, {
+          errorMap: () => ({ message: 'Seleccione un método de pago.' }),
+        }),
+        notes: z
+          .string()
+          .trim()
+          .max(500, { message: 'Las notas no pueden superar los 500 caracteres.' }),
+      })
+      .safeParse({
+        amount: formData.get('depositAmount'),
+        method: formData.get('depositMethod'),
+        notes: String(formData.get('depositNotes') ?? ''),
+      });
+
+    if (!depositParsed.success) {
+      return {
+        errors: {
+          depositAmount: depositParsed.error.flatten().fieldErrors.amount,
+          depositMethod: depositParsed.error.flatten().fieldErrors.method,
+        },
+        message: 'Revise la seña. No se pudo crear el pedido.',
+        payload: formData,
+      };
+    }
+
+    depositAmountCents = pesosToCents(depositParsed.data.amount);
+    depositMethod = depositParsed.data.method;
+    depositNotes = depositParsed.data.notes;
+
+    if (depositAmountCents > amountInCents) {
+      return {
+        errors: {
+          depositAmount: ['La seña no puede superar el total del pedido.'],
+        },
+        message: 'Revise la seña. No se pudo crear el pedido.',
+        payload: formData,
+      };
+    }
+  }
+
+  if (quoteId && !z.string().uuid().safeParse(quoteId).success) {
+    return {
+      errors: { quoteId: ['Presupuesto inválido.'] },
+      message: 'Revise los campos. No se pudo crear el pedido.',
+      payload: formData,
+    };
+  }
+
+  const createdDate = new Date().toISOString().split('T')[0];
   let orderId: string;
 
   try {
-    const trackingCode = await resolveTrackingCode(sql, code);
-    const inserted = await sql<{ id: string }[]>`
-      INSERT INTO orders (
-        customer_id,
-        amount,
-        status,
-        created_date,
-        tracking_code,
-        estimated_date
-      )
-      VALUES (
-        ${customerId},
-        ${amountInCents},
-        ${status},
-        ${createdDate},
-        ${trackingCode},
-        ${toIsoDate(estimatedDate)}
-      )
-      RETURNING id
-    `;
-    orderId = inserted[0].id;
-    await insertOrderStatusEvent(sql, orderId, null, status, userId);
+    orderId = await sql.begin(async (tx) => {
+      let validatedQuoteId: string | null = null;
+
+      if (quoteId) {
+        const quotes = await tx<
+          {
+            id: string;
+            status: string;
+            customerId: string;
+            quoteNumber: number;
+          }[]
+        >`
+          SELECT
+            id,
+            status,
+            customer_id as "customerId",
+            quote_number as "quoteNumber"
+          FROM quotes
+          WHERE id = ${quoteId}
+            AND deleted_at IS NULL
+          LIMIT 1
+        `;
+        const quote = quotes[0];
+        if (!quote) {
+          throw new Error('QUOTE_NOT_FOUND');
+        }
+        if (quote.customerId !== customerId) {
+          throw new Error('QUOTE_CUSTOMER');
+        }
+        if (quote.status !== 'accepted') {
+          throw new Error('QUOTE_NOT_ACCEPTED');
+        }
+
+        const familyOrder = await tx<{ id: string }[]>`
+          SELECT orders.id
+          FROM orders
+          JOIN quotes family ON family.id = orders.quote_id
+          WHERE family.quote_number = ${quote.quoteNumber}
+            AND orders.deleted_at IS NULL
+          LIMIT 1
+        `;
+        if (familyOrder[0]) {
+          throw new Error('FAMILY_ORDER');
+        }
+
+        validatedQuoteId = quote.id;
+      }
+
+      const trackingCode = await resolveTrackingCode(tx, code);
+      const inserted = await tx<{ id: string }[]>`
+        INSERT INTO orders (
+          customer_id,
+          amount,
+          status,
+          created_date,
+          tracking_code,
+          estimated_date,
+          notes,
+          quote_id,
+          quoted_amount_cents,
+          global_discount_percent
+        )
+        VALUES (
+          ${customerId},
+          ${amountInCents},
+          ${status},
+          ${createdDate},
+          ${trackingCode},
+          ${toIsoDate(estimatedDate)},
+          ${notes},
+          ${validatedQuoteId},
+          ${amountInCents},
+          ${globalDiscountPercent}
+        )
+        RETURNING id
+      `;
+
+      const newOrderId = inserted[0].id;
+      await insertOrderLines(tx, newOrderId, items, taxes);
+      await insertOrderStatusEvent(tx, newOrderId, null, status, userId);
+
+      if (registerDeposit && depositMethod && depositAmountCents > 0) {
+        await tx`
+          INSERT INTO order_payments (
+            order_id,
+            amount_cents,
+            kind,
+            method,
+            notes,
+            created_by
+          )
+          VALUES (
+            ${newOrderId},
+            ${depositAmountCents},
+            'deposit',
+            ${depositMethod},
+            ${depositNotes},
+            ${userId}
+          )
+        `;
+        await refreshOrderPaymentSummary(tx, newOrderId);
+      }
+
+      return newOrderId;
+    });
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'DUPLICATE_CODE') {
@@ -691,13 +1074,55 @@ export async function createOrder(
           payload: formData,
         };
       }
+      if (error.message === 'QUOTE_NOT_FOUND') {
+        return {
+          errors: { quoteId: ['No se encontró el presupuesto.'] },
+          message: 'Revise los campos. No se pudo crear el pedido.',
+          payload: formData,
+        };
+      }
+      if (error.message === 'QUOTE_CUSTOMER') {
+        return {
+          errors: {
+            quoteId: ['El presupuesto no pertenece al cliente seleccionado.'],
+          },
+          message: 'Revise los campos. No se pudo crear el pedido.',
+          payload: formData,
+        };
+      }
+      if (error.message === 'QUOTE_NOT_ACCEPTED') {
+        return {
+          errors: {
+            quoteId: ['El presupuesto tiene que estar aceptado.'],
+          },
+          message: 'Revise los campos. No se pudo crear el pedido.',
+          payload: formData,
+        };
+      }
+      if (error.message === 'FAMILY_ORDER') {
+        return {
+          errors: {
+            quoteId: [
+              'Ya hay un pedido para otra versión de este presupuesto.',
+            ],
+          },
+          message: 'Revise los campos. No se pudo crear el pedido.',
+          payload: formData,
+        };
+      }
     }
 
     console.error(error);
     return { message: 'No se pudo crear el pedido.', payload: formData };
   }
 
-  revalidateOrderPaths({ orderId, customerId });
+  const attachmentError = await attachUploadedFilesToOrder(orderId, formData);
+  if (attachmentError) {
+    revalidateOrderPaths({ orderId, customerId, quoteId });
+    redirect(`/admin/orders/${orderId}`);
+  }
+
+  revalidateOrderPaths({ orderId, customerId, quoteId });
   redirect(`/admin/orders/${orderId}`);
 }
 
@@ -884,14 +1309,13 @@ export async function updateOrderItems(
         throw new Error('NOT_FOUND');
       }
 
-      const existingLines = await tx<{ calculatorParams: QuoteItem['calculatorParams'] | null }[]>`
-        SELECT calculator_params as "calculatorParams"
+      const existingLineCount = await tx<{ count: number }[]>`
+        SELECT count(*)::int as count
         FROM order_items
         WHERE order_id = ${orderId}
-        ORDER BY sort_order ASC, created_at ASC
       `;
 
-      if (existingLines.length === 0) {
+      if (Number(existingLineCount[0]?.count ?? 0) === 0) {
         throw new Error('NO_LINES');
       }
 
@@ -922,31 +1346,7 @@ export async function updateOrderItems(
       const nextAmountCents = Math.max(0, pesosToCents(math.total));
       const previousAmountCents = Number(order.amount);
 
-      await tx`DELETE FROM order_items WHERE order_id = ${orderId}`;
-
-      for (const [index, item] of items.entries()) {
-        const calculatorParams = existingLines[index]?.calculatorParams ?? null;
-        await tx`
-          INSERT INTO order_items (
-            order_id,
-            sort_order,
-            description,
-            quantity,
-            unit_price_cents,
-            discount_percent,
-            calculator_params
-          )
-          VALUES (
-            ${orderId},
-            ${index},
-            ${item.description},
-            ${item.quantity},
-            ${pesosToCents(item.price)},
-            ${item.discount},
-            ${calculatorParams ? sql.json(calculatorParams) : null}
-          )
-        `;
-      }
+      await insertOrderLines(tx, orderId, items, taxes);
 
       await tx`
         UPDATE orders

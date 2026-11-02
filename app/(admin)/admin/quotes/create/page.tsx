@@ -80,7 +80,7 @@ export default async function Page({ searchParams }: PageProps) {
       : undefined;
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] flex-col md:h-[calc(100vh-6rem)]">
+    <div className="absolute inset-0 flex flex-col p-4 md:p-12">
       <Breadcrumbs
         breadcrumbs={[
           { label: 'Presupuestos', href: '/admin/quotes' },

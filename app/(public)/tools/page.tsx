@@ -5,7 +5,7 @@ import Link from "next/link";
 // Asumo que tienes PageHeader en '@/components/ui/page-header'
 import PageHeader from '@/components/ui/page-header'
 // 💡 Cambiamos los iconos de MUI a Lucide (si no tienes Lucide, instala 'lucide-react')
-import { Calculator, FileText } from 'lucide-react' 
+import { Calculator, FileText, Mountain } from 'lucide-react' 
 
 // Definimos la interfaz para las herramientas para asegurar tipado
 interface Tool {
@@ -33,7 +33,13 @@ const tools: Tool[] = [
         icon: <FileText className="w-8 h-8 text-primary" />,
         path: "/tools/quote-builder",
     },
-    // Puedes añadir más herramientas aquí
+    {
+        id: "map-stl",
+        name: "Mapa a STL",
+        description: "Seleccioná terreno en el mapa (rectángulo, región o pincel) y descargá un STL cerrado listo para imprimir en 3D.",
+        icon: <Mountain className="w-8 h-8 text-primary" />,
+        path: "/tools/map-stl",
+    },
 ];
 
 export default function ToolsPage() {
@@ -50,7 +56,7 @@ export default function ToolsPage() {
                     Potencia tu negocio de impresión 3D con nuestras utilidades diseñadas para optimizar costos, tiempo y gestión de documentos.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {tools.map((tool) => (
                         <Link 
                             key={tool.id} 

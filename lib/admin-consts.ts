@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Tags,
   Users,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -61,6 +62,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
       { name: 'Impresoras', href: '/admin/printers', icon: Printer },
       { name: 'Filamentos', href: '/admin/filaments', icon: LifeBuoy },
       { name: 'Cotizador', href: '/admin/quote-calculator', icon: Calculator },
+      { name: 'Herramientas', href: '/tools', icon: Wrench },
     ],
   },
   {

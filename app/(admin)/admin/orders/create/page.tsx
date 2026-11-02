@@ -2,6 +2,7 @@ import Breadcrumbs from '@/app/(admin)/admin/_components/breadcrumbs';
 import CreateForm from '@/app/(admin)/admin/orders/_components/create-form';
 import { fetchCustomerById } from '@/lib/data/customer-data';
 import { getCustomerName } from '@/lib/utils';
+import { lusitana } from '@/app/fonts';
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -22,7 +23,7 @@ export default async function Page({ searchParams }: PageProps) {
   const customer = customerId ? await fetchCustomerById(customerId) : undefined;
 
   return (
-    <main>
+    <main className="w-full max-w-5xl">
       <Breadcrumbs
         breadcrumbs={[
           { label: 'Pedidos', href: '/admin/orders' },
@@ -33,18 +34,17 @@ export default async function Page({ searchParams }: PageProps) {
           },
         ]}
       />
-      <div className="w-full max-w-xl">
-        <CreateForm
-          defaultCustomer={
-            customer
-              ? {
-                  value: customer.id,
-                  label: getCustomerName(customer),
-                }
-              : undefined
-          }
-        />
-      </div>
+      <h1 className={`${lusitana.className} mb-6 text-2xl`}>Nuevo pedido</h1>
+      <CreateForm
+        defaultCustomer={
+          customer
+            ? {
+                value: customer.id,
+                label: getCustomerName(customer),
+              }
+            : undefined
+        }
+      />
     </main>
   );
 }

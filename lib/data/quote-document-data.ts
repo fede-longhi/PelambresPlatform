@@ -325,6 +325,43 @@ export async function fetchCustomerQuoteDocuments(
   }
 }
 
+export async function fetchCustomerAcceptedQuotesWithoutOrder(
+  customerId: string
+): Promise<QuoteDocumentListItem[]> {
+  try {
+    return await sql<QuoteDocumentListItem[]>`
+      SELECT
+        quotes.id,
+        quotes.quote_number as "quoteNumber",
+        quotes.revision,
+        quotes.status,
+        to_char(quotes.quote_date, 'YYYY-MM-DD') as "quoteDate",
+        quotes.client_name as "clientName",
+        quotes.client_email as "clientEmail",
+        quotes.total_cents as "totalCents",
+        quotes.customer_id as "customerId",
+        NULL::uuid as "orderId",
+        NULL::text as "orderTrackingCode"
+      FROM quotes
+      WHERE quotes.customer_id = ${customerId}
+        AND quotes.status = 'accepted'
+        AND quotes.deleted_at IS NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM orders linked
+          JOIN quotes family ON family.id = linked.quote_id
+          WHERE family.quote_number = quotes.quote_number
+            AND linked.deleted_at IS NULL
+        )
+      ORDER BY quotes.quote_number DESC, quotes.revision DESC
+      LIMIT 20
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch accepted quotes for customer.');
+  }
+}
+
 export async function fetchQuoteDocumentsByRequestId(
   quoteRequestId: string
 ): Promise<QuoteDocumentListItem[]> {
