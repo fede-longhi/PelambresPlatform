@@ -1,0 +1,188 @@
+﻿═══════════════════════════════════════
+PELAMPRES.CLIMB — Pack Instagram
+Producto: Porta equipo (gear rack)
+═══════════════════════════════════════
+
+PLAN COMPLETO (pasos + imágenes + captions):
+  → PLAN-PUBLICACION.md  (calendario −2 → +7, DM, checklist)
+
+
+NOMBRE DEL PRODUCTO (AR)
+────────────────────────
+Porta equipo
+
+Jerga opcional en copy: rack / custom.
+
+
+═══════════════════════════════════════
+1) FEED — Carrusel (orden sugerido)
+═══════════════════════════════════════
+
+Archivos en esta carpeta:
+
+  00  pelambres-climb-feed-00-brand.jpg
+      → Lanzamiento de línea (rock + pelambres.climb)
+         Tagline: “accesorios para tu escalada.”
+         Íconos: mosquetones (gris / sage / violeta)
+
+  01  pelambres-climb-feed-01-hero-gear.jpg   ★ PORTADA
+      → Foto real del porta equipo cargado + hook
+         “¿Querés que tu equipo se vea así?”
+
+  01b pelambres-climb-feed-01b-hook.jpg
+      → Duo violeta/verde colgados (sin texto) — opcional en vez de 01
+         si preferís tipografía solo en Stories / caption
+
+  02  pelambres-climb-feed-02-colores.jpg
+      → Tres colores + “Elegí color y agujeros”
+
+  03  pelambres-climb-feed-03-detalle.jpg
+      → Flatlay con mosquetones y cintas (contexto de uso)
+
+  04  pelambres-climb-feed-04-flatlay.jpg
+      → Flatlay amplio con equipo (sin texto)
+
+  05  pelambres-climb-feed-05-hook-text.jpg
+      → Slide tipográfico del hook (si usás 01b sin texto)
+
+  06  pelambres-climb-feed-06-custom.jpg
+      → Custom: color · agujeros · tamaño
+
+  07  pelambres-climb-feed-07-cta.jpg
+      → CTA: Pedí el tuyo / DM
+
+Orden recomendado (7 slides):
+  01 → 00 → 02 → 03 → 06 → 04 → 07
+
+Orden corto (5 slides):
+  01 → 00 → 02 → 06 → 07
+
+
+CAPTION — FEED
+──────────────
+¿Querés que tu equipo se vea así?
+
+Presentamos pelambres.climb — la línea de escalada de Pelambres.
+Accesorios para tu escalada.
+
+Primer producto: porta equipo.
+Para quickdraws, cintas y mosquetones: en casa, en el placard o listo para salir a la pared / al cerro.
+
+Custom a tu medida:
+· color
+· cantidad de agujeros
+· tamaño
+
+Impreso en 3D, pensado para ordenar — no para anclar ni cargar peso de seguridad.
+No es EPP: solo organización de equipo.
+
+¿Lo querés? Escribinos por DM y lo armamos.
+
+pelambres.climb
+
+—
+#pelambresclimb #escalada #escaladaargentina #climbinggear #portaequipo #gearorganization #3dprint #customgear #boulder #deportiva #tradclimbing
+
+
+ALT TEXT (accesibilidad, por slide)
+───────────────────────────────────
+01: Porta equipo violeta colgado, cargado con quickdraws y mosquetones. Texto: ¿Querés que tu equipo se vea así? pelambres.climb
+00: Fondo de roca oscura. Texto: Nueva línea pelambres.climb — accesorios para tu escalada. Tres mosquetones en gris, verde y violeta.
+02: Tres porta equipo 3D en negro, verde y violeta sobre madera. Texto: Elegí color y agujeros.
+03: Flatlay de porta equipo con mosquetones y cintas sobre mesa de madera.
+06: Slide tipográfico: Custom a tu medida — color, agujeros, tamaño.
+04: Flatlay de tres porta equipo rodeados de equipo de escalada.
+07: Pedí el tuyo — DM pelambres.climb. Aviso: no es EPP.
+
+
+═══════════════════════════════════════
+2) STORIES (secuencia 4–5)
+═══════════════════════════════════════
+
+Archivos:
+  story-01-hero.jpg     → hook foto + texto
+  story-01b-ai-hook.jpg → variante (usar solo si te gusta más el look)
+  story-02-colores.jpg  → custom colores
+  story-03-cta.jpg      → Pedí el tuyo
+
+Secuencia:
+  1. story-01  + sticker de pregunta: “¿Cómo guardás el equipo hoy?”
+  2. story-02  + poll: “¿Qué color pedirías?” Negro / Verde / Violeta
+  3. story-03  + link / “Respondé este story” para pedido
+  4. (opcional) foto 01b o detalle + texto a mano: “Hecho a medida · 3D”
+
+Textos cortos para overlays (si querés editar en la app):
+  · “Nueva línea”
+  · “Portá el equipo ordenado”
+  · “Color + agujeros a tu medida”
+  · “DM para pedir”
+
+
+═══════════════════════════════════════
+3) REEL (15–25 s)
+═══════════════════════════════════════
+
+Cover:
+  pelambres-climb-reel-cover.jpg
+  (alt: pelambres-climb-reel-cover-alt.jpg)
+
+Guión / beats (filmá con el celu + usá estas fotos como B-roll):
+
+  0:00–0:03  Hook (texto en pantalla)
+             “¿Querés que tu equipo se vea así?”
+             Corte a porta equipo colgado lleno de draws
+
+  0:03–0:07  Close de agujeros / mosquetones clipándose
+             Audio: click de mosquetón
+
+  0:07–0:12  Tres colores sobre la mesa (pan lento)
+             Texto: “Color · agujeros · tamaño”
+
+  0:12–0:18  Flatlay con equipo alrededor
+             Texto: “pelambres.climb”
+
+  0:18–0:22  CTA
+             “Pedí el tuyo por DM”
+             End card: story-03 / feed-07
+
+Audio sugerido:
+  · Trending calm/outdoor o beat lo-fi con percusión seca
+  · O original: solo ambiente + clicks de mosquetones (muy climbing)
+
+Caption del Reel (corto):
+  Organizá el equipo. A tu color. A tu medida.
+  pelambres.climb — porta equipo custom.
+  Pedidos por DM.
+
+
+═══════════════════════════════════════
+4) HIGHLIGHTS (nuevos)
+═══════════════════════════════════════
+
+Cover idea (usar feed-00 o story-03 recortado a círculo):
+  · Highlight “climb”     → feed-00-brand
+  · Highlight “porta”     → feed-02-colores
+  · Highlight “pedidos”   → story-03-cta
+
+
+═══════════════════════════════════════
+5) NOTAS CM
+═══════════════════════════════════════
+
+· Las fotos originales vienen de WhatsApp (~576 px). Las del pack están
+  upscaleadas + gradeadas (~1296 px). Para próxima tanda: exportar desde
+  el celular en calidad original / RAW, luz lateral suave, fondo limpio.
+
+· Preferí las piezas “foto real + tipografía” (feed-01, 02, stories 01–02)
+  para que no se sienta IA. Los slides de roca (00, 05, 06, 07, story-03)
+  son marca / tipográficos a propósito.
+
+· feed-01-hero-ai-enhanced.jpg es una mejora generativa: más “pro”, pero
+  cambia un poco el equipo. Usala solo si te cierra; la verdad de producto
+  está en feed-01 / 01b / 03 / 04.
+
+· Disclaimer “No es EPP” siempre visible en caption y en el CTA final.
+
+· Respuestas rápidas para DM:
+  “Hola! El porta equipo es custom: color + cantidad de agujeros.
+   Contame cuántos draws/cintas querés colgar y te paso opciones y precio.”

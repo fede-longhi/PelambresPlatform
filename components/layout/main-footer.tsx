@@ -21,6 +21,7 @@ const toolLinks = [
     { title: "Todas las Herramientas", href: "/tools" },
     { title: "Calculadora de Costos", href: "/tools/calculator" },
     { title: "Generador de Presupuestos", href: "/tools/quote-builder" },
+    { title: "Mapa a STL", href: "/tools/map-stl" },
 ];
 
 const textToShare = "Hola, quiero imprimir!";

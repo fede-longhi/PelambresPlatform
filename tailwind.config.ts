@@ -88,6 +88,21 @@ const config: Config = {
   				background: 'hsl(var(--header-background))',
   				dark: 'hsl(var(--header-background-dark))'
   			},
+  			/** Map-to-STL tool palette (ported from me) — prefixed to avoid clobbering Tailwind defaults */
+  			ink: {
+  				DEFAULT: '#0b1f2a',
+  				muted: '#3d5a68',
+  			},
+  			line: 'color-mix(in oklab, #0b1f2a 12%, transparent)',
+  			'map-blue': {
+  				DEFAULT: '#1565a8',
+  				deep: '#0c3d6e',
+  			},
+  			'map-green': {
+  				DEFAULT: '#1f8f6a',
+  				soft: '#6bc4a3',
+  			},
+  			surface: 'color-mix(in oklab, white 72%, #cfe8e0)',
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',

@@ -30,7 +30,7 @@ export default async function Page({ params }: PageProps) {
   const quoteLabel = formatQuoteNumber(quote.quoteNumber, quote.revision);
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] flex-col md:h-[calc(100vh-6rem)]">
+    <div className="absolute inset-0 flex flex-col p-4 md:p-12">
       <Breadcrumbs
         breadcrumbs={[
           { label: 'Presupuestos', href: '/admin/quotes' },
@@ -43,7 +43,7 @@ export default async function Page({ params }: PageProps) {
         ]}
       />
       {quote.status !== 'draft' ? (
-        <p className="mb-3 text-sm text-muted-foreground">
+        <p className="mb-3 shrink-0 text-sm text-muted-foreground">
           Esta versión ya no se edita. Para cambiar el alcance, creá una nueva
           versión desde la ficha. Podés seguir viendo el PDF desde acá.
         </p>
